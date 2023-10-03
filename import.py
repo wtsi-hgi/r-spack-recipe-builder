@@ -91,7 +91,8 @@ def importPackage(package):
                 importPackage(k)
             except:
                 continue
-        k = "r-" + k.lower().replace('.','-')
+            k = k.replace(".","-")
+        k = "r-" + k.lower()
         f.write("\tdepends_on(\"" + k + "\", type=(\"build\", \"run\"))\n")
     f.write("\n")
 
