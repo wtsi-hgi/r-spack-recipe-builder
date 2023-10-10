@@ -7,7 +7,9 @@ import os
 import json
 import packaging
 
-# if newer thing exists download it
+
+#Makes CRAN dataframe
+#TODO: if newer thing exists download it
 databaseurl = "https://cran.r-project.org/web/packages/packages.rds"
 response = requests.get(databaseurl, allow_redirects=True)
 tmpfile = tempfile.NamedTemporaryFile()
@@ -16,6 +18,21 @@ tmpfile.write(response.content)
 database = pyreadr.read_r(tmpfile.name)
 database = database[None]
 pandasDatabase = pd.DataFrame(database)
+
+#Makes Bioconductor dictionary
+biocURL = "https://www.bioconductor.org/packages/3.18/bioc/VIEWS"
+response = requests.get(biocURL, allow_redirects=True)
+databaseBIOC = (response.text).split("\n\n")
+packagesBIOC = {}
+for i in range(len(databaseBIOC) - 1):
+	databaseBIOC[i] = databaseBIOC[i].replace("\n        ", " ")
+	databaseBIOC[i] = databaseBIOC[i].split("\n")
+	newPackage = {}
+	for j in range(len(databaseBIOC[i])):
+		databaseBIOC[i][j] = databaseBIOC[i][j].split(": ", 1)
+		newPackage[databaseBIOC[i][j][0]] = databaseBIOC[i][j][1]
+	packagesBIOC[newPackage["Package"]] = newPackage
+
 
 stream = os.popen("singularity run /opt/spack.sif list --format version_json r-*")
 builtin = stream.read()
@@ -30,44 +47,58 @@ for i in builtin:
 def importPackage(package, version, type):
 	if version == "":
 		version = "latest"
+		type = "latest"
 
 	urlbool = True
 
 	record = pandasDatabase.loc[pandasDatabase['Package'] == package]
+	if len(record) == 0:
+		if packagesBIOC.get(package) == None:
+			raise Exception(f"Package {'r-' + package.lower().replace('.','-')} not found in database")
+		else:
+			record = packagesBIOC[package]
+			packman = "bioc"
+	else:
+		record = record.to_dict('records')[0]
+		packman = "cran"
 
-	try:
-		name, description = record["Title"].values[0], record["Description"].values[0]
-	except:
-		raise Exception(f"Package {'r-' + package.lower().replace('.','-')} not found in database")
-		
+	name, description = record["Title"], record["Description"]
+
 	def writeDeps(field):
-		if pd.isna(record[field].values[0]):
+		if packagesBIOC.get(field) == None:
 			return []
-		return record[field].values[0].replace(" ","").replace("\n", "").split(",")
+		elif pd.isna(record[field]):
+			return []
+		return record[field].replace(" ","").replace("\n", "").split(",")
 
-	dependencies = writeDeps("Imports")
+	dependencies = writeDeps("Depends")
+	dependencies += writeDeps("Imports")
 	dependencies += writeDeps("LinkingTo")
 	suggests = writeDeps("Suggests")
 
 	try:
-		packageURL = record["URL"].values[0].split(",")[0].split(" ")[0].split("\n")[0]
+		packageURL = record["URL"].split(",")[0].split(" ")[0].split("\n")[0]
 	except:
 		urlbool = False
 	
-	latest = requests.get("https://cran.r-project.org/src/contrib/" + package + "_" + record["Version"].values[0] + ".tar.gz", allow_redirects=True)
-	if version != "latest":
-		source = requests.get(f"https://cran.r-project.org/src/contrib/Archive/{package}/{package}_{version}.tar.gz", allow_redirects=True)
+	if packman == "cran":
+		baseurl_version = f"https://cran.r-project.org/src/contrib/Archive/{package}/{package}_{version}.tar.gz"
+		baseurl_latest = f"https://cran.r-project.org/src/contrib/{package}_{record['Version']}.tar.gz"
+	if packman == "bioc":
+		baseurl_latest = f"https://bioconductor.org/packages/release/bioc/src/contrib/{package}_{version}.tar.gz"
+	elif type != "latest":
+		source = requests.get(baseurl_version, allow_redirects=True)
 		sha256_hash_version = hashlib.sha256()
 		sha256_hash_version.update(source.content)
+	latest = requests.get(baseurl_latest, allow_redirects=True)
 	sha256_hash_latest = hashlib.sha256()
 	sha256_hash_latest.update(latest.content)
 
 	versions = []
-	versions.append(f"""	version("{record['Version'].values[0]}", sha256="{sha256_hash_latest.hexdigest()}")\n""")
+	versions.append(f"""	version("{record['Version']}", sha256="{sha256_hash_latest.hexdigest()}")\n""")
 	if "r-" + package.lower().replace(".","-") in packageVersions.keys():
 		if os.path.isdir("packages/r-" + package.lower().replace(".","-")):
-			if open(f"packages/r-{package.lower().replace('.','-')}/package.py", "r").read() == "":
-				return("Circular error")
+			return(f"Package {'r-' + package.lower().replace('.','-')} already exists")
 		if type == "any":
 			return(f"Package {'r-' + package.lower().replace('.','-')} already exists")
 		else:
@@ -78,7 +109,7 @@ def importPackage(package, version, type):
 					print(f"Package {'r-' + package.lower().replace('.','-')} already exists")
 					return(f"Package {'r-' + package.lower().replace('.','-')} already exists")
 			elif version == "latest":
-				if record["Version"].values[0] in packageVersions["r-" + package.lower().replace(".","-")]:
+				if record["Version"] in packageVersions["r-" + package.lower().replace(".","-")]:
 					print(f"Package {'r-' + package.lower().replace('.','-')} already exists")
 					return(f"Package {'r-' + package.lower().replace('.','-')} already exists")
 			else:
@@ -95,15 +126,14 @@ def importPackage(package, version, type):
 	variants = []
 	for k in dependencies:
 		try:
-			dependencylist.append("\tdepends_on(\"" + packageName(k, suggests)[0] + "\", type=(\"build\", \"run\"))\n")
+			dependencylist.append("\tdepends_on(\"" + packageName(k)[0] + "\", type=(\"build\", \"run\"))\n")
 		except:
 			continue
 	for l in suggests:
 		try:
-			pkg = packageName(l, suggests)
-			if pkg[1] != "i":
-				dependencylist.append("\tdepends_on(\"" + pkg[0] + pkg[1] + "\", when=\"+" + pkg[0] + "\", type=(\"build\", \"run\"))\n")
-				variants.append("\tvariant(\"" + pkg[0] + "\", default=" + str(pkg[3]) + ", description=\"Enable " + pkg[0] + " support\")\n")
+			pkg = packageName(l)
+			dependencylist.append("\tdepends_on(\"" + pkg[0] + pkg[1] + "\", when=\"+" + pkg[0] + "\", type=(\"build\", \"run\"))\n")
+			variants.append("\tvariant(\"" + pkg[0] + "\", default=" + str(pkg[3]) + ", description=\"Enable " + pkg[0] + " support\")\n")
 		except:
 			continue
 
@@ -127,7 +157,7 @@ class R{classname}(RPackage):
 	\"\"\"
 	
 	{f'homepage = "{packageURL}"' if urlbool and str(packageURL) != "nan" else ''}
-	cran = "{package}"
+	{packman} = "{package}"
 
 {"".join(versions)}
 
@@ -138,7 +168,7 @@ class R{classname}(RPackage):
 	f.close()
 	print(f"Package {'r-' + package.lower().replace('.','-')} has been created!")
 
-def packageName(k, suggests):
+def packageName(k):
 	if "(" in k:
 		version = k.split("(")
 		k = version[0]
@@ -160,15 +190,13 @@ def packageName(k, suggests):
 		fullname = k.replace(".","-")
 		getversion = ""
 		type = "any"
+	if fullname.lower() == "r":
+		return "r", getversion, type, False
 	try:
-		if importPackage(k, getversion, type) == "Circular error":
-			if k in suggests:
-				return "r-" + fullname.lower(), getversion, type, False
-			else:
-				return("Circular error")
+		importPackage(k, getversion, type)	
 	except:
 		raise Exception(f"Package {'r-' + k.lower().replace('.','-')} not found in database")
-	return "r-" + fullname.lower(), getversion, type, True
+	return "r-" + fullname.lower(), getversion, type, False
 
 def getVersions(package):
 	versions = []
@@ -188,4 +216,4 @@ def getVersions(package):
 package = str(input("Please enter package name: "))
 version = str(input("Please enter package version (leave blank for latest version): "))
 
-importPackage(package, version, "latest")
+importPackage(package, version, version)
