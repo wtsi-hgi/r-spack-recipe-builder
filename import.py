@@ -6,25 +6,31 @@ import os
 import json
 from packaging.version import parse
 import pickle
+import email.utils, datetime
 
 #Makes CRAN dataframe
-if not os.path.isfile("cranLibrary.rds"):
+databaseurl = "https://cran.r-project.org/web/packages/packages.rds"
+cranHead = requests.head(databaseurl)
+cranWebTime = email.utils.parsedate_to_datetime(cranHead.headers.get('last-modified')).replace(tzinfo=None)
+cranLocalTime = datetime.datetime.fromtimestamp(os.path.getmtime("cranLibrary.rds"))
+if not os.path.isfile("cranLibrary.rds") or cranWebTime > cranLocalTime:
 	print("Downloading CRAN database")
-	databaseurl = "https://cran.r-project.org/web/packages/packages.rds"
 	response = requests.get(databaseurl, allow_redirects=True)
 	savedDatabase = open("cranLibrary.rds", "wb")
 	savedDatabase.write(response.content)
 	savedDatabase.close()
-
 savedDatabase = open("cranLibrary.rds", "rb")
 database = pyreadr.read_r(savedDatabase.name)
 database = database[None]
 pandasDatabase = pd.DataFrame(database)
 
 #Makes Bioconductor dictionary
+biocURL = "https://www.bioconductor.org/packages/3.18/bioc/VIEWS"
+biocHead = requests.head(databaseurl)
+biocWebTime = email.utils.parsedate_to_datetime(biocHead.headers.get('last-modified')).replace(tzinfo=None)
+biocLocalTime = datetime.datetime.fromtimestamp(os.path.getmtime("biocLibrary.pkl"))
 if not os.path.isfile("biocLibrary.pkl"):
 	print("Downloading Bioconductor database")
-	biocURL = "https://www.bioconductor.org/packages/3.18/bioc/VIEWS"
 	response = requests.get(biocURL, allow_redirects=True)
 	databaseBIOC = (response.text).split("\n\n")
 	packagesBIOC = {}
