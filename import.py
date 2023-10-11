@@ -1,54 +1,63 @@
 import hashlib
 import requests
 import pyreadr
-import tempfile
 import pandas as pd
 import os
 import json
-import packaging
-
+from packaging.version import parse
+import pickle
 
 #Makes CRAN dataframe
-#TODO: if newer thing exists download it
-databaseurl = "https://cran.r-project.org/web/packages/packages.rds"
-response = requests.get(databaseurl, allow_redirects=True)
-tmpfile = tempfile.NamedTemporaryFile()
-tmpfile.write(response.content)
+if not os.path.isfile("cranLibrary.rds"):
+	print("Downloading CRAN database")
+	databaseurl = "https://cran.r-project.org/web/packages/packages.rds"
+	response = requests.get(databaseurl, allow_redirects=True)
+	savedDatabase = open("cranLibrary.rds", "wb")
+	savedDatabase.write(response.content)
+	savedDatabase.close()
 
-database = pyreadr.read_r(tmpfile.name)
+savedDatabase = open("cranLibrary.rds", "rb")
+database = pyreadr.read_r(savedDatabase.name)
 database = database[None]
 pandasDatabase = pd.DataFrame(database)
 
 #Makes Bioconductor dictionary
-biocURL = "https://www.bioconductor.org/packages/3.18/bioc/VIEWS"
-response = requests.get(biocURL, allow_redirects=True)
-databaseBIOC = (response.text).split("\n\n")
-packagesBIOC = {}
-for i in range(len(databaseBIOC) - 1):
-	databaseBIOC[i] = databaseBIOC[i].replace("\n        ", " ")
-	databaseBIOC[i] = databaseBIOC[i].split("\n")
-	newPackage = {}
-	for j in range(len(databaseBIOC[i])):
-		databaseBIOC[i][j] = databaseBIOC[i][j].split(": ", 1)
-		newPackage[databaseBIOC[i][j][0]] = databaseBIOC[i][j][1]
-	packagesBIOC[newPackage["Package"]] = newPackage
+if not os.path.isfile("biocLibrary.pkl"):
+	print("Downloading Bioconductor database")
+	biocURL = "https://www.bioconductor.org/packages/3.18/bioc/VIEWS"
+	response = requests.get(biocURL, allow_redirects=True)
+	databaseBIOC = (response.text).split("\n\n")
+	packagesBIOC = {}
+	for i in range(len(databaseBIOC) - 1):
+		databaseBIOC[i] = databaseBIOC[i].replace("\n        ", " ")
+		databaseBIOC[i] = databaseBIOC[i].split("\n")
+		newPackage = {}
+		for j in range(len(databaseBIOC[i])):
+			databaseBIOC[i][j] = databaseBIOC[i][j].split(": ", 1)
+			newPackage[databaseBIOC[i][j][0]] = databaseBIOC[i][j][1]
+		packagesBIOC[newPackage["Package"]] = newPackage
+	
+	with open("biocLibrary.pkl", "wb") as fp:
+		pickle.dump(packagesBIOC, fp)
 
+with open('biocLibrary.pkl', 'rb') as fp:
+    packagesBIOC = pickle.load(fp)
 
+print("Fetching package versions")
 stream = os.popen("singularity run /opt/spack.sif list --format version_json r-*")
 builtin = stream.read()
 stream.close()
 builtin = json.loads(builtin)
+print("Versions successfully fetched!\n")
 packageVersions = {}
 locations = {}
 for i in builtin:
 	packageVersions[i["name"]] = i["versions"]
 	locations[i["name"]] = i["file"]
-
 def importPackage(package, version, type):
-	if version == "":
+	if type == "":
 		version = "latest"
 		type = "latest"
-
 	urlbool = True
 
 	record = pandasDatabase.loc[pandasDatabase['Package'] == package]
@@ -65,7 +74,7 @@ def importPackage(package, version, type):
 	name, description = record["Title"], record["Description"]
 
 	def writeDeps(field):
-		if packagesBIOC.get(field) == None:
+		if record.get(field) == None:
 			return []
 		elif pd.isna(record[field]):
 			return []
@@ -97,24 +106,23 @@ def importPackage(package, version, type):
 	versions = []
 	versions.append(f"""	version("{record['Version']}", sha256="{sha256_hash_latest.hexdigest()}")\n""")
 	if "r-" + package.lower().replace(".","-") in packageVersions.keys():
-		if os.path.isdir("packages/r-" + package.lower().replace(".","-")):
-			return(f"Package {'r-' + package.lower().replace('.','-')} already exists")
-		if type == "any":
+		if os.path.isdir("packages/r-" + package.lower().replace(".","-")) or type == "any":
+			print(f"{packman} package {'r-' + package.lower().replace('.','-')} already exists")
 			return(f"Package {'r-' + package.lower().replace('.','-')} already exists")
 		else:
 
 			if "at least" in type:
 				verNum = type.split("at least ")[1]
-				if packaging.version.parse(verNum) <= packaging.version.parse(packageVersions["r-" + package.lower().replace(".","-")][0]):
-					print(f"Package {'r-' + package.lower().replace('.','-')} already exists")
+				if parse(verNum) <= parse(packageVersions["r-" + package.lower().replace(".","-")][0]):
+					print(f"{packman} package {'r-' + package.lower().replace('.','-')} already exists")
 					return(f"Package {'r-' + package.lower().replace('.','-')} already exists")
 			elif version == "latest":
 				if record["Version"] in packageVersions["r-" + package.lower().replace(".","-")]:
-					print(f"Package {'r-' + package.lower().replace('.','-')} already exists")
+					print(f"{packman} package {'r-' + package.lower().replace('.','-')} already exists")
 					return(f"Package {'r-' + package.lower().replace('.','-')} already exists")
 			else:
 				if type in packageVersions["r-" + package.lower().replace(".","-")]:
-					print(f"Package {'r-' + package.lower().replace('.','-')} already exists")
+					print(f"{packman} package {'r-' + package.lower().replace('.','-')} already exists")
 					return(f"Package {'r-' + package.lower().replace('.','-')} already exists")
 			for i in getVersions(package):
 					versions.append(str(i).replace("    ", "\t") + "\n")
@@ -196,6 +204,7 @@ def packageName(k):
 		importPackage(k, getversion, type)	
 	except:
 		raise Exception(f"Package {'r-' + k.lower().replace('.','-')} not found in database")
+	# print(fullname.lower(), getversion, type)
 	return "r-" + fullname.lower(), getversion, type, False
 
 def getVersions(package):
