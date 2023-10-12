@@ -101,7 +101,7 @@ def writePackage(package):
 		urlbool = False
 	
 	if "r-" + package.lower().replace(".","-") in packageVersions.keys():
-		if record["Version"] in packageVersions["r-" + package.lower().replace(".","-")]:
+		if record["Version"] in packageVersions["r-" + package.lower().replace(".","-")] or os.path.isdir("packages/r-" + package.lower().replace(".","-")):
 			print(f"({'{:.2f}'.format((progress/total) * 100)}%) Package {'r-' + package.lower().replace('.','-')} already exists")
 			return()
 		else:
@@ -119,7 +119,7 @@ def writePackage(package):
 	variants = []
 	for k in dependencies:
 		try:
-			dependencylist.append("\tdepends_on(\"" + packageName(k)[0] + "\", type=(\"build\", \"run\"))\n")
+			dependencylist.append("\tdepends_on(\"" + packageName(k)[0] + packageName(k)[1] + "\", type=(\"build\", \"run\"))\n")
 		except:
 			continue
 	for l in suggests:
@@ -179,6 +179,10 @@ def packageName(k):
 		elif "<=" in version:
 			fullname = k.replace(".","-")
 			getversion = f"@:{version[2:]}"
+			type = version[2:]
+		elif "==" in version:
+			fullname = k.replace(".","-")
+			getversion = f"@={version[2:]}"
 			type = version[2:]
 		else:
 			fullname = k.replace(".","-")
