@@ -25,7 +25,7 @@ database = database[None]
 pandasDatabase = pd.DataFrame(database)
 
 #Makes Bioconductor dictionary
-biocURL = "https://www.bioconductor.org/packages/3.18/bioc/VIEWS"
+biocURL = "https://www.bioconductor.org/packages/3.17/bioc/VIEWS"
 biocHead = requests.head(databaseurl)
 biocWebTime = email.utils.parsedate_to_datetime(biocHead.headers.get('last-modified')).replace(tzinfo=None)
 biocLocalTime = datetime.datetime.fromtimestamp(os.path.getmtime("biocLibrary.pkl"))
@@ -77,6 +77,8 @@ def importPackage(package, version, type):
 		record = record.to_dict('records')[0]
 		packman = "cran"
 
+	if version == "latest":
+		version = record["Version"]
 	name, description = record["Title"], record["Description"]
 
 	def writeDeps(field):
