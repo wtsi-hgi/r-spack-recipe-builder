@@ -97,13 +97,15 @@ def importPackage(package, version, type):
 		packageURL = record["URL"].split(",")[0].split(" ")[0].split("\n")[0]
 	except:
 		urlbool = False
+	if version == "":
+		version = record["Version"]
 	
 	if packman == "cran":
 		baseurl_version = f"https://cran.r-project.org/src/contrib/Archive/{package}/{package}_{version}.tar.gz"
 		baseurl_latest = f"https://cran.r-project.org/src/contrib/{package}_{record['Version']}.tar.gz"
 	if packman == "bioc":
 		baseurl_latest = f"https://bioconductor.org/packages/release/bioc/src/contrib/{package}_{version}.tar.gz"
-	elif type != "latest":
+	elif type != "latest" and type != "any":
 		source = requests.get(baseurl_version, allow_redirects=True)
 		sha256_hash_version = hashlib.sha256()
 		sha256_hash_version.update(source.content)
@@ -113,6 +115,8 @@ def importPackage(package, version, type):
 
 	versions = []
 	versions.append(f"""	version("{record['Version']}", sha256="{sha256_hash_latest.hexdigest()}")\n""")
+	if type != "latest" and type != "any":
+		versions.append(f"""	version("{version}", sha256="{sha256_hash_version.hexdigest()}")\n""")
 	if "r-" + package.lower().replace(".","-") in packageVersions.keys():
 		if os.path.isdir("packages/r-" + package.lower().replace(".","-")) or type == "any":
 			print(f"{packman} package {'r-' + package.lower().replace('.','-')} already exists")
