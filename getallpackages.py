@@ -12,7 +12,7 @@ import email.utils, datetime
 databaseurl = "https://cran.r-project.org/web/packages/packages.rds"
 cranHead = requests.head(databaseurl)
 cranWebTime = email.utils.parsedate_to_datetime(cranHead.headers.get('last-modified')).replace(tzinfo=None)
-cranLocalTime = datetime.datetime.fromtimestamp(os.path.getmtime("cranLibrary.rds"))
+cranLocalTime = datetime.datetime.fromtimestamp(os.path.getmtime("cranLibrary.rds")) if os.path.isfile("cranLibrary.rds") else datetime.datetime.fromtimestamp(0)
 if not os.path.isfile("cranLibrary.rds") or cranWebTime > cranLocalTime:
 	print("Downloading CRAN database")
 	response = requests.get(databaseurl, allow_redirects=True)
@@ -25,11 +25,11 @@ database = database[None]
 pandasDatabase = pd.DataFrame(database)
 
 #Makes Bioconductor dictionary
-biocURL = "https://www.bioconductor.org/packages/3.18/bioc/VIEWS"
+biocURL = "https://www.bioconductor.org/packages/3.17/bioc/VIEWS"
 biocHead = requests.head(databaseurl)
 biocWebTime = email.utils.parsedate_to_datetime(biocHead.headers.get('last-modified')).replace(tzinfo=None)
-biocLocalTime = datetime.datetime.fromtimestamp(os.path.getmtime("biocLibrary.pkl"))
-if not os.path.isfile("biocLibrary.pkl"):
+biocLocalTime = datetime.datetime.fromtimestamp(os.path.getmtime("biocLibrary.pkl")) if os.path.isfile("biocLibrary.pkl") else datetime.datetime.fromtimestamp(0)
+if not os.path.isfile("biocLibrary.pkl") or biocWebTime > biocLocalTime:
 	print("Downloading Bioconductor database")
 	response = requests.get(biocURL, allow_redirects=True)
 	databaseBIOC = (response.text).split("\n\n")
@@ -48,6 +48,9 @@ if not os.path.isfile("biocLibrary.pkl"):
 
 with open('biocLibrary.pkl', 'rb') as fp:
 	packagesBIOC = pickle.load(fp)
+
+if not os.path.isdir("packages"):
+	os.mkdir("packages")
 
 print("Fetching package versions")
 stream = os.popen("singularity run /opt/spack.sif list --format version_json r-*")
@@ -108,8 +111,12 @@ def writePackage(package):
 			pass
 	else:
 		pass
-
-	baseurl_latest = f"https://cran.r-project.org/src/contrib/{package}_{record['Version']}.tar.gz"
+	
+	if packman == "cran":
+		baseurl_latest = f"https://cran.r-project.org/src/contrib/{package}_{record['Version']}.tar.gz"
+	elif packman == "bioc":
+		baseurl_latest = f"https://bioconductor.org/packages/release/bioc/src/contrib/{package}_{record['Version']}.tar.gz"
+	print(baseurl_latest)
 	latest = requests.get(baseurl_latest, allow_redirects=True)
 	sha256_hash_latest = hashlib.sha256()
 	sha256_hash_latest.update(latest.content)
