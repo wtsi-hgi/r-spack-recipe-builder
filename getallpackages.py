@@ -1,5 +1,4 @@
 import hashlib
-import time
 import requests
 import pyreadr
 import pandas as pd
@@ -7,6 +6,7 @@ import os
 import json
 import pickle
 import email.utils, datetime
+from bs4 import BeautifulSoup as bs
 
 #Makes CRAN dataframe
 databaseurl = "https://cran.r-project.org/web/packages/packages.rds"
@@ -116,12 +116,25 @@ def writePackage(package):
 		baseurl_latest = f"https://cran.r-project.org/src/contrib/{package}_{record['Version']}.tar.gz"
 	elif packman == "bioc":
 		baseurl_latest = f"https://bioconductor.org/packages/release/bioc/src/contrib/{package}_{record['Version']}.tar.gz"
-	print(baseurl_latest)
+	
 	latest = requests.get(baseurl_latest, allow_redirects=True)
 	sha256_hash_latest = hashlib.sha256()
 	sha256_hash_latest.update(latest.content)
-	versions = (f"""	version("{record['Version']}", sha256="{sha256_hash_latest.hexdigest()}")\n""")
-
+	versions = []
+	if packman == "cran":
+		archiveURL = f"https://cran.r-project.org/src/contrib/Archive/{package}"
+		archive = requests.get(archiveURL, allow_redirects=True)
+		soup = bs(archive.content, "html.parser")
+		for i in soup.find_all("a"):
+			if i.get("href") != None:
+				if i.get("href").endswith(".tar.gz"):
+					addVersion = (i.get("href").split("/")[-1].split("_")[1].split(".tar.gz")[0])
+					downloadVersion = requests.get(f"https://cran.r-project.org/src/contrib/Archive/{package}/{package}_{addVersion}.tar.gz", allow_redirects=True)
+					sha256_hash_version = hashlib.sha256()
+					sha256_hash_version.update(downloadVersion.content)
+					versions.append(f"""	version("{addVersion}", sha256="{sha256_hash_version.hexdigest()}")\n""")
+	versions.append(f"""	version("{record['Version']}", sha256="{sha256_hash_latest.hexdigest()}")\n""")
+	versions.reverse()
 	dependencylist = []
 	variants = []
 	for k in dependencies:
@@ -219,5 +232,5 @@ def packageLoop(lib, libname):
 	print(f"Finished creating {libname} packages!")
 
 
-packageLoop(packagesBIOC.keys(), "Bioconductor")
+# packageLoop(packagesBIOC.keys(), "Bioconductor")
 packageLoop(pandasDatabase["Package"], "CRAN")
