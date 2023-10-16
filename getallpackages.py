@@ -1,4 +1,5 @@
 import hashlib
+import time
 import requests
 import pyreadr
 import pandas as pd
@@ -228,7 +229,7 @@ def packageLoop(lib, libname):
 	total = len(lib)
 	for i in lib:
 		writePackage(i)
-		#time.sleep(1)
+		time.sleep(5)
 	print(f"Finished creating {libname} packages!")
 
 
