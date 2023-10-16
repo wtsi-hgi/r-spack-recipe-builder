@@ -232,5 +232,5 @@ def packageLoop(lib, libname):
 	print(f"Finished creating {libname} packages!")
 
 
-# packageLoop(packagesBIOC.keys(), "Bioconductor")
 packageLoop(pandasDatabase["Package"], "CRAN")
+packageLoop(packagesBIOC.keys(), "Bioconductor")
