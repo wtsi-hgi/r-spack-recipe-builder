@@ -26,7 +26,7 @@ database = database[None]
 pandasDatabase = pd.DataFrame(database)
 
 #Makes Bioconductor dictionary
-biocURL = "https://www.bioconductor.org/packages/3.17/bioc/VIEWS"
+biocURL = "https://www.bioconductor.org/packages/release/bioc/VIEWS"
 biocHead = requests.head(databaseurl)
 biocWebTime = email.utils.parsedate_to_datetime(biocHead.headers.get('last-modified')).replace(tzinfo=None)
 biocLocalTime = datetime.datetime.fromtimestamp(os.path.getmtime("biocLibrary.pkl")) if os.path.isfile("biocLibrary.pkl") else datetime.datetime.fromtimestamp(0)
