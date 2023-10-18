@@ -1,4 +1,5 @@
 import hashlib
+import shutil
 import time
 import requests
 import pyreadr
@@ -7,7 +8,16 @@ import os
 import json
 import pickle
 import email.utils, datetime
-from bs4 import BeautifulSoup as bs
+import subprocess
+
+print("Welcome to the Spack recipe creator for R!\n [+] means a package is freshly created\n [*] means a package is updated\n [~] means a package is already up to date\n")
+# Get all repos
+cmd = subprocess.run(["/opt/spack/bin/spack", "repo", "list"], capture_output=True)
+repoDirs = cmd.stdout.decode("utf-8").strip()
+splittedDirs = repoDirs.split("\n")
+actualDirs = []
+for i in splittedDirs:
+	actualDirs.append(i.split(" ", 1)[1].strip())
 
 #Makes CRAN dataframe
 databaseurl = "https://cran.r-project.org/web/packages/packages.rds"
@@ -53,17 +63,15 @@ with open('biocLibrary.pkl', 'rb') as fp:
 if not os.path.isdir("packages"):
 	os.mkdir("packages")
 
-print("Fetching package versions")
-stream = os.popen("singularity run /opt/spack.sif list --format version_json r-*")
+print("Fetching package versions, this could take a while...")
+stream = os.popen("/opt/spack/bin/spack list --format version_json r-*")
 builtin = stream.read()
 stream.close()
 builtin = json.loads(builtin)
 print("Versions successfully fetched!\n")
 packageVersions = {}
-locations = {}
 for i in builtin:
 	packageVersions[i["name"]] = i["versions"]
-	locations[i["name"]] = i["file"]
 
 progress = 0
 total = 0
@@ -71,7 +79,9 @@ total = 0
 def writePackage(package):
 	global progress, total
 	progress += 1
-	mode = "created"
+	mode = "+"
+	location = "ERROR"
+	spaces = " " * (6 - len(str('{:.2f}'.format((progress/total) * 100))))
 
 	record = pandasDatabase.loc[pandasDatabase['Package'] == package]
 	urlbool = True
@@ -107,36 +117,31 @@ def writePackage(package):
 	
 	if "r-" + package.lower().replace(".","-") in packageVersions.keys():
 		if record["Version"] in packageVersions["r-" + package.lower().replace(".","-")]:
-			print(f"({'{:.2f}'.format((progress/total) * 100)}%) Package {'r-' + package.lower().replace('.','-')} already exists")
-			return()
+			
+			print(f"({'{:.2f}'.format((progress/total) * 100)}%){spaces}[~] {packman} package {'r-' + package.lower().replace('.','-')}")
+			return
 		else:
-			pass
+			mode = "*"
+			for i in actualDirs:
+				if os.path.isfile(i + "/packages/r-" + package.lower().replace(".","-") + "/package.py"):
+					location = i
+					break
+			if location != os.path.dirname(os.path.realpath(__file__)):
+				shutil.copytree(location + "/packages/r-" + package.lower().replace(".","-"), "packages/r-" + package.lower().replace(".","-"))
+	if not os.path.isdir("packages/r-" + package.lower().replace(".","-")):
+		os.makedirs("packages/r-" + package.lower().replace(".","-"))
+
+	if "MD5sum" in record.keys():
+		versions = f"""\tversion("{record['Version']}", md5="{record['MD5sum']}")\n"""
 	else:
-		pass
-	
-	if packman == "cran":
-		baseurl_latest = f"https://cran.r-project.org/src/contrib/{package}_{record['Version']}.tar.gz"
-	elif packman == "bioc":
-		baseurl_latest = f"https://bioconductor.org/packages/release/bioc/src/contrib/{package}_{record['Version']}.tar.gz"
-	
-	latest = requests.get(baseurl_latest, allow_redirects=True)
-	sha256_hash_latest = hashlib.sha256()
-	sha256_hash_latest.update(latest.content)
-	versions = []
-	if packman == "cran":
-		archiveURL = f"https://cran.r-project.org/src/contrib/Archive/{package}"
-		archive = requests.get(archiveURL, allow_redirects=True)
-		soup = bs(archive.content, "html.parser")
-		for i in soup.find_all("a"):
-			if i.get("href") != None:
-				if i.get("href").endswith(".tar.gz"):
-					addVersion = (i.get("href").split("/")[-1].split("_")[1].split(".tar.gz")[0])
-					downloadVersion = requests.get(f"https://cran.r-project.org/src/contrib/Archive/{package}/{package}_{addVersion}.tar.gz", allow_redirects=True)
-					sha256_hash_version = hashlib.sha256()
-					sha256_hash_version.update(downloadVersion.content)
-					versions.append(f"""	version("{addVersion}", sha256="{sha256_hash_version.hexdigest()}")\n""")
-	versions.append(f"""	version("{record['Version']}", sha256="{sha256_hash_latest.hexdigest()}")\n""")
-	versions.reverse()
+		if packman == "cran":
+			baseurl = f"https://cran.r-project.org/src/contrib/{package}_{record['Version']}.tar.gz"
+		elif packman == "bioc":
+			baseurl = f"https://bioconductor.org/packages/release/bioc/src/contrib/{package}_{record['Version']}.tar.gz"
+		latest = requests.get(baseurl, allow_redirects=True)
+		sha256_hash_latest = hashlib.sha256()
+		sha256_hash_latest.update(latest.content)
+		versions = f"""\tversion("{record['Version']}", sha256="{sha256_hash_latest.hexdigest()}")\n"""
 	dependencylist = []
 	variants = []
 	for k in dependencies:
@@ -159,13 +164,9 @@ def writePackage(package):
 		classname[i] = classname[i].capitalize()
 	classname = "".join(classname)
 
-	if not os.path.isdir("packages/r-" + package.lower().replace(".","-")):
-		os.makedirs("packages/r-" + package.lower().replace(".","-"))
-	else:
-		mode = "updated"
-
-	f = open("packages/r-" + package.lower().replace(".","-") + "/package.py", "w")
-	f.write(f"""# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+	if mode == "+":
+		backslashN = "\n\t"
+		header = f"""# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -179,17 +180,30 @@ class R{classname}(RPackage):
 	{description}
 	\"\"\"
 	
-	{f'homepage = "{packageURL}"' if urlbool and str(packageURL) != "nan" else ''}
-	{packman} = "{package}"
+	{f'homepage = "{packageURL}"{backslashN}' if urlbool and str(packageURL) != "nan" else ''}{packman} = "{package}" """
+		footer = ""
+	else:
+		f = open("packages/r-" + package.lower().replace(".","-") + "/package.py", "r")
+		lines = f.readlines()
+		firstline = 0
+		for i in range(len(lines)):
+			lines[i] = lines[i].replace("    ", "\t")
+			if "\tversion(" in lines[i]:
+				firstline = i
+				break
+		header = "".join(lines[:firstline]).strip()
+		lastline = len(lines)
+		for j in range(len(lines)):
+			lines[j] = lines[j].replace("    ", "\t")
+			if "\tdepends_on(" in lines[j] or "\tvariant(" in lines[j] or "\tversion(" in lines[j]:
+				for k in range(3):
+					if "\")" in lines[j]:
+						lastline = j + k + 1
+						break
+		footer = "".join(lines[lastline:])
 
-{"".join(versions)}
-
-{"".join(dependencylist)}
-{"".join(variants)}
-""")
-
-	f.close()
-	print(f"({'{:.2f}'.format((progress/total) * 100)}%) Package {'r-' + package.lower().replace('.','-')} has been {mode}!")
+	writeRecipe(header, footer, versions, dependencylist, variants, package)
+	print(f"({'{:.2f}'.format((progress/total) * 100)}%){spaces}[{mode}] {packman} package {'r-' + package.lower().replace('.','-')}")
 
 def packageName(k):
 	if "(" in k:
@@ -228,13 +242,23 @@ def packageName(k):
 
 def packageLoop(lib, libname):
 	print(f"Creating {libname} packages...")
+	time.sleep(2)
 	global progress, total
 	progress = 0
 	total = len(lib)
 	for i in lib:
 		writePackage(i)
-		time.sleep(5)
 	print(f"Finished creating {libname} packages!")
+	time.sleep(2)
+
+def writeRecipe(header, footer, versions, depends, variants, package):
+	f = open("packages/r-" + package.lower().replace(".","-") + "/package.py", "w")
+	f.write(f"""{header}
+
+{"".join(versions)}
+{"".join(depends)}
+{"".join(variants)}{footer}""")
+	f.close()
 
 
 packageLoop(pandasDatabase["Package"], "CRAN")
