@@ -71,6 +71,7 @@ total = 0
 def writePackage(package):
 	global progress, total
 	progress += 1
+	mode = "created"
 
 	record = pandasDatabase.loc[pandasDatabase['Package'] == package]
 	urlbool = True
@@ -158,7 +159,10 @@ def writePackage(package):
 		classname[i] = classname[i].capitalize()
 	classname = "".join(classname)
 
-	os.makedirs("packages/r-" + package.lower().replace(".","-"))
+	if not os.path.isdir("packages/r-" + package.lower().replace(".","-")):
+		os.makedirs("packages/r-" + package.lower().replace(".","-"))
+	else:
+		mode = "updated"
 
 	f = open("packages/r-" + package.lower().replace(".","-") + "/package.py", "w")
 	f.write(f"""# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
@@ -185,7 +189,7 @@ class R{classname}(RPackage):
 """)
 
 	f.close()
-	print(f"({'{:.2f}'.format((progress/total) * 100)}%) Package {'r-' + package.lower().replace('.','-')} has been created!")
+	print(f"({'{:.2f}'.format((progress/total) * 100)}%) Package {'r-' + package.lower().replace('.','-')} has been {mode}!")
 
 def packageName(k):
 	if "(" in k:
