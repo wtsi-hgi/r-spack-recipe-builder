@@ -105,7 +105,7 @@ def writePackage(package):
 		urlbool = False
 	
 	if "r-" + package.lower().replace(".","-") in packageVersions.keys():
-		if record["Version"] in packageVersions["r-" + package.lower().replace(".","-")] or os.path.isdir("packages/r-" + package.lower().replace(".","-")):
+		if record["Version"] in packageVersions["r-" + package.lower().replace(".","-")]:
 			print(f"({'{:.2f}'.format((progress/total) * 100)}%) Package {'r-' + package.lower().replace('.','-')} already exists")
 			return()
 		else:
