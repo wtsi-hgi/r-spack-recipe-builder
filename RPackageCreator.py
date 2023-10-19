@@ -223,37 +223,6 @@ class R{classname}(RPackage):
 
 	return header, footer
 
-def writePackage(package):
-	packageVersions = getExistingVersions()
-	spaces = " " * (6 - len(str('{:.2f}'.format((progress/total) * 100))))
-
-	record, packman = whichPackMan(package)
-	
-	name, description = record["Title"], record["Description"].replace("\\", "")
-
-	dependencies = writeDeps(record, "Depends")
-	dependencies += writeDeps(record, "Imports")
-	dependencies += writeDeps(record, "LinkingTo")
-	x, suggests = writeDeps(record, "Suggests", package)
-	dependencies += x
-	
-
-	url, urlbool = getURL(record)
-
-	try:
-		mode = getExistingFiles(package, record, packman, packageVersions)
-	except:
-		return
-
-	version = getChecksum(record, packman, package)
-
-	classname = getClassname(package)
-	
-	header, footer = getTemplate(mode, package, packman, name, description, url, urlbool, classname)
-
-	writeRecipe(header, footer, version, dependencies, suggests, package)
-	print(f"({'{:.2f}'.format((progress/total) * 100)}%){spaces}[{mode}] {packman} package {'r-' + package.lower().replace('.','-')}")
-
 def packageName(k):
 	if "(" in k:
 		version = k.split("(")
@@ -296,7 +265,7 @@ def packageLoop(lib, libname):
 	progress = 0
 	total = len(lib)
 	for i in lib:
-		writePackage(i)
+		get(i)
 	print(f"Finished creating {libname} packages!")
 	time.sleep(2)
 
@@ -309,6 +278,36 @@ def writeRecipe(header, footer, versions, depends, variants, package):
 {"".join(variants)}{footer}""")
 	f.close()
 
+def get(package):
+	packageVersions = getExistingVersions()
+	spaces = " " * (6 - len(str('{:.2f}'.format((progress/total) * 100))))
+
+	record, packman = whichPackMan(package)
+	
+	name, description = record["Title"], record["Description"].replace("\\", "")
+
+	dependencies = writeDeps(record, "Depends")
+	dependencies += writeDeps(record, "Imports")
+	dependencies += writeDeps(record, "LinkingTo")
+	x, suggests = writeDeps(record, "Suggests", package)
+	dependencies += x
+	
+
+	url, urlbool = getURL(record)
+
+	try:
+		mode = getExistingFiles(package, record, packman, packageVersions)
+	except:
+		return
+
+	version = getChecksum(record, packman, package)
+
+	classname = getClassname(package)
+	
+	header, footer = getTemplate(mode, package, packman, name, description, url, urlbool, classname)
+
+	writeRecipe(header, footer, version, dependencies, suggests, package)
+	print(f"({'{:.2f}'.format((progress/total) * 100)}%){spaces}[{mode}] {packman} package {'r-' + package.lower().replace('.','-')}")
 
 packageLoop(cranGet()["Package"], "CRAN")
 packageLoop(biocGet().keys(), "Bioconductor")
