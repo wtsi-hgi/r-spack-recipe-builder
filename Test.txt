@@ -1,0 +1,347 @@
+Package: a4
+Version: 1.48.0
+Depends: a4Base, a4Preproc, a4Classif, a4Core, a4Reporting
+Suggests: MLP, nlcv, ALL, Cairo, Rgraphviz, GOstats
+License: GPL-3
+MD5sum: 5d945210d12e19d845e8949ef53b9d43
+NeedsCompilation: no
+Title: Automated Affymetrix Array Analysis Umbrella Package
+Description: Umbrella package is available for the entire Automated
+        Affymetrix Array Analysis suite of package.
+biocViews: Microarray
+Author: Willem Talloen [aut], Tobias Verbeke [aut], Laure Cougnaud
+        [cre]
+Maintainer: Laure Cougnaud <laure.cougnaud@openanalytics.eu>
+git_url: https://git.bioconductor.org/packages/a4
+git_branch: RELEASE_3_17
+git_last_commit: 89ef9f4
+git_last_commit_date: 2023-04-25
+Date/Publication: 2023-04-25
+source.ver: src/contrib/a4_1.48.0.tar.gz
+win.binary.ver: bin/windows/contrib/4.3/a4_1.48.0.zip
+mac.binary.big-sur-x86_64.ver:
+        bin/macosx/big-sur-x86_64/contrib/4.3/a4_1.48.0.tgz
+mac.binary.big-sur-arm64.ver:
+        bin/macosx/big-sur-arm64/contrib/4.3/a4_1.48.0.tgz
+vignettes: vignettes/a4/inst/doc/a4vignette.pdf
+vignetteTitles: a4vignette
+hasREADME: FALSE
+hasNEWS: TRUE
+hasINSTALL: FALSE
+hasLICENSE: FALSE
+Rfiles: vignettes/a4/inst/doc/a4vignette.R
+dependencyCount: 86
+
+Package: a4Base
+Version: 1.48.0
+Depends: a4Preproc, a4Core
+Imports: methods, graphics, grid, Biobase, annaffy, mpm, genefilter,
+        limma, multtest, glmnet, gplots
+Suggests: Cairo, ALL, hgu95av2.db, nlcv
+Enhances: gridSVG, JavaGD
+License: GPL-3
+MD5sum: b4727840ebfa0c2fdb548b54320e4e39
+NeedsCompilation: no
+Title: Automated Affymetrix Array Analysis Base Package
+Description: Base utility functions are available for the Automated
+        Affymetrix Array Analysis set of packages.
+biocViews: Microarray
+Author: Willem Talloen [aut], Tine Casneuf [aut], An De Bondt [aut],
+        Steven Osselaer [aut], Hinrich Goehlmann [aut], Willem
+        Ligtenberg [aut], Tobias Verbeke [aut], Laure Cougnaud [cre]
+Maintainer: Laure Cougnaud <laure.cougnaud@openanalytics.eu>
+git_url: https://git.bioconductor.org/packages/a4Base
+git_branch: RELEASE_3_17
+git_last_commit: 26d5793
+git_last_commit_date: 2023-04-25
+Date/Publication: 2023-04-25
+source.ver: src/contrib/a4Base_1.48.0.tar.gz
+win.binary.ver: bin/windows/contrib/4.3/a4Base_1.48.0.zip
+mac.binary.big-sur-x86_64.ver:
+        bin/macosx/big-sur-x86_64/contrib/4.3/a4Base_1.48.0.tgz
+mac.binary.big-sur-arm64.ver:
+        bin/macosx/big-sur-arm64/contrib/4.3/a4Base_1.48.0.tgz
+hasREADME: FALSE
+hasNEWS: TRUE
+hasINSTALL: FALSE
+hasLICENSE: FALSE
+dependsOnMe: a4
+suggestsMe: epimutacions
+dependencyCount: 77
+
+Package: a4Classif
+Version: 1.48.0
+Depends: a4Core, a4Preproc
+Imports: methods, Biobase, ROCR, pamr, glmnet, varSelRF, utils,
+        graphics, stats
+Suggests: ALL, hgu95av2.db, knitr, rmarkdown
+License: GPL-3
+MD5sum: 44dc4f5d280303effaedb954307fb336
+NeedsCompilation: no
+Title: Automated Affymetrix Array Analysis Classification Package
+Description: Functionalities for classification of Affymetrix
+        microarray data, integrating within the Automated Affymetrix
+        Array Analysis set of packages.
+biocViews: Microarray, GeneExpression, Classification
+Author: Willem Talloen [aut], Tobias Verbeke [aut], Laure Cougnaud
+        [cre]
+Maintainer: Laure Cougnaud <laure.cougnaud@openanalytics.eu>
+VignetteBuilder: knitr
+git_url: https://git.bioconductor.org/packages/a4Classif
+git_branch: RELEASE_3_17
+git_last_commit: 1e2ff90
+git_last_commit_date: 2023-04-25
+Date/Publication: 2023-04-25
+source.ver: src/contrib/a4Classif_1.48.0.tar.gz
+win.binary.ver: bin/windows/contrib/4.3/a4Classif_1.48.0.zip
+mac.binary.big-sur-x86_64.ver:
+        bin/macosx/big-sur-x86_64/contrib/4.3/a4Classif_1.48.0.tgz
+mac.binary.big-sur-arm64.ver:
+        bin/macosx/big-sur-arm64/contrib/4.3/a4Classif_1.48.0.tgz
+vignettes: vignettes/a4Classif/inst/doc/a4Classif-vignette.html
+vignetteTitles: a4Classif package
+hasREADME: FALSE
+hasNEWS: TRUE
+hasINSTALL: FALSE
+hasLICENSE: FALSE
+Rfiles: vignettes/a4Classif/inst/doc/a4Classif-vignette.R
+dependsOnMe: a4
+dependencyCount: 32
+
+Package: a4Core
+Version: 1.48.0
+Imports: Biobase, glmnet, methods, stats
+Suggests: knitr, rmarkdown
+License: GPL-3
+MD5sum: 5f0cb8b9e0ac23f1cd176b17c4ef84aa
+NeedsCompilation: no
+Title: Automated Affymetrix Array Analysis Core Package
+Description: Utility functions for the Automated Affymetrix Array
+        Analysis set of packages.
+biocViews: Microarray, Classification
+Author: Willem Talloen [aut], Tobias Verbeke [aut], Laure Cougnaud
+        [cre]
+Maintainer: Laure Cougnaud <laure.cougnaud@openanalytics.eu>
+VignetteBuilder: knitr
+git_url: https://git.bioconductor.org/packages/a4Core
+git_branch: RELEASE_3_17
+git_last_commit: 3dd09f0
+git_last_commit_date: 2023-04-25
+Date/Publication: 2023-04-25
+source.ver: src/contrib/a4Core_1.48.0.tar.gz
+win.binary.ver: bin/windows/contrib/4.3/a4Core_1.48.0.zip
+mac.binary.big-sur-x86_64.ver:
+        bin/macosx/big-sur-x86_64/contrib/4.3/a4Core_1.48.0.tgz
+mac.binary.big-sur-arm64.ver:
+        bin/macosx/big-sur-arm64/contrib/4.3/a4Core_1.48.0.tgz
+vignettes: vignettes/a4Core/inst/doc/a4Core-vignette.html
+vignetteTitles: a4Core package
+hasREADME: FALSE
+hasNEWS: TRUE
+hasINSTALL: FALSE
+hasLICENSE: FALSE
+Rfiles: vignettes/a4Core/inst/doc/a4Core-vignette.R
+dependsOnMe: a4, a4Base, a4Classif, nlcv
+dependencyCount: 19
+
+Package: a4Preproc
+Version: 1.48.0
+Imports: BiocGenerics, Biobase
+Suggests: ALL, hgu95av2.db, knitr, rmarkdown
+License: GPL-3
+MD5sum: 268368ed5be41d5484b7b5967e2fa716
+NeedsCompilation: no
+Title: Automated Affymetrix Array Analysis Preprocessing Package
+Description: Utility functions to pre-process data for the Automated
+        Affymetrix Array Analysis set of packages.
+biocViews: Microarray, Preprocessing
+Author: Willem Talloen [aut], Tobias Verbeke [aut], Laure Cougnaud
+        [cre]
+Maintainer: Laure Cougnaud <laure.cougnaud@openanalytics.eu>
+VignetteBuilder: knitr
+git_url: https://git.bioconductor.org/packages/a4Preproc
+git_branch: RELEASE_3_17
+git_last_commit: d3bf8b8
+git_last_commit_date: 2023-04-25
+Date/Publication: 2023-04-25
+source.ver: src/contrib/a4Preproc_1.48.0.tar.gz
+win.binary.ver: bin/windows/contrib/4.3/a4Preproc_1.48.0.zip
+mac.binary.big-sur-x86_64.ver:
+        bin/macosx/big-sur-x86_64/contrib/4.3/a4Preproc_1.48.0.tgz
+mac.binary.big-sur-arm64.ver:
+        bin/macosx/big-sur-arm64/contrib/4.3/a4Preproc_1.48.0.tgz
+vignettes: vignettes/a4Preproc/inst/doc/a4Preproc-vignette.html
+vignetteTitles: a4Preproc package
+hasREADME: FALSE
+hasNEWS: TRUE
+hasINSTALL: FALSE
+hasLICENSE: FALSE
+Rfiles: vignettes/a4Preproc/inst/doc/a4Preproc-vignette.R
+dependsOnMe: a4, a4Base, a4Classif
+suggestsMe: graphite
+dependencyCount: 6
+
+Package: a4Reporting
+Version: 1.48.0
+Imports: methods, xtable
+Suggests: knitr, rmarkdown
+License: GPL-3
+MD5sum: aace068e89a5238b844b694e81ef185b
+NeedsCompilation: no
+Title: Automated Affymetrix Array Analysis Reporting Package
+Description: Utility functions to facilitate the reporting of the
+        Automated Affymetrix Array Analysis Reporting set of packages.
+biocViews: Microarray
+Author: Tobias Verbeke [aut], Laure Cougnaud [cre]
+Maintainer: Laure Cougnaud <laure.cougnaud@openanalytics.eu>
+VignetteBuilder: knitr
+git_url: https://git.bioconductor.org/packages/a4Reporting
+git_branch: RELEASE_3_17
+git_last_commit: de8c4b7
+git_last_commit_date: 2023-04-25
+Date/Publication: 2023-04-25
+source.ver: src/contrib/a4Reporting_1.48.0.tar.gz
+win.binary.ver: bin/windows/contrib/4.3/a4Reporting_1.48.0.zip
+mac.binary.big-sur-x86_64.ver:
+        bin/macosx/big-sur-x86_64/contrib/4.3/a4Reporting_1.48.0.tgz
+mac.binary.big-sur-arm64.ver:
+        bin/macosx/big-sur-arm64/contrib/4.3/a4Reporting_1.48.0.tgz
+vignettes: vignettes/a4Reporting/inst/doc/a4reporting-vignette.html
+vignetteTitles: a4Reporting package
+hasREADME: FALSE
+hasNEWS: TRUE
+hasINSTALL: FALSE
+hasLICENSE: FALSE
+Rfiles: vignettes/a4Reporting/inst/doc/a4reporting-vignette.R
+dependsOnMe: a4
+dependencyCount: 4
+
+Package: ABarray
+Version: 1.68.0
+Imports: Biobase, graphics, grDevices, methods, multtest, stats, tcltk,
+        utils
+Suggests: limma, LPE
+License: GPL
+MD5sum: c2ae9c221317ee561584dec59cd0ed37
+NeedsCompilation: no
+Title: Microarray QA and statistical data analysis for Applied
+        Biosystems Genome Survey Microrarray (AB1700) gene expression
+        data.
+Description: Automated pipline to perform gene expression analysis for
+        Applied Biosystems Genome Survey Microarray (AB1700) data
+        format. Functions include data preprocessing, filtering,
+        control probe analysis, statistical analysis in one single
+        function. A GUI interface is also provided. The raw data,
+        processed data, graphics output and statistical results are
+        organized into folders according to the analysis settings used.
+biocViews: Microarray, OneChannel, Preprocessing
+Author: Yongming Andrew Sun
+Maintainer: Yongming Andrew Sun <sunya@appliedbiosystems.com>
+git_url: https://git.bioconductor.org/packages/ABarray
+git_branch: RELEASE_3_17
+git_last_commit: 7ffc3cf
+git_last_commit_date: 2023-04-25
+Date/Publication: 2023-04-25
+source.ver: src/contrib/ABarray_1.68.0.tar.gz
+win.binary.ver: bin/windows/contrib/4.3/ABarray_1.68.0.zip
+mac.binary.big-sur-x86_64.ver:
+        bin/macosx/big-sur-x86_64/contrib/4.3/ABarray_1.68.0.tgz
+mac.binary.big-sur-arm64.ver:
+        bin/macosx/big-sur-arm64/contrib/4.3/ABarray_1.68.0.tgz
+vignettes: vignettes/ABarray/inst/doc/ABarray.pdf,
+        vignettes/ABarray/inst/doc/ABarrayGUI.pdf
+vignetteTitles: ABarray gene expression, ABarray gene expression GUI
+        interface
+hasREADME: FALSE
+hasNEWS: FALSE
+hasINSTALL: FALSE
+hasLICENSE: FALSE
+dependencyCount: 16
+
+Package: abseqR
+Version: 1.18.0
+Depends: R (>= 3.5.0)
+Imports: ggplot2, RColorBrewer, circlize, reshape2, VennDiagram, plyr,
+        flexdashboard, BiocParallel (>= 1.1.25), png, grid, gridExtra,
+        rmarkdown, knitr, vegan, ggcorrplot, ggdendro, plotly,
+        BiocStyle, stringr, utils, methods, grDevices, stats, tools,
+        graphics
+Suggests: testthat
+License: GPL-3 | file LICENSE
+MD5sum: aef896b0c639d90e59a64148f07587c5
+NeedsCompilation: no
+Title: Reporting and data analysis functionalities for Rep-Seq datasets
+        of antibody libraries
+Description: AbSeq is a comprehensive bioinformatic pipeline for the
+        analysis of sequencing datasets generated from antibody
+        libraries and abseqR is one of its packages. abseqR empowers
+        the users of abseqPy (https://github.com/malhamdoosh/abseqPy)
+        with plotting and reporting capabilities and allows them to
+        generate interactive HTML reports for the convenience of
+        viewing and sharing with other researchers. Additionally,
+        abseqR extends abseqPy to compare multiple repertoire analyses
+        and perform further downstream analysis on its output.
+biocViews: Sequencing, Visualization, ReportWriting, QualityControl,
+        MultipleComparison
+Author: JiaHong Fong [cre, aut], Monther Alhamdoosh [aut]
+Maintainer: JiaHong Fong <jiahfong@gmail.com>
+URL: https://github.com/malhamdoosh/abseqR
+SystemRequirements: pandoc (>= 1.19.2.1)
+VignetteBuilder: knitr
+BugReports: https://github.com/malhamdoosh/abseqR/issues
+git_url: https://git.bioconductor.org/packages/abseqR
+git_branch: RELEASE_3_17
+git_last_commit: c325db9
+git_last_commit_date: 2023-04-25
+Date/Publication: 2023-04-25
+source.ver: src/contrib/abseqR_1.18.0.tar.gz
+win.binary.ver: bin/windows/contrib/4.3/abseqR_1.18.0.zip
+mac.binary.big-sur-x86_64.ver:
+        bin/macosx/big-sur-x86_64/contrib/4.3/abseqR_1.18.0.tgz
+mac.binary.big-sur-arm64.ver:
+        bin/macosx/big-sur-arm64/contrib/4.3/abseqR_1.18.0.tgz
+vignettes: vignettes/abseqR/inst/doc/abseqR.pdf
+vignetteTitles: Introduction to abseqR
+hasREADME: FALSE
+hasNEWS: TRUE
+hasINSTALL: FALSE
+hasLICENSE: TRUE
+Rfiles: vignettes/abseqR/inst/doc/abseqR.R
+dependencyCount: 111
+
+Package: ABSSeq
+Version: 1.54.0
+Depends: R (<= 3.10), methods
+Imports: locfit, limma
+Suggests: edgeR
+License: GPL (>= 3)
+MD5sum: e0e0790ae5c6424bf69ba5b2aa334204
+NeedsCompilation: no
+Title: ABSSeq: a new RNA-Seq analysis method based on modelling
+        absolute expression differences
+Description: Inferring differential expression genes by absolute counts
+        difference between two groups, utilizing Negative binomial
+        distribution and moderating fold-change according to
+        heterogeneity of dispersion across expression level.
+biocViews: DifferentialExpression
+Author: Wentao Yang
+Maintainer: Wentao Yang <wyang@zoologie.uni-kiel.de>
+git_url: https://git.bioconductor.org/packages/ABSSeq
+git_branch: RELEASE_3_17
+git_last_commit: 5e7de8c
+git_last_commit_date: 2023-04-25
+Date/Publication: 2023-04-25
+source.ver: src/contrib/ABSSeq_1.54.0.tar.gz
+win.binary.ver: bin/windows/contrib/4.3/ABSSeq_1.54.0.zip
+mac.binary.big-sur-x86_64.ver:
+        bin/macosx/big-sur-x86_64/contrib/4.3/ABSSeq_1.54.0.tgz
+mac.binary.big-sur-arm64.ver:
+        bin/macosx/big-sur-arm64/contrib/4.3/ABSSeq_1.54.0.tgz
+vignettes: vignettes/ABSSeq/inst/doc/ABSSeq.pdf
+vignetteTitles: ABSSeq
+hasREADME: FALSE
+hasNEWS: TRUE
+hasINSTALL: FALSE
+hasLICENSE: FALSE
+Rfiles: vignettes/ABSSeq/inst/doc/ABSSeq.R
+dependencyCount: 9
