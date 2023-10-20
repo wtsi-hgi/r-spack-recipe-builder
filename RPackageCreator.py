@@ -87,7 +87,9 @@ class PackageMaker:
 		return f"({'{:.2f}'.format((self.progress/self.total) * 100)}%){spaces}[{mode}]"
 
 	def getChecksum(self, record, package):
-		if "MD5sum" in record.keys():
+		if "git_last_commit" in record.keys():
+			return f"""\tversion("{record['Version']}", commit="{record['git_last_commit']}")\n"""
+		elif "MD5sum" in record.keys():
 			return f"""\tversion("{record['Version']}", md5="{record['MD5sum']}")\n"""
 		else:
 			baseurl = self.getURL(package, record)
