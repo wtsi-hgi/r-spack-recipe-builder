@@ -87,8 +87,14 @@ class PackageMaker:
 		return f"({'{:.2f}'.format((self.progress/self.total) * 100)}%){spaces}[{mode}]"
 
 	def getChecksum(self, record, package):
-		if "git_last_commit" in record.keys():
-			return f"""\tversion("{record['Version']}", commit="{record['git_last_commit']}")\n"""
+		if "git_url" in record.keys():
+			gitRefs = requests.get(record['git_url'] + "/info/refs", allow_redirects=True).text.split("\n")
+			for i in range(len(gitRefs)):
+				hash = gitRefs[i].split("\trefs/heads/")
+				if hash[1] == record['git_branch']:
+					commitHash = hash[0]
+					break
+			return f"""\tversion("{record['Version']}", commit="{commitHash}")\n"""
 		elif "MD5sum" in record.keys():
 			return f"""\tversion("{record['Version']}", md5="{record['MD5sum']}")\n"""
 		else:
