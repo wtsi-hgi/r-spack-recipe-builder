@@ -86,24 +86,6 @@ class PackageMaker:
 		spaces = " " * (6 - len(str('{:.2f}'.format((self.progress/self.total) * 100))))
 		return f"({'{:.2f}'.format((self.progress/self.total) * 100)}%){spaces}[{mode}]"
 
-	def getChecksum(self, record, package):
-		if "git_url" in record.keys():
-			gitRefs = requests.get(record['git_url'] + "/info/refs", allow_redirects=True).text.split("\n")
-			for i in range(len(gitRefs)):
-				hash = gitRefs[i].split("\trefs/heads/")
-				if hash[1] == record['git_branch']:
-					commitHash = hash[0]
-					break
-			return f"""\tversion("{record['Version']}", commit="{commitHash}")\n"""
-		elif "MD5sum" in record.keys():
-			return f"""\tversion("{record['Version']}", md5="{record['MD5sum']}")\n"""
-		else:
-			baseurl = self.getURL(package, record)
-			latest = requests.get(baseurl, allow_redirects=True)
-			sha256_hash_latest = hashlib.sha256()
-			sha256_hash_latest.update(latest.content)
-			return f"""\tversion("{record['Version']}", sha256="{sha256_hash_latest.hexdigest()}")\n"""
-
 	def getDepends(self, dependencies):
 		dependencylist = []
 		for pkg in dependencies:
@@ -243,17 +225,13 @@ class R{classname}(RPackage):
 		writeRecipe(header, footer, version, dependencies, suggests, package)
 		print(f"{self.getProgress(mode)} {self.packman} package {'r-' + package.lower().replace('.','-')}")
 
-	def packageLoop(self, lib, libname, packageVersions, actualLib):
+	def packageLoop(self, lib, libname, record):
 		print(f"Creating {libname} packages...")
 		time.sleep(2)
 		self.progress = 0
 		self.total = len(lib)
 		for i in lib:
-			if libname == "CRAN":
-				record = actualLib.loc[lib == i].to_dict('records')[0]
-			elif libname == "Bioconductor":
-				record = actualLib[i]
-			self.get(i, record)
+			self.get(i, record(i))
 		print(f"Finished creating {libname} packages!")
 		time.sleep(2)
 
@@ -281,8 +259,19 @@ class CRANPackageMaker(PackageMaker):
 		return f"https://cran.r-project.org/src/contrib/{package}_{record['Version']}.tar.gz"
 		
 	def packageLoop(self):
-		super().packageLoop(self.lib["Package"], "CRAN", self.packageVersions, self.lib)
-
+		record = lambda x: self.lib.loc[self.lib["Package"] == x].to_dict('records')[0]
+		super().packageLoop(self.lib["Package"], "CRAN", record)
+		
+	def getChecksum(self, record, package):
+		if "MD5sum" in record.keys():
+			return f"""\tversion("{record['Version']}", md5="{record['MD5sum']}")\n"""
+		else:
+			baseurl = self.getURL(package, record)
+			latest = requests.get(baseurl, allow_redirects=True)
+			sha256_hash_latest = hashlib.sha256()
+			sha256_hash_latest.update(latest.content)
+			return f"""\tversion("{record['Version']}", sha256="{sha256_hash_latest.hexdigest()}")\n"""
+		
 class BIOCPackageMaker(PackageMaker):
 	packman = "bioc"
 
@@ -315,11 +304,31 @@ class BIOCPackageMaker(PackageMaker):
 			packagesBIOC = pickle.load(fp)
 		return packagesBIOC
 
+
 	def packageLoop(self):
-		super().packageLoop(self.lib.keys(), "Bioconductor", self.packageVersions, self.lib)
+		record = lambda x: self.lib[x]
+		super().packageLoop(self.lib.keys(), "Bioconductor", record)
 	
 	def getURL(self, package, record):
 		return f"https://bioconductor.org/packages/release/bioc/src/contrib/{package}_{record['Version']}.tar.gz"
+
+	def getChecksum(self, record, package):
+		if "git_url" in record.keys():
+			gitRefs = requests.get(record['git_url'] + "/info/refs", allow_redirects=True).text.split("\n")
+			for i in range(len(gitRefs)):
+				hash = gitRefs[i].split("\trefs/heads/")
+				if hash[1] == record['git_branch']:
+					commitHash = hash[0]
+					break
+			return f"""\tversion("{record['Version']}", commit="{commitHash}")\n"""
+		else:
+			baseurl = self.getURL(package, record)
+			latest = requests.get(baseurl, allow_redirects=True)
+			sha256_hash_latest = hashlib.sha256()
+			sha256_hash_latest.update(latest.content)
+			return f"""\tversion("{record['Version']}", sha256="{sha256_hash_latest.hexdigest()}")\n"""
+
+
 
 print("Welcome to the Spack recipe creator for R!\n [+] means a package is freshly created\n [*] means a package is updated\n [~] means a package is already up to date\n")
 
@@ -329,5 +338,5 @@ packageVersions = getExistingVersions()
 cran = CRANPackageMaker(actualDirs, packageVersions)
 bioc = BIOCPackageMaker(actualDirs, packageVersions)
 
-cran.packageLoop()
 bioc.packageLoop()
+cran.packageLoop()
