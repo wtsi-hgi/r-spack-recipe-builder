@@ -88,10 +88,10 @@ class PackageMaker:
 
 	def getDepends(self, dependencies):
 		dependencylist = []
-		for pkg in dependencies:
+		for i in dependencies:
 			try:
-				name = self.packageName(pkg)
-				dependencylist.append("\tdepends_on(\"" + name[0] + name[1] + "\", type=(\"build\", \"run\"))\n")
+				pkg = self.packageName(i)
+				dependencylist.append("\tdepends_on(\"" + pkg[0] + pkg[1] + "\", type=(\"build\", \"run\"))\n")
 			except:
 				continue
 		return dependencylist
@@ -338,5 +338,5 @@ packageVersions = getExistingVersions()
 cran = CRANPackageMaker(actualDirs, packageVersions)
 bioc = BIOCPackageMaker(actualDirs, packageVersions)
 
-bioc.packageLoop()
 cran.packageLoop()
+bioc.packageLoop()
