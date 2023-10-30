@@ -200,6 +200,11 @@ class R{classname}(RPackage):
 			return self.getDepends(dependencies), []
 
 	def get(self, package, record):		
+		try:
+			mode = self.getExistingFiles(package, record)
+		except:
+			return
+
 		name, description = record["Title"], record["Description"].replace("\\", "")
 
 		dependencies = []
@@ -211,11 +216,6 @@ class R{classname}(RPackage):
 		
 
 		homepage = getHomepage(record)
-
-		try:
-			mode = self.getExistingFiles(package, record)
-		except:
-			return
 
 		version = self.getChecksum(record, package)
 
