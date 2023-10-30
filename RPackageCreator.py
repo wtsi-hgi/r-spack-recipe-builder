@@ -10,8 +10,10 @@ import pickle
 import email.utils, datetime
 import subprocess
 
+spackBin = "/opt/spack/bin/spack"
+
 def getRepos():
-	cmd = subprocess.run(["/opt/spack/bin/spack", "repo", "list"], capture_output=True)
+	cmd = subprocess.run([spackBin, "repo", "list"], capture_output=True)
 	repoDirs = cmd.stdout.decode("utf-8").strip()
 	splittedDirs = repoDirs.split("\n")
 	actualDirs = []
@@ -24,10 +26,9 @@ def getExistingVersions():
 		os.mkdir("packages")
 
 	print("Fetching package versions, this could take a while...")
-	stream = os.popen("/opt/spack/bin/spack list --format version_json r-*")
-	builtin = stream.read()
-	stream.close()
-	builtin = json.loads(builtin)
+	stream = subprocess.run([spackBin, "list", "--format", "version_json", "r-*"], capture_output=True)
+	decoded = stream.stdout.decode("utf-8").strip()
+	builtin = json.loads(decoded)
 	print("Versions successfully fetched!\n")
 	packageVersions = {}
 	for row in builtin:
@@ -104,8 +105,8 @@ class PackageMaker:
 				pkg = self.packageName(i)
 				if pkg[0] == ('r-' + package.lower().replace('.','-')):
 					continue
-				dependencylist.append("\tdepends_on(\"" + pkg[0] + pkg[1] + "\", when=\"+" + pkg[0].replace("r-", "") + "\", type=(\"build\", \"run\"))\n")
-				variants.append("\tvariant(\"" + pkg[0].replace("r-", "") + "\", default=" + str(pkg[3]) + ", description=\"Enable " + pkg[0] + " support\")\n")
+				dependencylist.append("\tdepends_on(\"" + pkg[0] + pkg[1] + "\", when=\"+" + pkg[0].replace("r-", "").replace("-", ".") + "\", type=(\"build\", \"run\"))\n")
+				variants.append("\tvariant(\"" + pkg[0].replace("r-", "").replace("-", ".") + "\", default=" + str(pkg[3]) + ", description=\"Enable " + pkg[0] + " support\")\n")
 			except:
 				continue
 		return dependencylist, variants 
