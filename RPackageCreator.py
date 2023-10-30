@@ -104,8 +104,8 @@ class PackageMaker:
 				pkg = self.packageName(i)
 				if pkg[0] == ('r-' + package.lower().replace('.','-')):
 					continue
-				dependencylist.append("\tdepends_on(\"" + pkg[0] + pkg[1] + "\", when=\"+" + pkg[0] + "\", type=(\"build\", \"run\"))\n")
-				variants.append("\tvariant(\"" + pkg[0] + "\", default=" + str(pkg[3]) + ", description=\"Enable " + pkg[0] + " support\")\n")
+				dependencylist.append("\tdepends_on(\"" + pkg[0] + pkg[1] + "\", when=\"+" + pkg[0].replace("r-", "") + "\", type=(\"build\", \"run\"))\n")
+				variants.append("\tvariant(\"" + pkg[0].replace("r-", "") + "\", default=" + str(pkg[3]) + ", description=\"Enable " + pkg[0] + " support\")\n")
 			except:
 				continue
 		return dependencylist, variants 
