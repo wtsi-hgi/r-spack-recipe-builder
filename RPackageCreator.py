@@ -195,10 +195,10 @@ class R{classname}(RPackage):
 				name = name.replace("gnu ", "")
 			if " " in name or name == "":
 				written = True
-				log.write(f"{record['Package']} => {i}\n")
+				log.write(f"[manual]    {record['Package']} => {i}\n")
 			else:
 				dependencylist.append("\tdepends_on(\"" + name + "\")\n")
-				print(f"\t{record['Package']} => {name}")
+				log.write(f"[automatic] {record['Package']} => {i}\n")
 		if written:
 			log.write("\n")
 		log.close()
