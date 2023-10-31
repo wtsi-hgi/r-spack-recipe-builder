@@ -144,22 +144,17 @@ class R{classname}(RPackage):
 			k = version[0]
 			version = version[1].lower().replace(")","")
 			getversion = ""
-			if ">=" in version:
-				fullname = k.replace(".","-")
-				getversion = f"@{version[2:]}:"
-				type = "at least " + version[2:]
-			elif "<=" in version:
-				fullname = k.replace(".","-")
-				getversion = f"@:{version[2:]}"
-				type = version[2:]
-			elif "==" in version:
-				fullname = k.replace(".","-")
-				getversion = f"@={version[2:]}"
-				type = version[2:]
-			else:
-				fullname = k.replace(".","-")
-				getversion = f"@={version[1:]}"
-				type = version[2:]
+			fullname = k.replace(".","-")
+			ver = version.replace('>','').replace('<','').replace('=','')
+			type = ""
+			if ">" in version:
+				getversion = f"@{ver}:"
+				type = "at least "
+			elif "<" in version:
+				getversion = f"@:{ver}"
+			elif "=" in version:
+				getversion = f"@{ver}"
+			type += ver
 		else:
 			fullname = k.replace(".","-")
 			getversion = ""
@@ -190,19 +185,23 @@ class R{classname}(RPackage):
 			requirements = [record["SystemRequirements"].replace("\n", " ").replace("or",",").replace(";",",").split(",")[0]]
 		else:
 			requirements = record["SystemRequirements"].replace("\n", " ").replace(" and ",",").replace(";",",").split(",")
+		log = open("requirements.log", "a")
+		written = False
 		for i in requirements:
-			name = i.split("(")[0].strip().lower().replace("+","p").replace("\'", "").replace("\"", "")
+			name = i.split("(")[0].strip().lower().replace("c++","cpp").replace("\'", "").replace("\"", "")
 			if ":" in name:
-				name = name.split(":")[0].strip()
+				name = name.split(": ")[0].strip()
 			if "gnu " in name:
 				name = name.replace("gnu ", "")
 			if " " in name or name == "":
-				log = open("requirements.log", "a")
-				log.write(f"{record['Package']} => {i}\n\n")
-				log.close()
+				written = True
+				log.write(f"{record['Package']} => {i}\n")
 			else:
 				dependencylist.append("\tdepends_on(\"" + name + "\")\n")
 				print(f"\t{record['Package']} => {name}")
+		if written:
+			log.write("\n")
+		log.close()
 		return dependencylist
 
 	def get(self, package, record):		
