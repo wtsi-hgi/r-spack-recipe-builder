@@ -187,6 +187,7 @@ class R{classname}(RPackage):
 			requirements = record["SystemRequirements"].replace("\n", " ").replace(" and ",",").replace(";",",").split(",")
 		log = open("requirements.log", "a")
 		written = False
+		logThese = []
 		for i in requirements:
 			name = i.split("(")[0].strip().lower().replace("c++","cpp").replace("\'", "").replace("\"", "")
 			if ":" in name:
@@ -195,12 +196,14 @@ class R{classname}(RPackage):
 				name = name.replace("gnu ", "")
 			if " " in name or name == "":
 				written = True
-				log.write(f"[manual]    {record['Package']} => {i}\n")
+				logThese = [(f"[manual]    {record['Package']} => {record['SystemRequirements']}\n")]
+				break
 			else:
+				written = True
 				dependencylist.append("\tdepends_on(\"" + name + "\")\n")
-				log.write(f"[automatic] {record['Package']} => {i}\n")
+				logThese.append(f"[automatic] {record['Package']} => {i}\n")
 		if written:
-			log.write("\n")
+			log.write(f"{''.join(logThese)}\n")
 		log.close()
 		return dependencylist
 
