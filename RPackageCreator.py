@@ -173,14 +173,37 @@ class R{classname}(RPackage):
 		# print(fullname.lower(), getversion, type)
 		return "r-" + fullname.lower(), getversion, type, False
 
-	def writeDeps(self, record, field, package):
+	def writeDeps(self, record, field):
 		if record.get(field) == None:
-			return [], []
+			return []
 		elif pd.isna(record[field]):
-			return [], []
-		dependencies = record[field].replace(" ","").replace("\n", "").split(",")
+			return []
 
-		return self.getDepends(dependencies), []
+		if field == "SystemRequirements":
+			return self.writeRequirements(record)
+		dependencies = record[field].replace(" ","").replace("\n", "").split(",")
+		return self.getDepends(dependencies)
+
+	def writeRequirements(self, record):
+		dependencylist = []
+		if " or " in record["SystemRequirements"]:
+			requirements = [record["SystemRequirements"].replace("\n", " ").replace("or",",").replace(";",",").split(",")[0]]
+		else:
+			requirements = record["SystemRequirements"].replace("\n", " ").replace(" and ",",").replace(";",",").split(",")
+		for i in requirements:
+			name = i.split("(")[0].strip().lower().replace("+","p").replace("\'", "").replace("\"", "")
+			if ":" in name:
+				name = name.split(":")[0].strip()
+			if "gnu " in name:
+				name = name.replace("gnu ", "")
+			if " " in name or name == "":
+				log = open("requirements.log", "a")
+				log.write(f"{record['Package']} => {i}\n\n")
+				log.close()
+			else:
+				dependencylist.append("\tdepends_on(\"" + name + "\")\n")
+				print(f"\t{record['Package']} => {name}")
+		return dependencylist
 
 	def get(self, package, record):		
 		try:
@@ -191,9 +214,11 @@ class R{classname}(RPackage):
 		name, description = record["Title"], record["Description"].replace("\\", "")
 
 		dependencies = []
-		dependencies = self.writeDeps(record, "Depends", package)[0]
-		dependencies += self.writeDeps(record, "Imports", package)[0]
-		dependencies += self.writeDeps(record, "LinkingTo", package)[0]
+		dependencies = self.writeDeps(record, "Depends")
+		dependencies += self.writeDeps(record, "Imports")
+		dependencies += self.writeDeps(record, "LinkingTo")
+		if "SystemRequirements" in record.keys():
+			dependencies += self.writeDeps(record, "SystemRequirements")
 
 		homepage = getHomepage(record)
 
