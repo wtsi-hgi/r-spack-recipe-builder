@@ -52,8 +52,8 @@ def writeRecipe(header, footer, versions, depends, variants, package):
 	f.write(f"""{header}
 
 {"".join(versions)}
-{"".join(depends)}
-{"".join(variants)}{footer}""")
+{"".join(variants)}
+{"".join(depends)}{footer}""")
 	f.close()
 
 class PackageMaker:
