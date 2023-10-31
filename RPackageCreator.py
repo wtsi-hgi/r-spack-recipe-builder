@@ -47,12 +47,11 @@ def getHomepage(record):
 	except:
 		return ""
 
-def writeRecipe(header, footer, versions, depends, variants, package):
+def writeRecipe(header, footer, versions, depends, package):
 	f = open("packages/r-" + package.lower().replace(".","-") + "/package.py", "w")
 	f.write(f"""{header}
 
 {"".join(versions)}
-{"".join(variants)}
 {"".join(depends)}{footer}""")
 	f.close()
 
@@ -97,20 +96,6 @@ class PackageMaker:
 				continue
 		return dependencylist
 
-	def getSuggests(self, suggests, package):
-		dependencylist = []
-		variants = []
-		for i in suggests:
-			try:
-				pkg = self.packageName(i)
-				if pkg[0] == ('r-' + package.lower().replace('.','-')):
-					continue
-				dependencylist.append("\tdepends_on(\"" + pkg[0] + pkg[1] + "\", when=\"+" + pkg[0].replace("r-", "").replace("-", ".") + "\", type=(\"build\", \"run\"))\n")
-				variants.append("\tvariant(\"" + pkg[0].replace("r-", "").replace("-", ".") + "\", default=" + str(pkg[3]) + ", description=\"Enable " + pkg[0] + " support\")\n")
-			except:
-				continue
-		return dependencylist, variants 
-
 	def getTemplate(self, mode, package, name, description, homepage, classname):
 		if mode == "+":
 			backslashN = "\n\t"
@@ -143,7 +128,7 @@ class R{classname}(RPackage):
 			lastline = len(lines)
 			for j in range(len(lines)):
 				lines[j] = lines[j].replace("    ", "\t")
-				if "\tdepends_on(" in lines[j] or "\tvariant(" in lines[j] or "\tversion(" in lines[j]:
+				if "\tdepends_on(" in lines[j] or "\tversion(" in lines[j]:
 					for k in range(3):
 						if "\")" in lines[j]:
 							lastline = j + k + 1
@@ -194,10 +179,8 @@ class R{classname}(RPackage):
 		elif pd.isna(record[field]):
 			return [], []
 		dependencies = record[field].replace(" ","").replace("\n", "").split(",")
-		if field == "Suggests":
-			return self.getSuggests(dependencies, package)
-		else:
-			return self.getDepends(dependencies), []
+
+		return self.getDepends(dependencies), []
 
 	def get(self, package, record):		
 		try:
@@ -211,9 +194,6 @@ class R{classname}(RPackage):
 		dependencies = self.writeDeps(record, "Depends", package)[0]
 		dependencies += self.writeDeps(record, "Imports", package)[0]
 		dependencies += self.writeDeps(record, "LinkingTo", package)[0]
-		x, suggests = self.writeDeps(record, "Suggests", package)
-		dependencies += x
-		
 
 		homepage = getHomepage(record)
 
@@ -223,7 +203,7 @@ class R{classname}(RPackage):
 		
 		header, footer = self.getTemplate(mode, package, name, description, homepage, classname)
 
-		writeRecipe(header, footer, version, dependencies, suggests, package)
+		writeRecipe(header, footer, version, dependencies, package)
 		print(f"{self.getProgress(mode)} {self.packman} package {'r-' + package.lower().replace('.','-')}")
 
 	def packageLoop(self, lib, libname, record):
