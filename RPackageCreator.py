@@ -173,14 +173,30 @@ class R{classname}(RPackage):
 		# print(fullname.lower(), getversion, type)
 		return "r-" + fullname.lower(), getversion, type, False
 
-	def writeDeps(self, record, field, package):
+	def writeDeps(self, record, field):
 		if record.get(field) == None:
-			return [], []
+			return []
 		elif pd.isna(record[field]):
-			return [], []
-		dependencies = record[field].replace(" ","").replace("\n", "").split(",")
+			return []
 
-		return self.getDepends(dependencies), []
+		if field == "SystemRequirements":
+			return self.writeRequirements(record)
+		dependencies = record[field].replace(" ","").replace("\n", "").split(",")
+		return self.getDepends(dependencies)
+
+	def writeRequirements(self, record):
+		dependencylist = []
+		requirements = record["SystemRequirements"].replace("\n", " ").split(",")
+		for i in requirements:
+			name = i.split("(")[0].strip().lower()
+			if " " in name:
+				log = open("requirements.log", "a")
+				log.write(f"{record['Package']} => {name}\n\n")
+				log.close()
+			else:
+				dependencylist.append("\tdepends_on(\"" + {name} + "\")\n")
+				print(f"\t{record['Package']} => {name}\n")
+		return dependencylist
 
 	def get(self, package, record):		
 		try:
@@ -191,9 +207,10 @@ class R{classname}(RPackage):
 		name, description = record["Title"], record["Description"].replace("\\", "")
 
 		dependencies = []
-		dependencies = self.writeDeps(record, "Depends", package)[0]
-		dependencies += self.writeDeps(record, "Imports", package)[0]
-		dependencies += self.writeDeps(record, "LinkingTo", package)[0]
+		dependencies = self.writeDeps(record, "Depends")
+		dependencies += self.writeDeps(record, "Imports")
+		dependencies += self.writeDeps(record, "LinkingTo")
+		dependencies += self.writeDeps(record, "SystemRequirements")
 
 		homepage = getHomepage(record)
 
