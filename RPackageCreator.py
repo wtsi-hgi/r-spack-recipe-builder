@@ -201,7 +201,7 @@ class R{classname}(RPackage):
 			else:
 				written = True
 				dependencylist.append("\tdepends_on(\"" + name + "\")\n")
-				logThese.append(f"[automatic] {record['Package']} => {i}\n")
+				logThese.append(f"[automatic] {record['Package']} => {i}\n [{name}]")
 		if written:
 			log.write(f"{''.join(logThese)}\n")
 		log.close()
@@ -259,6 +259,7 @@ class CRANPackageMaker(PackageMaker):
 			savedDatabase.close()
 		savedDatabase = open("cranLibrary.rds", "rb")
 		database = pyreadr.read_r(savedDatabase.name)
+		savedDatabase.close()
 		database = database[None]
 		pandasDatabase = pd.DataFrame(database)
 		return pandasDatabase
@@ -307,9 +308,11 @@ class BIOCPackageMaker(PackageMaker):
 			
 			with open("biocLibrary.pkl", "wb") as fp:
 				pickle.dump(packagesBIOC, fp)
+				fp.close()
 
 		with open('biocLibrary.pkl', 'rb') as fp:
 			packagesBIOC = pickle.load(fp)
+			fp.close()
 		return packagesBIOC
 
 
