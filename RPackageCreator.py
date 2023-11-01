@@ -1,6 +1,6 @@
 import hashlib
 import shutil
-import time
+import re
 import requests
 import pyreadr
 import pandas as pd
@@ -35,6 +35,28 @@ def getExistingVersions():
 		packageVersions[row["name"]] = row["versions"]
 	return packageVersions
 
+def getSystemRequirements():
+	if not os.path.isfile("requirementsDict.tsv"):
+		return {}
+	else:
+		file = open("requirementsDict.tsv", "r")
+		lines = file.readlines()
+		file.close()
+		dict = {}
+		for i in lines:
+			splitted = i.split(",")
+			if len(splitted) > 1:
+				dict[splitted[0]] = splitted[1:]
+			else:
+				dict[splitted[0]] = []
+		return dict
+
+def setSystemRequirements(dict):
+	file = open("requirementsDict.tsv", "w")
+	for i in dict.keys():
+		file.write(f"{i}\t{'	'.join(dict[i])}\n")
+	file.close()
+
 def getClassname(package):
 	classname = package.split(".")
 	for i in range(len(classname)):
@@ -60,6 +82,7 @@ class PackageMaker:
 		self.actualDirs = actualDirs
 		self.packageVersions = packageVersions
 		self.lib = self.getPackages()
+		self.systemRequirements = {}
 
 	def getExistingFiles(self, package, record):
 		mode = "+"
@@ -180,34 +203,46 @@ class R{classname}(RPackage):
 		return self.getDepends(dependencies)
 
 	def writeRequirements(self, record):
+		if record["SystemRequirements"] in self.systemRequirements.keys():
+			return self.systemRequirements[record["SystemRequirements"]]
 		dependencylist = []
-		if " or " in record["SystemRequirements"]:
-			requirements = [record["SystemRequirements"].replace("\n", " ").replace("or",",").replace(";",",").split(",")[0]]
-		else:
-			requirements = record["SystemRequirements"].replace("\n", " ").replace(" and ",",").replace(";",",").split(",")
+		requirements = record["SystemRequirements"].replace("\n", " ").replace(";",",").split(",")
 		log = open("requirements.log", "a")
 		written = False
 		logThese = []
+		dependencyNames = []
 		for i in requirements:
 			name = i.split("(")[0].strip().lower().replace("c++","cpp").replace("\'", "").replace("\"", "")
-			if ":" in name:
-				name = name.split(": ")[0].strip()
 			if "gnu " in name:
 				name = name.replace("gnu ", "")
 			if " " in name or name == "":
 				written = True
 				logThese = [(f"[manual]    {record['Package']} => {record['SystemRequirements']}\n")]
+				dependencylist = []
+				dependencyNames = []
 				break
 			else:
 				written = True
 				dependencylist.append("\tdepends_on(\"" + name + "\")\n")
-				logThese.append(f"[automatic] {record['Package']} => {i}\n [{name}]")
+				logThese.append(f"[automatic] {record['Package']} => {i} [{name}]")
+				dependencyNames.append(name)
 		if written:
 			log.write(f"{''.join(logThese)}\n")
+			if len(record["SystemRequirements"]) >= 1:
+				self.systemRequirements[repr(record["SystemRequirements"])] = dependencyNames
 		log.close()
+		if len(dependencyNames) > 0:
+			tsv = open("automatic.tsv", "a")
+			tsv.write(repr(record["SystemRequirements"]))
+			for dep in dependencyNames:
+				tsv.write(f"\t{dep}")
+			tsv.write("\n")
 		return dependencylist
 
 	def get(self, package, record):		
+		dependencies = []
+		if "SystemRequirements" in record.keys():
+			dependencies = self.writeDeps(record, "SystemRequirements")
 		try:
 			mode = self.getExistingFiles(package, record)
 		except:
@@ -215,12 +250,9 @@ class R{classname}(RPackage):
 
 		name, description = record["Title"], record["Description"].replace("\\", "")
 
-		dependencies = []
-		dependencies = self.writeDeps(record, "Depends")
+		dependencies += self.writeDeps(record, "Depends")
 		dependencies += self.writeDeps(record, "Imports")
 		dependencies += self.writeDeps(record, "LinkingTo")
-		if "SystemRequirements" in record.keys():
-			dependencies += self.writeDeps(record, "SystemRequirements")
 
 		homepage = getHomepage(record)
 
@@ -235,13 +267,13 @@ class R{classname}(RPackage):
 
 	def packageLoop(self, lib, libname, record):
 		print(f"Creating {libname} packages...")
-		time.sleep(2)
+		self.systemRequirements = getSystemRequirements()
 		self.progress = 0
 		self.total = len(lib)
 		for i in lib:
 			self.get(i, record(i))
+		setSystemRequirements(self.systemRequirements)
 		print(f"Finished creating {libname} packages!")
-		time.sleep(2)
 
 class CRANPackageMaker(PackageMaker):
 	packman = "cran"
@@ -345,6 +377,7 @@ print("Welcome to the Spack recipe creator for R!\n [+] means a package is fresh
 
 actualDirs = getRepos()
 packageVersions = getExistingVersions()
+
 
 cran = CRANPackageMaker(actualDirs, packageVersions)
 bioc = BIOCPackageMaker(actualDirs, packageVersions)
