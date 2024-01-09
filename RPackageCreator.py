@@ -88,7 +88,7 @@ class PackageMaker:
 		mode = "+"
 
 		if "r-" + package.lower().replace(".","-") in self.packageVersions.keys():
-			if record["Version"] in self.packageVersions["r-" + package.lower().replace(".","-")]:
+			if record["Version"] in self.packageVersions["r-" + package.lower().replace(".","-")] and "SystemRequirements" not in record.keys():
 				
 				print(f"{self.getProgress('~')} {self.packman} package {'r-' + package.lower().replace('.','-')}")
 				raise Exception(f"Package {'r-' + package.lower().replace('.','-')} is already up to date")
