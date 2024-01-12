@@ -44,7 +44,7 @@ def getSystemRequirements():
 		file.close()
 		dict = {}
 		for i in lines:
-			splitted = i.split(",")
+			splitted = i.strip().split("\t")
 			if len(splitted) > 1:
 				dict[splitted[0]] = splitted[1:]
 			else:
@@ -78,11 +78,15 @@ def writeRecipe(header, footer, versions, depends, package):
 	f.close()
 
 class PackageMaker:
-	def __init__(self, actualDirs, packageVersions):
+	def __init__(self, actualDirs, packageVersions, systemRequirements):
 		self.actualDirs = actualDirs
 		self.packageVersions = packageVersions
 		self.lib = self.getPackages()
-		self.systemRequirements = {}
+		self.systemRequirements = systemRequirements
+		self.blacklist = []
+		if os.path.isfile("blacklist.txt"):
+			with open("blacklist.txt", "r") as f:
+				self.blacklist = f.readlines()
 
 	def getExistingFiles(self, package, record):
 		mode = "+"
@@ -203,8 +207,9 @@ class R{classname}(RPackage):
 		return self.getDepends(dependencies)
 
 	def writeRequirements(self, record):
-		if record["SystemRequirements"] in self.systemRequirements.keys():
-			return self.systemRequirements[record["SystemRequirements"]]
+		sysreq = repr(record["SystemRequirements"]).replace("	", " ")
+		if sysreq in self.systemRequirements.keys():
+			return list(map(lambda x: f"\tdepends_on(\"{x}\", type=(\"build\", \"link\", \"run\"))\n", self.systemRequirements[sysreq]))
 		dependencylist = []
 		requirements = record["SystemRequirements"].replace("\n", " ").replace(";",",").split(",")
 		log = open("requirements.log", "a")
@@ -212,37 +217,41 @@ class R{classname}(RPackage):
 		logThese = []
 		dependencyNames = []
 		for i in requirements:
-			name = i.split("(")[0].strip().lower().replace("c++","cpp").replace("\'", "").replace("\"", "")
+			name = i.split("(")[0].strip().lower().replace("\'", "").replace("\"", "")
 			if "gnu " in name:
 				name = name.replace("gnu ", "")
 			if " " in name or name == "":
 				written = True
-				logThese = [(f"[manual]    {record['Package']} => {record['SystemRequirements']}\n")]
+				logThese = [(f"[manual]    {record['Package']} => {sysreq}\n")]
 				dependencylist = []
 				dependencyNames = []
 				break
 			else:
 				written = True
-				dependencylist.append("\tdepends_on(\"" + name + "\")\n")
+				dependencylist.append(f"\tdepends_on(\"{name}\", type=(\"build\", \"link\", \"run\"))\n")
 				logThese.append(f"[automatic] {record['Package']} => {i} [{name}]")
-				dependencyNames.append(name)
+				dependencyNames.append(name.strip())
 		if written:
 			log.write(f"{''.join(logThese)}\n")
-			if len(record["SystemRequirements"]) >= 1:
-				self.systemRequirements[repr(record["SystemRequirements"])] = dependencyNames
+			if len(sysreq) >= 1:
+				self.systemRequirements[sysreq] = dependencyNames
 		log.close()
 		if len(dependencyNames) > 0:
 			tsv = open("automatic.tsv", "a")
-			tsv.write(repr(record["SystemRequirements"]))
+			tsv.write(sysreq)
 			for dep in dependencyNames:
 				tsv.write(f"\t{dep}")
 			tsv.write("\n")
 		return dependencylist
 
 	def get(self, package, record):		
+		if package in self.blacklist:
+			print(f"{self.getProgress('x')} {self.packman} package {'r-' + package.lower().replace('.','-')}")
+			return
+
 		dependencies = []
 		if "SystemRequirements" in record.keys():
-			dependencies = self.writeDeps(record, "SystemRequirements")
+			dependencies += self.writeDeps(record, "SystemRequirements")
 		try:
 			mode = self.getExistingFiles(package, record)
 		except:
@@ -267,12 +276,10 @@ class R{classname}(RPackage):
 
 	def packageLoop(self, lib, libname, record):
 		print(f"Creating {libname} packages...")
-		self.systemRequirements = getSystemRequirements()
 		self.progress = 0
 		self.total = len(lib)
 		for i in lib:
 			self.get(i, record(i))
-		setSystemRequirements(self.systemRequirements)
 		print(f"Finished creating {libname} packages!")
 
 class CRANPackageMaker(PackageMaker):
@@ -315,6 +322,7 @@ class CRANPackageMaker(PackageMaker):
 		
 class BIOCPackageMaker(PackageMaker):
 	packman = "bioc"
+	hashes = {}
 
 	def getRecord(self, package):
 		return self.packages[package]
@@ -349,20 +357,35 @@ class BIOCPackageMaker(PackageMaker):
 
 
 	def packageLoop(self):
+		if os.path.exists("BIOCHashes.json"):
+			print("Downloading Bioconductor hashes")
+			with open("BIOCHashes.json", "r") as f:
+				self.hashes = json.load(f)
+		else:
+			self.hashes = {}
 		record = lambda x: self.lib[x]
 		super().packageLoop(self.lib.keys(), "Bioconductor", record)
+		with open("BIOCHashes.json", "w") as f:
+			json.dump(self.hashes, f)
 	
 	def getURL(self, package, record):
 		return f"https://bioconductor.org/packages/release/bioc/src/contrib/{package}_{record['Version']}.tar.gz"
 
 	def getChecksum(self, record, package):
+		# return f"""\tversion("{record['Version']}", sha256="TODO_UNCOMMENT")\n"""
 		if "git_url" in record.keys():
+			if record["git_last_commit"] in self.hashes.keys():
+				return f"""\tversion("{record['Version']}", sha256="{self.hashes[record["git_last_commit"]]}")\n"""
 			gitRefs = requests.get(record['git_url'] + "/info/refs", allow_redirects=True).text.split("\n")
 			for i in range(len(gitRefs)):
 				hash = gitRefs[i].split("\trefs/heads/")
 				if hash[1] == record['git_branch']:
 					commitHash = hash[0]
 					break
+			self.hashes[record["git_last_commit"]] = commitHash
+			if len(self.hashes.keys()) % 50 == 0:
+				with open("BIOCHashes.json", "w") as f:
+					json.dump(self.hashes, f)
 			return f"""\tversion("{record['Version']}", commit="{commitHash}")\n"""
 		else:
 			baseurl = self.getURL(package, record)
@@ -373,14 +396,16 @@ class BIOCPackageMaker(PackageMaker):
 
 
 
-print("Welcome to the Spack recipe creator for R!\n [+] means a package is freshly created\n [*] means a package is updated\n [~] means a package is already up to date\n")
+print("Welcome to the Spack recipe creator for R!\n [+] means a package is freshly created\n [*] means a package is updated\n [~] means a package is already up to date\n [x] means a package is blacklisted\n")
 
 actualDirs = getRepos()
 packageVersions = getExistingVersions()
+systemRequirements = getSystemRequirements()
 
 
-cran = CRANPackageMaker(actualDirs, packageVersions)
-bioc = BIOCPackageMaker(actualDirs, packageVersions)
+cran = CRANPackageMaker(actualDirs, packageVersions, systemRequirements)
+bioc = BIOCPackageMaker(actualDirs, packageVersions, systemRequirements)
 
 cran.packageLoop()
 bioc.packageLoop()
+setSystemRequirements(systemRequirements)
