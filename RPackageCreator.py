@@ -396,7 +396,7 @@ class BIOCPackageMaker(PackageMaker):
 
 
 
-print("Welcome to the Spack recipe creator for R!\n [+] means a package is freshly created\n [*] means a package is updated\n [~] means a package is already up to date\n [x] means a package is blacklisted\n")
+print("Welcome to the Spack recipe creator for R!\n [+] means a package is freshly created\n [*] means a package is updated\n [~] means a package is already up to date\n [x] means a package is in blacklist.txt and won't be created \n")
 
 actualDirs = getRepos()
 packageVersions = getExistingVersions()
