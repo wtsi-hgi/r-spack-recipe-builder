@@ -57,6 +57,22 @@ def setSystemRequirements(dict):
 		file.write(f"{i}\t{'	'.join(dict[i])}\n")
 	file.close()
 
+def getMissingDependencies():
+	if not os.path.isfile("missingDependencies.csv"):
+		return {}
+	else:
+		file = open("missingDependencies.csv", "r")
+		lines = file.readlines()
+		file.close()
+		dict = {}
+		for i in lines:
+			splitted = i.replace(" ", "").split(",")
+			if len(splitted) > 1:
+				dict[splitted[0]] = splitted[1:]
+			else:
+				dict[splitted[0]] = []
+		return dict
+
 def getClassname(package):
 	classname = package.split(".")
 	for i in range(len(classname)):
@@ -78,35 +94,39 @@ def writeRecipe(header, footer, versions, depends, package):
 	f.close()
 
 class PackageMaker:
-	def __init__(self, actualDirs, packageVersions, systemRequirements):
+	def __init__(self, actualDirs, packageVersions, systemRequirements, missingDependencies):
 		self.actualDirs = actualDirs
 		self.packageVersions = packageVersions
 		self.lib = self.getPackages()
 		self.systemRequirements = systemRequirements
+		self.missingDependencies = missingDependencies
 		self.blacklist = []
 		if os.path.isfile("blacklist.txt"):
 			with open("blacklist.txt", "r") as f:
 				self.blacklist = f.readlines()
 
 	def getExistingFiles(self, package, record):
-		mode = "+"
+		def pullFiles():
+			for dir in actualDirs:
+				if os.path.isfile(dir + "/packages/r-" + package.lower().replace(".","-") + "/package.py"):
+					location = dir
+					break
+			if location != os.path.dirname(os.path.realpath(__file__)):
+				shutil.copytree(location + "/packages/r-" + package.lower().replace(".","-"), "packages/r-" + package.lower().replace(".","-"))		
+			return "*"
 
 		if "r-" + package.lower().replace(".","-") in self.packageVersions.keys():
-			if record["Version"] in self.packageVersions["r-" + package.lower().replace(".","-")] and "SystemRequirements" not in record.keys():
-				
+			if "SystemRequirements" in record.keys():
+				if pd.notna(record["SystemRequirements"]):
+					return pullFiles()
+			if record["Version"] in self.packageVersions["r-" + package.lower().replace(".","-")]:
 				print(f"{self.getProgress('~')} {self.packman} package {'r-' + package.lower().replace('.','-')}")
 				raise Exception(f"Package {'r-' + package.lower().replace('.','-')} is already up to date")
-			else:
-				mode = "*"
-				for dir in actualDirs:
-					if os.path.isfile(dir + "/packages/r-" + package.lower().replace(".","-") + "/package.py"):
-						location = dir
-						break
-				if location != os.path.dirname(os.path.realpath(__file__)):
-					shutil.copytree(location + "/packages/r-" + package.lower().replace(".","-"), "packages/r-" + package.lower().replace(".","-"))
+			return pullFiles()
+		
 		if not os.path.isdir("packages/r-" + package.lower().replace(".","-")):
 			os.makedirs("packages/r-" + package.lower().replace(".","-"))
-		return mode
+		return "+"
 
 	def getProgress(self, mode):
 		self.progress += 1
@@ -114,14 +134,16 @@ class PackageMaker:
 		return f"({'{:.2f}'.format((self.progress/self.total) * 100)}%){spaces}[{mode}]"
 
 	def getDepends(self, dependencies):
-		dependencylist = []
-		for i in dependencies:
-			try:
-				pkg = self.packageName(i)
-				dependencylist.append("\tdepends_on(\"" + pkg[0] + pkg[1] + "\", type=(\"build\", \"run\"))\n")
-			except:
-				continue
-		return dependencylist
+		depends_on = []
+		dependenciesDict = {}
+		dependenciesList = []
+		for j in dependencies:
+			dependenciesDict[j[0]] = j[1:]
+		for k in dependenciesDict.keys():
+			dependenciesList.append([k] + list(dependenciesDict[k]))
+		for i in dependenciesList:
+			depends_on.append("\tdepends_on(\"" + i[0] + i[1] + "\", type=(\"build\", \"run\"))\n")
+		return depends_on
 
 	def getTemplate(self, mode, package, name, description, homepage, classname):
 		if mode == "+":
@@ -201,19 +223,26 @@ class R{classname}(RPackage):
 		elif pd.isna(record[field]):
 			return []
 
-		if field == "SystemRequirements":
-			return self.writeRequirements(record)
 		dependencies = record[field].replace(" ","").replace("\n", "").split(",")
-		return self.getDepends(dependencies)
+		result = []
+		for i in dependencies:
+			try:
+				result.append(self.packageName(i))
+			except:
+				continue
+		return result
 
 	def writeRequirements(self, record):
+		if record.get("SystemRequirements") == None:
+			return []
+		elif pd.isna(record["SystemRequirements"]):
+			return []
 		sysreq = repr(record["SystemRequirements"]).replace("	", " ")
 		if sysreq in self.systemRequirements.keys():
 			return list(map(lambda x: f"\tdepends_on(\"{x}\", type=(\"build\", \"link\", \"run\"))\n", self.systemRequirements[sysreq]))
 		dependencylist = []
 		requirements = record["SystemRequirements"].replace("\n", " ").replace(";",",").split(",")
 		log = open("requirements.log", "a")
-		written = False
 		logThese = []
 		dependencyNames = []
 		for i in requirements:
@@ -221,27 +250,18 @@ class R{classname}(RPackage):
 			if "gnu " in name:
 				name = name.replace("gnu ", "")
 			if " " in name or name == "":
-				written = True
 				logThese = [(f"[manual]    {record['Package']} => {sysreq}\n")]
 				dependencylist = []
 				dependencyNames = []
 				break
 			else:
-				written = True
 				dependencylist.append(f"\tdepends_on(\"{name}\", type=(\"build\", \"link\", \"run\"))\n")
 				logThese.append(f"[automatic] {record['Package']} => {i} [{name}]")
 				dependencyNames.append(name.strip())
-		if written:
-			log.write(f"{''.join(logThese)}\n")
-			if len(sysreq) >= 1:
-				self.systemRequirements[sysreq] = dependencyNames
+		log.write('\n'.join(logThese) + "\n")
+		if len(sysreq) >= 1:
+			self.systemRequirements[sysreq] = dependencyNames
 		log.close()
-		if len(dependencyNames) > 0:
-			tsv = open("automatic.tsv", "a")
-			tsv.write(sysreq)
-			for dep in dependencyNames:
-				tsv.write(f"\t{dep}")
-			tsv.write("\n")
 		return dependencylist
 
 	def get(self, package, record):		
@@ -249,9 +269,6 @@ class R{classname}(RPackage):
 			print(f"{self.getProgress('x')} {self.packman} package {'r-' + package.lower().replace('.','-')}")
 			return
 
-		dependencies = []
-		if "SystemRequirements" in record.keys():
-			dependencies += self.writeDeps(record, "SystemRequirements")
 		try:
 			mode = self.getExistingFiles(package, record)
 		except:
@@ -259,13 +276,25 @@ class R{classname}(RPackage):
 
 		name, description = record["Title"], record["Description"].replace("\\", "")
 
-		dependencies += self.writeDeps(record, "Depends")
-		dependencies += self.writeDeps(record, "Imports")
-		dependencies += self.writeDeps(record, "LinkingTo")
+		dependencyList = []
+		dependencyList += self.writeDeps(record, "Depends")
+		dependencyList += self.writeDeps(record, "Imports")
+		dependencyList += self.writeDeps(record, "LinkingTo")
+
+		dependencies = self.getDepends(dependencyList)
+		dependencies += self.writeRequirements(record)
+		if package in self.missingDependencies.keys():
+			for dep in self.missingDependencies[package]:
+				dependencies += f"\tdepends_on(\"{dep}\", type=(\"build\", \"link\", \"run\"))\n"
 
 		homepage = getHomepage(record)
 
 		version = self.getChecksum(record, package)
+		if version is False:
+			with open("blacklist.txt", "a") as f:
+				f.write(f"\n{package}")
+			print(f"{self.getProgress('x')} {self.packman} package {'r-' + package.lower().replace('.','-')}")
+			return
 
 		classname = getClassname(package)
 		
@@ -375,7 +404,7 @@ class BIOCPackageMaker(PackageMaker):
 		# return f"""\tversion("{record['Version']}", sha256="TODO_UNCOMMENT")\n"""
 		if "git_url" in record.keys():
 			if record["git_last_commit"] in self.hashes.keys():
-				return f"""\tversion("{record['Version']}", sha256="{self.hashes[record["git_last_commit"]]}")\n"""
+				return f"""\tversion("{record['Version']}", commit="{self.hashes[record["git_last_commit"]]}")\n"""
 			gitRefs = requests.get(record['git_url'] + "/info/refs", allow_redirects=True).text.split("\n")
 			for i in range(len(gitRefs)):
 				hash = gitRefs[i].split("\trefs/heads/")
@@ -388,23 +417,20 @@ class BIOCPackageMaker(PackageMaker):
 					json.dump(self.hashes, f)
 			return f"""\tversion("{record['Version']}", commit="{commitHash}")\n"""
 		else:
-			baseurl = self.getURL(package, record)
-			latest = requests.get(baseurl, allow_redirects=True)
-			sha256_hash_latest = hashlib.sha256()
-			sha256_hash_latest.update(latest.content)
-			return f"""\tversion("{record['Version']}", sha256="{sha256_hash_latest.hexdigest()}")\n"""
+			return False
 
 
 
-print("Welcome to the Spack recipe creator for R!\n [+] means a package is freshly created\n [*] means a package is updated\n [~] means a package is already up to date\n [x] means a package is in blacklist.txt and won't be created \n")
+print("Welcome to the Spack recipe creator for R!\n [+] means a package is freshly created\n [*] means a package is updated\n [~] means a package is already up to date\n [x] means a package won't be created because it is deprecated or it exists in blacklist.txt\n")
 
 actualDirs = getRepos()
 packageVersions = getExistingVersions()
 systemRequirements = getSystemRequirements()
+missingDependencies = getMissingDependencies()
 
 
-cran = CRANPackageMaker(actualDirs, packageVersions, systemRequirements)
-bioc = BIOCPackageMaker(actualDirs, packageVersions, systemRequirements)
+cran = CRANPackageMaker(actualDirs, packageVersions, systemRequirements, missingDependencies)
+bioc = BIOCPackageMaker(actualDirs, packageVersions, systemRequirements, missingDependencies)
 
 cran.packageLoop()
 bioc.packageLoop()
