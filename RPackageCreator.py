@@ -10,7 +10,7 @@ import pickle
 import email.utils, datetime
 import subprocess
 
-spackBin = "/opt/spack/bin/spack"
+spackBin = "spack/bin/spack"
 
 def getRepos():
 	cmd = subprocess.run([spackBin, "repo", "list"], capture_output=True)
