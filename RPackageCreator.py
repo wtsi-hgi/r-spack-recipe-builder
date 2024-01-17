@@ -66,7 +66,7 @@ def getMissingDependencies():
 		file.close()
 		dict = {}
 		for i in lines:
-			splitted = i.replace(" ", "").split(",")
+			splitted = list(map(str.strip, i.replace(" ", "").split(",")))
 			if len(splitted) > 1:
 				dict[splitted[0]] = splitted[1:]
 			else:
@@ -86,6 +86,8 @@ def getHomepage(record):
 		return ""
 
 def writeRecipe(header, footer, versions, depends, package):
+	if not os.path.isdir("packages/r-" + package.lower().replace(".","-")):
+		os.makedirs("packages/r-" + package.lower().replace(".","-"))
 	f = open("packages/r-" + package.lower().replace(".","-") + "/package.py", "w")
 	f.write(f"""{header}
 
@@ -104,6 +106,8 @@ class PackageMaker:
 		if os.path.isfile("blacklist.txt"):
 			with open("blacklist.txt", "r") as f:
 				self.blacklist = f.readlines()
+				for i in range(len(self.blacklist)):
+					self.blacklist[i] = self.blacklist[i].strip()
 
 	def getExistingFiles(self, package, record):
 		def pullFiles():
@@ -124,8 +128,6 @@ class PackageMaker:
 				raise Exception(f"Package {'r-' + package.lower().replace('.','-')} is already up to date")
 			return pullFiles()
 		
-		if not os.path.isdir("packages/r-" + package.lower().replace(".","-")):
-			os.makedirs("packages/r-" + package.lower().replace(".","-"))
 		return "+"
 
 	def getProgress(self, mode):
@@ -145,7 +147,7 @@ class PackageMaker:
 			depends_on.append("\tdepends_on(\"" + i[0] + i[1] + "\", type=(\"build\", \"run\"))\n")
 		return depends_on
 
-	def getTemplate(self, mode, package, name, description, homepage, classname):
+	def getTemplate(self, mode, package, name, description, homepage, classname, md5URL):
 		if mode == "+":
 			backslashN = "\n\t"
 			header = f"""# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
@@ -170,7 +172,7 @@ class R{classname}(RPackage):
 			firstline = 0
 			for i in range(len(lines)):
 				lines[i] = lines[i].replace("    ", "\t")
-				if "\tversion(" in lines[i]:
+				if "\tversion(" in lines[i] or "\turl =" in lines[i]:
 					firstline = i
 					break
 			header = "".join(lines[:firstline]).strip()
@@ -184,6 +186,10 @@ class R{classname}(RPackage):
 							break
 			footer = "".join(lines[lastline:])
 
+		if md5URL != False:
+			header += f'\n\turl = "{md5URL}"'
+		if biocAnnotation.lib.get(package) != None:
+			footer += "\n# annotation"
 		return header, footer
 
 
@@ -212,7 +218,7 @@ class R{classname}(RPackage):
 			return "r", getversion, type, False
 		record = cran.lib.loc[cran.lib['Package'] == k]
 		if len(record) == 0:
-			if bioc.lib.get(k) == None:
+			if bioc.lib.get(k) == None and biocAnnotation.lib.get(k) == None:
 				raise Exception(f"Package {'r-' + k.lower().replace('.','-')} not found in database")
 		# print(fullname.lower(), getversion, type)
 		return "r-" + fullname.lower(), getversion, type, False
@@ -289,16 +295,14 @@ class R{classname}(RPackage):
 
 		homepage = getHomepage(record)
 
-		version = self.getChecksum(record, package)
+		version, md5URL = self.getChecksum(record, package)
 		if version is False:
-			with open("blacklist.txt", "a") as f:
-				f.write(f"\n{package}")
 			print(f"{self.getProgress('x')} {self.packman} package {'r-' + package.lower().replace('.','-')}")
 			return
 
 		classname = getClassname(package)
 		
-		header, footer = self.getTemplate(mode, package, name, description, homepage, classname)
+		header, footer = self.getTemplate(mode, package, name, description, homepage, classname, md5URL)
 
 		writeRecipe(header, footer, version, dependencies, package)
 		print(f"{self.getProgress(mode)} {self.packman} package {'r-' + package.lower().replace('.','-')}")
@@ -341,7 +345,7 @@ class CRANPackageMaker(PackageMaker):
 		
 	def getChecksum(self, record, package):
 		if "MD5sum" in record.keys():
-			return f"""\tversion("{record['Version']}", md5="{record['MD5sum']}")\n"""
+			return f"""\tversion("{record['Version']}", md5="{record['MD5sum']}")\n""", False
 		else:
 			baseurl = self.getURL(package, record)
 			latest = requests.get(baseurl, allow_redirects=True)
@@ -352,18 +356,20 @@ class CRANPackageMaker(PackageMaker):
 class BIOCPackageMaker(PackageMaker):
 	packman = "bioc"
 	hashes = {}
+	url = "https://www.bioconductor.org/packages/release/bioc/VIEWS"
+	cacheFilename = "biocLibrary.pkl"
+	name = "Bioconductor"
 
 	def getRecord(self, package):
 		return self.packages[package]
 
 	def getPackages(self):
-		url = "https://www.bioconductor.org/packages/release/bioc/VIEWS"
-		biocHead = requests.head(url)
+		biocHead = requests.head(self.url)
 		biocWebTime = email.utils.parsedate_to_datetime(biocHead.headers.get('last-modified')).replace(tzinfo=None)
-		biocLocalTime = datetime.datetime.fromtimestamp(os.path.getmtime("biocLibrary.pkl")) if os.path.isfile("biocLibrary.pkl") else datetime.datetime.fromtimestamp(0)
-		if not os.path.isfile("biocLibrary.pkl") or biocWebTime > biocLocalTime:
-			print("Downloading Bioconductor database")
-			response = requests.get(url, allow_redirects=True)
+		biocLocalTime = datetime.datetime.fromtimestamp(os.path.getmtime(self.cacheFilename)) if os.path.isfile(self.cacheFilename) else datetime.datetime.fromtimestamp(0)
+		if not os.path.isfile(self.cacheFilename) or biocWebTime > biocLocalTime:
+			print(f"Downloading {self.name} database")
+			response = requests.get(self.url, allow_redirects=True)
 			databaseBIOC = (response.text).split("\n\n")
 			packagesBIOC = {}
 			for package in range(len(databaseBIOC) - 1):
@@ -375,11 +381,11 @@ class BIOCPackageMaker(PackageMaker):
 					newPackage[databaseBIOC[package][field][0]] = databaseBIOC[package][field][1]
 				packagesBIOC[newPackage["Package"]] = newPackage
 			
-			with open("biocLibrary.pkl", "wb") as fp:
+			with open(self.cacheFilename, "wb") as fp:
 				pickle.dump(packagesBIOC, fp)
 				fp.close()
 
-		with open('biocLibrary.pkl', 'rb') as fp:
+		with open(self.cacheFilename, 'rb') as fp:
 			packagesBIOC = pickle.load(fp)
 			fp.close()
 		return packagesBIOC
@@ -396,15 +402,17 @@ class BIOCPackageMaker(PackageMaker):
 		super().packageLoop(self.lib.keys(), "Bioconductor", record)
 		with open("BIOCHashes.json", "w") as f:
 			json.dump(self.hashes, f)
-	
-	def getURL(self, package, record):
-		return f"https://bioconductor.org/packages/release/bioc/src/contrib/{package}_{record['Version']}.tar.gz"
+
+	def getURL(self, record):
+		return f"https://bioconductor.org/packages/release/bioc/{record['source.ver']}"
 
 	def getChecksum(self, record, package):
 		# return f"""\tversion("{record['Version']}", sha256="TODO_UNCOMMENT")\n"""
+		if "source.ver" in record.keys():
+			return f"""\tversion("{record['Version']}", md5="{record['MD5sum']}")\n""", self.getURL(record)
 		if "git_url" in record.keys():
 			if record["git_last_commit"] in self.hashes.keys():
-				return f"""\tversion("{record['Version']}", commit="{self.hashes[record["git_last_commit"]]}")\n"""
+				return f"""\tversion("{record['Version']}", commit="{self.hashes[record["git_last_commit"]]}")\n""", False
 			gitRefs = requests.get(record['git_url'] + "/info/refs", allow_redirects=True).text.split("\n")
 			for i in range(len(gitRefs)):
 				hash = gitRefs[i].split("\trefs/heads/")
@@ -415,13 +423,16 @@ class BIOCPackageMaker(PackageMaker):
 			if len(self.hashes.keys()) % 50 == 0:
 				with open("BIOCHashes.json", "w") as f:
 					json.dump(self.hashes, f)
-			return f"""\tversion("{record['Version']}", commit="{commitHash}")\n"""
+			return f"""\tversion("{record['Version']}", commit="{commitHash}")\n""", False
 		else:
-			return False
+			return False, False
 
+class BIOCAnnotationMaker(BIOCPackageMaker):
+	url = "https://www.bioconductor.org/packages/release/data/annotation/VIEWS"
+	cacheFilename = "biocAnnotationLibrary.pkl"
+	name = "Bioconductor annotations"
 
-
-print("Welcome to the Spack recipe creator for R!\n [+] means a package is freshly created\n [*] means a package is updated\n [~] means a package is already up to date\n [x] means a package won't be created because it is deprecated or it exists in blacklist.txt\n")
+print("Welcome to the Spack recipe creator for R!\n [+] means a package is freshly created\n [*] means a package is updated\n [~] means a package is already up to date\n [x] means a package can't be created or is blacklisted\n")
 
 actualDirs = getRepos()
 packageVersions = getExistingVersions()
@@ -431,7 +442,10 @@ missingDependencies = getMissingDependencies()
 
 cran = CRANPackageMaker(actualDirs, packageVersions, systemRequirements, missingDependencies)
 bioc = BIOCPackageMaker(actualDirs, packageVersions, systemRequirements, missingDependencies)
+biocAnnotation = BIOCAnnotationMaker(actualDirs, packageVersions, systemRequirements, missingDependencies)
 
 cran.packageLoop()
 bioc.packageLoop()
+biocAnnotation.packageLoop()
+
 setSystemRequirements(systemRequirements)
