@@ -1,5 +1,5 @@
 __pycache__
 packages
-biocLibrary.pkl
-cranLibrary.rds
+*Library.*
 spack
+packages.zip
