@@ -96,6 +96,8 @@ def writeRecipe(header, footer, versions, depends, package):
 	f.close()
 
 class PackageMaker:
+	packageMakers = []
+
 	def __init__(self, actualDirs, packageVersions, systemRequirements, missingDependencies):
 		self.actualDirs = actualDirs
 		self.packageVersions = packageVersions
@@ -103,6 +105,9 @@ class PackageMaker:
 		self.systemRequirements = systemRequirements
 		self.missingDependencies = missingDependencies
 		self.blacklist = []
+		self.comment = False
+		PackageMaker.packageMakers.append(self)
+		
 		if os.path.isfile("blacklist.txt"):
 			with open("blacklist.txt", "r") as f:
 				self.blacklist = f.readlines()
@@ -188,8 +193,8 @@ class R{classname}(RPackage):
 
 		if md5URL != False:
 			header += f'\n\turl = "{md5URL}"'
-		if biocAnnotation.lib.get(package) != None:
-			footer += "\n# annotation"
+		if self.comment != False:
+			footer += f"\n\t# {self.comment}"
 		return header, footer
 
 
@@ -216,12 +221,11 @@ class R{classname}(RPackage):
 			type = "any"
 		if fullname.lower() == "r":
 			return "r", getversion, type, False
-		record = cran.lib.loc[cran.lib['Package'] == k]
-		if len(record) == 0:
-			if bioc.lib.get(k) == None and biocAnnotation.lib.get(k) == None:
-				raise Exception(f"Package {'r-' + k.lower().replace('.','-')} not found in database")
-		# print(fullname.lower(), getversion, type)
-		return "r-" + fullname.lower(), getversion, type, False
+		
+		for i in PackageMaker.packageMakers:
+			if i.exists(k):
+				return "r-" + fullname.lower(), getversion, type, False
+		return False
 
 	def writeDeps(self, record, field):
 		if record.get(field) == None:
@@ -232,10 +236,11 @@ class R{classname}(RPackage):
 		dependencies = record[field].replace(" ","").replace("\n", "").split(",")
 		result = []
 		for i in dependencies:
-			try:
-				result.append(self.packageName(i))
-			except:
+			name = self.packageName(i)
+			if not name:
 				continue
+			else:
+				result.append(self.packageName(i))
 		return result
 
 	def writeRequirements(self, record):
@@ -353,6 +358,10 @@ class CRANPackageMaker(PackageMaker):
 			sha256_hash_latest.update(latest.content)
 			return f"""\tversion("{record['Version']}", sha256="{sha256_hash_latest.hexdigest()}")\n"""
 		
+	def exists(self, k):
+		record = self.lib.loc[self.lib['Package'] == k]
+		return len(record) > 0
+
 class BIOCPackageMaker(PackageMaker):
 	packman = "bioc"
 	hashes = {}
@@ -393,7 +402,7 @@ class BIOCPackageMaker(PackageMaker):
 
 	def packageLoop(self):
 		if os.path.exists("BIOCHashes.json"):
-			print("Downloading Bioconductor hashes")
+			print("Loading Bioconductor hashes")
 			with open("BIOCHashes.json", "r") as f:
 				self.hashes = json.load(f)
 		else:
@@ -426,11 +435,21 @@ class BIOCPackageMaker(PackageMaker):
 			return f"""\tversion("{record['Version']}", commit="{commitHash}")\n""", False
 		else:
 			return False, False
+		
+	def exists(self, k):
+		return self.lib.get(k) is not None
 
 class BIOCAnnotationMaker(BIOCPackageMaker):
 	url = "https://www.bioconductor.org/packages/release/data/annotation/VIEWS"
 	cacheFilename = "biocAnnotationLibrary.pkl"
 	name = "Bioconductor annotations"
+	comment = "annotation"
+
+class BIOCExperimentMaker(BIOCPackageMaker):
+	url = "https://www.bioconductor.org/packages/release/data/experiment/VIEWS"
+	cacheFilename = "biocExperimentLibrary.pkl"
+	name = "Bioconductor experiments"
+	comment = "experiment"
 
 print("Welcome to the Spack recipe creator for R!\n [+] means a package is freshly created\n [*] means a package is updated\n [~] means a package is already up to date\n [x] means a package can't be created or is blacklisted\n")
 
@@ -443,9 +462,11 @@ missingDependencies = getMissingDependencies()
 cran = CRANPackageMaker(actualDirs, packageVersions, systemRequirements, missingDependencies)
 bioc = BIOCPackageMaker(actualDirs, packageVersions, systemRequirements, missingDependencies)
 biocAnnotation = BIOCAnnotationMaker(actualDirs, packageVersions, systemRequirements, missingDependencies)
+biocExperiment = BIOCExperimentMaker(actualDirs, packageVersions, systemRequirements, missingDependencies)
 
 cran.packageLoop()
 bioc.packageLoop()
 biocAnnotation.packageLoop()
+biocExperiment.packageLoop()
 
 setSystemRequirements(systemRequirements)
