@@ -364,7 +364,7 @@ class CRANPackageMaker(PackageMaker):
 class BIOCPackageMaker(PackageMaker):
 	packman = "bioc"
 	hashes = {}
-	url = "https://www.bioconductor.org/packages/release/bioc/VIEWS"
+	url = "https://www.bioconductor.org/packages/release/bioc/"
 	cacheFilename = "libs/biocLibrary.pkl"
 	name = "Bioconductor"
 
@@ -372,12 +372,12 @@ class BIOCPackageMaker(PackageMaker):
 		return self.packages[package]
 
 	def getPackages(self):
-		biocHead = requests.head(self.url)
+		biocHead = requests.head(self.url + "VIEWS")
 		biocWebTime = email.utils.parsedate_to_datetime(biocHead.headers.get('last-modified')).replace(tzinfo=None)
 		biocLocalTime = datetime.datetime.fromtimestamp(os.path.getmtime(self.cacheFilename)) if os.path.isfile(self.cacheFilename) else datetime.datetime.fromtimestamp(0)
 		if not os.path.isfile(self.cacheFilename) or biocWebTime > biocLocalTime:
 			print(f"Downloading {self.name} database")
-			response = requests.get(self.url, allow_redirects=True)
+			response = requests.get(self.url + "VIEWS", allow_redirects=True)
 			databaseBIOC = (response.text).split("\n\n")
 			packagesBIOC = {}
 			for package in range(len(databaseBIOC) - 1):
@@ -412,7 +412,7 @@ class BIOCPackageMaker(PackageMaker):
 			json.dump(self.hashes, f)
 
 	def getURL(self, record):
-		return f"https://bioconductor.org/packages/release/bioc/{record['source.ver']}"
+		return self.url + record['source.ver']
 
 	def getChecksum(self, record, package):
 		# return f"""\tversion("{record['Version']}", sha256="TODO_UNCOMMENT")\n"""
@@ -439,19 +439,19 @@ class BIOCPackageMaker(PackageMaker):
 		return self.lib.get(k) is not None
 
 class BIOCAnnotationMaker(BIOCPackageMaker):
-	url = "https://www.bioconductor.org/packages/release/data/annotation/VIEWS"
+	url = "https://www.bioconductor.org/packages/release/data/annotation/"
 	cacheFilename = "libs/biocAnnotationLibrary.pkl"
 	name = "Bioconductor annotations"
 	comment = "annotation"
 
 class BIOCExperimentMaker(BIOCPackageMaker):
-	url = "https://www.bioconductor.org/packages/release/data/experiment/VIEWS"
+	url = "https://www.bioconductor.org/packages/release/data/experiment/"
 	cacheFilename = "libs/biocExperimentLibrary.pkl"
 	name = "Bioconductor experiments"
 	comment = "experiment"
 
 class BIOCWorkflowMaker(BIOCPackageMaker):
-	url = "https://www.bioconductor.org/packages/release/workflows/VIEWS"
+	url = "https://www.bioconductor.org/packages/release/workflows/"
 	cacheFilename = "libs/biocWorkflowLibrary.pkl"
 	name = "Bioconductor workflows"
 	comment = "workflow"
