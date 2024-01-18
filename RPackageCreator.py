@@ -451,6 +451,12 @@ class BIOCExperimentMaker(BIOCPackageMaker):
 	name = "Bioconductor experiments"
 	comment = "experiment"
 
+class BIOCWorkflowMaker(BIOCPackageMaker):
+	url = "https://www.bioconductor.org/packages/release/workflows/VIEWS"
+	cacheFilename = "biocWorkflowLibrary.pkl"
+	name = "Bioconductor workflows"
+	comment = "workflow"
+
 print("Welcome to the Spack recipe creator for R!\n [+] means a package is freshly created\n [*] means a package is updated\n [~] means a package is already up to date\n [x] means a package can't be created or is blacklisted\n")
 
 actualDirs = getRepos()
@@ -458,15 +464,18 @@ packageVersions = getExistingVersions()
 systemRequirements = getSystemRequirements()
 missingDependencies = getMissingDependencies()
 
+managers = (
+	CRANPackageMaker, 
+	BIOCPackageMaker, 
+	BIOCAnnotationMaker, 
+	BIOCExperimentMaker, 
+	BIOCWorkflowMaker
+)
 
-cran = CRANPackageMaker(actualDirs, packageVersions, systemRequirements, missingDependencies)
-bioc = BIOCPackageMaker(actualDirs, packageVersions, systemRequirements, missingDependencies)
-biocAnnotation = BIOCAnnotationMaker(actualDirs, packageVersions, systemRequirements, missingDependencies)
-biocExperiment = BIOCExperimentMaker(actualDirs, packageVersions, systemRequirements, missingDependencies)
+for p in managers:
+	p(actualDirs, packageVersions, systemRequirements, missingDependencies)
 
-cran.packageLoop()
-bioc.packageLoop()
-biocAnnotation.packageLoop()
-biocExperiment.packageLoop()
+for p in PackageMaker.packageMakers:
+	p.packageLoop()
 
 setSystemRequirements(systemRequirements)
