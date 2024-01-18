@@ -364,9 +364,6 @@ class CRANPackageMaker(PackageMaker):
 class BIOCPackageMaker(PackageMaker):
 	packman = "bioc"
 	hashes = {}
-	url = "https://www.bioconductor.org/packages/release/bioc/"
-	cacheFilename = "libs/biocLibrary.pkl"
-	name = "Bioconductor"
 
 	def getRecord(self, package):
 		return self.packages[package]
@@ -438,19 +435,25 @@ class BIOCPackageMaker(PackageMaker):
 	def exists(self, k):
 		return self.lib.get(k) is not None
 
-class BIOCAnnotationMaker(BIOCPackageMaker):
+class BIOCSoftware(BIOCPackageMaker):
+	url = "https://www.bioconductor.org/packages/release/bioc/"
+	cacheFilename = "libs/biocLibrary.pkl"
+	name = "Bioconductor software"
+	comment = ""
+
+class BIOCAnnotations(BIOCPackageMaker):
 	url = "https://www.bioconductor.org/packages/release/data/annotation/"
 	cacheFilename = "libs/biocAnnotationLibrary.pkl"
 	name = "Bioconductor annotations"
 	comment = "annotation"
 
-class BIOCExperimentMaker(BIOCPackageMaker):
+class BIOCExperiments(BIOCPackageMaker):
 	url = "https://www.bioconductor.org/packages/release/data/experiment/"
 	cacheFilename = "libs/biocExperimentLibrary.pkl"
 	name = "Bioconductor experiments"
 	comment = "experiment"
 
-class BIOCWorkflowMaker(BIOCPackageMaker):
+class BIOCWorkflows(BIOCPackageMaker):
 	url = "https://www.bioconductor.org/packages/release/workflows/"
 	cacheFilename = "libs/biocWorkflowLibrary.pkl"
 	name = "Bioconductor workflows"
@@ -465,10 +468,10 @@ missingDependencies = getMissingDependencies()
 
 managers = (
 	CRANPackageMaker, 
-	BIOCPackageMaker, 
-	BIOCAnnotationMaker, 
-	BIOCExperimentMaker, 
-	BIOCWorkflowMaker
+	BIOCSoftware, 
+	BIOCAnnotations, 
+	BIOCExperiments, 
+	BIOCWorkflows
 )
 
 for p in managers:
