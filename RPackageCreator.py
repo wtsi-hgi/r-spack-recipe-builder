@@ -22,9 +22,8 @@ def getRepos():
 	return actualDirs
 
 def getExistingVersions():
-	if not os.path.isdir("packages"):
-		os.mkdir("packages")
-
+	os.makedirs("packages", exist_ok=True)
+	os.makedirs("libs", exist_ok=True)
 	print("Fetching package versions, this could take a while...")
 	stream = subprocess.run([spackBin, "list", "--format", "version_json", "r-*"], capture_output=True)
 	decoded = stream.stdout.decode("utf-8").strip()
@@ -86,8 +85,7 @@ def getHomepage(record):
 		return ""
 
 def writeRecipe(header, footer, versions, depends, package):
-	if not os.path.isdir("packages/r-" + package.lower().replace(".","-")):
-		os.makedirs("packages/r-" + package.lower().replace(".","-"))
+	os.makedirs("packages/r-" + package.lower().replace(".","-"), exist_ok=True)
 	f = open("packages/r-" + package.lower().replace(".","-") + "/package.py", "w")
 	f.write(f"""{header}
 
@@ -97,6 +95,7 @@ def writeRecipe(header, footer, versions, depends, package):
 
 class PackageMaker:
 	packageMakers = []
+	comment = ""
 
 	def __init__(self, actualDirs, packageVersions, systemRequirements, missingDependencies):
 		self.actualDirs = actualDirs
@@ -105,7 +104,6 @@ class PackageMaker:
 		self.systemRequirements = systemRequirements
 		self.missingDependencies = missingDependencies
 		self.blacklist = []
-		self.comment = False
 		PackageMaker.packageMakers.append(self)
 		
 		if os.path.isfile("blacklist.txt"):
@@ -191,9 +189,9 @@ class R{classname}(RPackage):
 							break
 			footer = "".join(lines[lastline:])
 
-		if md5URL != False:
+		if md5URL != "":
 			header += f'\n\turl = "{md5URL}"'
-		if self.comment != False:
+		if self.comment != "":
 			footer += f"\n\t# {self.comment}"
 		return header, footer
 
@@ -301,7 +299,7 @@ class R{classname}(RPackage):
 		homepage = getHomepage(record)
 
 		version, md5URL = self.getChecksum(record, package)
-		if version is False:
+		if version == "":
 			print(f"{self.getProgress('x')} {self.packman} package {'r-' + package.lower().replace('.','-')}")
 			return
 
@@ -322,19 +320,20 @@ class R{classname}(RPackage):
 
 class CRANPackageMaker(PackageMaker):
 	packman = "cran"
+	cacheFilename = "libs/cranLibrary.rds"
 
 	def getPackages(self):
 		url = "https://cran.r-project.org/web/packages/packages.rds"
 		cranHead = requests.head(url)
 		cranWebTime = email.utils.parsedate_to_datetime(cranHead.headers.get('last-modified')).replace(tzinfo=None)
-		cranLocalTime = datetime.datetime.fromtimestamp(os.path.getmtime("cranLibrary.rds")) if os.path.isfile("cranLibrary.rds") else datetime.datetime.fromtimestamp(0)
-		if not os.path.isfile("cranLibrary.rds") or cranWebTime > cranLocalTime:
+		cranLocalTime = datetime.datetime.fromtimestamp(os.path.getmtime(self.cacheFilename)) if os.path.isfile(self.cacheFilename) else datetime.datetime.fromtimestamp(0)
+		if not os.path.isfile(self.cacheFilename) or cranWebTime > cranLocalTime:
 			print("Downloading CRAN database")
 			response = requests.get(url, allow_redirects=True)
-			savedDatabase = open("cranLibrary.rds", "wb")
+			savedDatabase = open(self.cacheFilename, "wb")
 			savedDatabase.write(response.content)
 			savedDatabase.close()
-		savedDatabase = open("cranLibrary.rds", "rb")
+		savedDatabase = open(self.cacheFilename, "rb")
 		database = pyreadr.read_r(savedDatabase.name)
 		savedDatabase.close()
 		database = database[None]
@@ -350,13 +349,13 @@ class CRANPackageMaker(PackageMaker):
 		
 	def getChecksum(self, record, package):
 		if "MD5sum" in record.keys():
-			return f"""\tversion("{record['Version']}", md5="{record['MD5sum']}")\n""", False
+			return f"""\tversion("{record['Version']}", md5="{record['MD5sum']}")\n""", ""
 		else:
 			baseurl = self.getURL(package, record)
 			latest = requests.get(baseurl, allow_redirects=True)
 			sha256_hash_latest = hashlib.sha256()
 			sha256_hash_latest.update(latest.content)
-			return f"""\tversion("{record['Version']}", sha256="{sha256_hash_latest.hexdigest()}")\n"""
+			return f"""\tversion("{record['Version']}", sha256="{sha256_hash_latest.hexdigest()}")\n""", ""
 		
 	def exists(self, k):
 		record = self.lib.loc[self.lib['Package'] == k]
@@ -366,7 +365,7 @@ class BIOCPackageMaker(PackageMaker):
 	packman = "bioc"
 	hashes = {}
 	url = "https://www.bioconductor.org/packages/release/bioc/VIEWS"
-	cacheFilename = "biocLibrary.pkl"
+	cacheFilename = "libs/biocLibrary.pkl"
 	name = "Bioconductor"
 
 	def getRecord(self, package):
@@ -401,15 +400,15 @@ class BIOCPackageMaker(PackageMaker):
 
 
 	def packageLoop(self):
-		if os.path.exists("BIOCHashes.json"):
+		if os.path.exists("libs/BIOCHashes.json"):
 			print("Loading Bioconductor hashes")
-			with open("BIOCHashes.json", "r") as f:
+			with open("libs/BIOCHashes.json", "r") as f:
 				self.hashes = json.load(f)
 		else:
 			self.hashes = {}
 		record = lambda x: self.lib[x]
 		super().packageLoop(self.lib.keys(), self.name, record)
-		with open("BIOCHashes.json", "w") as f:
+		with open("libs/BIOCHashes.json", "w") as f:
 			json.dump(self.hashes, f)
 
 	def getURL(self, record):
@@ -421,7 +420,7 @@ class BIOCPackageMaker(PackageMaker):
 			return f"""\tversion("{record['Version']}", md5="{record['MD5sum']}")\n""", self.getURL(record)
 		if "git_url" in record.keys():
 			if record["git_last_commit"] in self.hashes.keys():
-				return f"""\tversion("{record['Version']}", commit="{self.hashes[record["git_last_commit"]]}")\n""", False
+				return f"""\tversion("{record['Version']}", commit="{self.hashes[record["git_last_commit"]]}")\n""", ""
 			gitRefs = requests.get(record['git_url'] + "/info/refs", allow_redirects=True).text.split("\n")
 			for i in range(len(gitRefs)):
 				hash = gitRefs[i].split("\trefs/heads/")
@@ -430,30 +429,30 @@ class BIOCPackageMaker(PackageMaker):
 					break
 			self.hashes[record["git_last_commit"]] = commitHash
 			if len(self.hashes.keys()) % 50 == 0:
-				with open("BIOCHashes.json", "w") as f:
+				with open("libs/BIOCHashes.json", "w") as f:
 					json.dump(self.hashes, f)
-			return f"""\tversion("{record['Version']}", commit="{commitHash}")\n""", False
+			return f"""\tversion("{record['Version']}", commit="{commitHash}")\n""", ""
 		else:
-			return False, False
+			return "", ""
 		
 	def exists(self, k):
 		return self.lib.get(k) is not None
 
 class BIOCAnnotationMaker(BIOCPackageMaker):
 	url = "https://www.bioconductor.org/packages/release/data/annotation/VIEWS"
-	cacheFilename = "biocAnnotationLibrary.pkl"
+	cacheFilename = "libs/biocAnnotationLibrary.pkl"
 	name = "Bioconductor annotations"
 	comment = "annotation"
 
 class BIOCExperimentMaker(BIOCPackageMaker):
 	url = "https://www.bioconductor.org/packages/release/data/experiment/VIEWS"
-	cacheFilename = "biocExperimentLibrary.pkl"
+	cacheFilename = "libs/biocExperimentLibrary.pkl"
 	name = "Bioconductor experiments"
 	comment = "experiment"
 
 class BIOCWorkflowMaker(BIOCPackageMaker):
 	url = "https://www.bioconductor.org/packages/release/workflows/VIEWS"
-	cacheFilename = "biocWorkflowLibrary.pkl"
+	cacheFilename = "libs/biocWorkflowLibrary.pkl"
 	name = "Bioconductor workflows"
 	comment = "workflow"
 
