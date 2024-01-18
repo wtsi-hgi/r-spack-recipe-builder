@@ -749,3 +749,4 @@
 'pandoc (>= 1.14), pandoc-citeproc'	pandoc	pandoc-citeproc
 'C++11 Windows: Dokan Linux&Mac: fuse, pkg-config'	pkg-config
 'Java (>= 8.0) Git'	java@1.8:	git
+'GDAL'	gdal
