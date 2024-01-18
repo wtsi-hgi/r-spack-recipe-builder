@@ -408,7 +408,7 @@ class BIOCPackageMaker(PackageMaker):
 		else:
 			self.hashes = {}
 		record = lambda x: self.lib[x]
-		super().packageLoop(self.lib.keys(), "Bioconductor", record)
+		super().packageLoop(self.lib.keys(), self.name, record)
 		with open("BIOCHashes.json", "w") as f:
 			json.dump(self.hashes, f)
 
