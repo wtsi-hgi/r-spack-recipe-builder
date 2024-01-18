@@ -750,3 +750,4 @@
 'C++11 Windows: Dokan Linux&Mac: fuse, pkg-config'	pkg-config
 'Java (>= 8.0) Git'	java@1.8:	git
 'GDAL'	gdal
+'UNIX, SRA Toolkit=2.10.3, Entrez Direct=13.3, FastQC=v0.11.9, Cutadapt=2.10, datasets, SAMtools=1.9, HISAT2=2.2.0, StringTie=2.1.1, Salmon=1.2.1'	sratoolkit@2.10.3:	entrezdirect@13.3:	fastqc@0.11.9:	py-cutadapt@2.10:	py-datasets	samtools@1.9:	hisat2@2.2.0:	stringtie@2.1.1:	salmon@1.2.1:
