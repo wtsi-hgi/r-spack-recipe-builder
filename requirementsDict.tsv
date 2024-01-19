@@ -165,7 +165,7 @@
 'Requires the OpenMP library for parallel computing.\nIf the OpenMP library is not available, the code is executed\nsequentially and a warning is printed.'	
 'The package required the jq command line library.\nPlease check https://stedolan.github.io/jq/download/ for\ndownload instructions.'	jq
 'Python (>= 2.7 or >= 3.5) and elex package'	python@3.5:	py-elex
-'pari/gp'	pari-gp
+'pari/gp'	pari
 'The function render() requires Pandoc\n(http://pandoc.org). To use PGP/GnuPG encryption requires gpg.'	pandoc
 'pandoc (>= 1.12.3)'	pandoc@1.12.3:
 'EnergyPlus (optional) (<https://energyplus.net>);\nudunits2'	udunits
@@ -635,7 +635,7 @@
 'udunits-2'	udunits@2:
 'POSIX.1-2001, AppArmor (optional)'	
 'JAGS >= 4.3.0 (http://mcmc-jags.sourceforge.net)'	jags@4.3.0:
-'PARI/GP >= 2.3.0 [strongly recommended for\nlogkda()]'	pari-gp
+'PARI/GP >= 2.3.0 [strongly recommended for\nlogkda()]'	pari
 'Linux or MacOS Intel chip tensorflow (1.14.0)'	tensorflow@1.14.0:
 'V8 engine version 6+ is needed for ES6 and WASM\nsupport. On Linux you can build against libv8-dev (Debian) or\nv8-devel (Fedora). We also provide static libv8 binaries for\nmost platforms, see the README for details.'	
 'valection (>= 1.0.0)'	valection@1.0.0:
