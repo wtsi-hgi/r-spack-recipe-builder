@@ -1,5 +1,14 @@
 XVector,zlib
 rtracklayer,zlib
-VariantAnnotation,zlib
+VariantAnnotation,zlib,curl
 RPostgreSQL,postgresql+client_only
 imager,libx11
+mzR,zlib
+rJava,xz,bzip2,zlib,icu4c,libiconv
+RcppZiggurat,gsl
+alabaster.base,zlib,gzip
+bamsignals,curl
+Rsamtools,zlib,curl
+CNEr,zlib
+nlopt,nlopt
+nloptr,nlopt
