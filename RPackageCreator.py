@@ -1,6 +1,5 @@
 import hashlib
 import shutil
-import re
 import requests
 import pyreadr
 import pandas as pd
@@ -203,7 +202,9 @@ class R{classname}(RPackage):
 			version = version[1].lower().replace(")","")
 			getversion = ""
 			fullname = k.replace(".","-")
-			ver = version.replace('>','').replace('<','').replace('=','')
+			versionNumber = version.replace('>','').replace('<','').replace('=','')
+			verNoFrontZeros = ".".join(str(int(i)) for i in versionNumber.split("."))
+			ver = verNoFrontZeros.replace(".0","") # If you remove verNoFrontZeros, this will break. This replace function relies on the fact the function above removes .0s that have a number after them.
 			type = ""
 			if ">" in version:
 				getversion = f"@{ver}:"
@@ -364,9 +365,6 @@ class CRANPackageMaker(PackageMaker):
 class BIOCPackageMaker(PackageMaker):
 	packman = "bioc"
 	hashes = {}
-
-	def getRecord(self, package):
-		return self.packages[package]
 
 	def getPackages(self):
 		biocHead = requests.head(self.url + "VIEWS")
