@@ -336,7 +336,7 @@
 'pandoc (>= 2.7.2) - http://pandoc.org'	pandoc@2.7.2:
 'TensorFlow (https://www.tensorflow.org), Keras\n(https://keras.io), TensorFlow Probability\n(https://www.tensorflow.org/probability)'	py-tensorflow-probability
 'A C++14 compiler. Version 5 or later of GCC will be\nfine.'	gcc@5:
-'gdal (optional), geos (optional), proj (optional),\nudunits (optional), gsl (optional), gmp (optional), glu\n(optional), jags (optional), mpfr (optional), openmpi\n(optional)'	gdal	geos	proj	udunits	gsl	gmp	glu	jags	mpfr	openmpi
+'gdal (optional), geos (optional), proj (optional),\nudunits (optional), gsl (optional), gmp (optional), glu\n(optional), jags (optional), mpfr (optional), openmpi\n(optional)'	gdal	geos	proj	udunits	gsl	gmp	glu	gl	jags	mpfr	openmpi
 'MRTSwath'	mrtswath
 'MonetDB, available from http://www.monetdb.org'	monetdb
 'OpenSSL, Cyrus SASL (aka libsasl2)'	openssl	cyrus-sasl
@@ -397,7 +397,7 @@
 'Poppler C++ API: libpoppler-cpp-dev (deb) or\npoppler-cpp-devel (rpm), and poppler-data (rpm/deb) package.'	poppler
 'MERLIN (https://csg.sph.umich.edu/abecasis/merlin/)\nfor calculations involving multiple linked markers.'	merlin
 'Python (>= 3.9.0)'	python@3.9.0:
-'Tcl/Tk package TkTable.'	tcl 	tk	tktable
+'Tcl/Tk package TkTable.'	tcl	tk	tktable
 'OpenSSL library and headers (openssl-dev or\nsimilar)'	openssl@1.0.2:
 'aria2: apt-get install -y aria2 (deb), gdal-bin:\napt-get install -y gdal-bin (deb), libgdal-dev: apt-get install\n-y libgdal-dev (deb)'	aria2	gdal
 'Pandoc (>= 1.15)'	pandoc@1.15:
@@ -486,7 +486,7 @@
 'FACTS Linux engines (>= 6.2.4), FLFLL (>= 6.2.4),\nMono (>= 5.20.1.19)'	facts@6.2.4:	flfll@6.2.4:	mono@5.20.1.19:
 'tk.browse() requires Tcl-tk >= 8.6 (shipped with R\n>= 3.4.0 on Windows, may have to be manually updated on other\nsystems)'	tcl@8.6:	tk@8.6:
 'Python (>= 3.7), rgf_python, scikit-learn (>=\n0.18.0), scipy, numpy. Detailed installation instructions for\neach operating system can be found in the README file.'	python@3.7:	py-scikit-learn@0.18.0:	py-scipy	py-numpy
-'OpenGL and GLU Library (Required for display in R.\nSee "Installing OpenGL support" in README.md. Not needed if\nonly browser displays using rglwidget() are wanted.), zlib\n(optional), libpng (>=1.2.9, optional), FreeType (optional),\npandoc (>=1.14, needed for vignettes)'	openglu	zlib	libpng	freetype
+'OpenGL and GLU Library (Required for display in R.\nSee "Installing OpenGL support" in README.md. Not needed if\nonly browser displays using rglwidget() are wanted.), zlib\n(optional), libpng (>=1.2.9, optional), FreeType (optional),\npandoc (>=1.14, needed for vignettes)'	gl	glu	zlib	libpng	freetype
 'GLPK library package (e.g., libglpk-dev on\nDebian/Ubuntu)'	glpk
 'gnparser (<https://github.com/gnames/gnparser>)'	gnparser
 'GRASS (>= 7)'	grass@7:
