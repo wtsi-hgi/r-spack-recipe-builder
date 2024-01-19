@@ -9,6 +9,7 @@ import requests
 class PackageMaker:
 	packageMakers = []
 	comment = ""
+	packageDict = {}
 
 	def __init__(self):
 		self.lib = self.getPackages()
@@ -20,32 +21,30 @@ class PackageMaker:
 				for i in range(len(self.blacklist)):
 					self.blacklist[i] = self.blacklist[i].strip()
 	
+	def addPackages(self, lib):
+		for i in lib:
+			PackageMaker.packageDict["r-" + i.lower().replace(".","-")] = False
+	
 	def packageLoop(self, lib, libname, record):
-		topLevel = []
 		total = len(lib)
 		counter = 0
 		for i in lib:
 			counter += 1
 			print (f"{counter}/{total} {libname} packages", end="\r")
-			if self.get(record(i), libname):
-				topLevel.append(i)
-
-		print(f"{len(topLevel)}/{total} {libname} packages: {topLevel}\n\n", end="\r")
-
+			self.get(record(i), libname)
 
 	def get(self, record, libname):
-		if libname == "CRAN":
-			if pd.isna(record.get("Reverse depends")):
-				if pd.isna(record.get("Reverse suggests")):
-					if pd.isna(record.get("Reverse imports")):
-						return True
-			return False
-		else:
-			if record.get("dependsOnMe") is None:
-				if record.get("importsMe") is None:
-					if record.get("suggestsMe") is None:
-						return True
-			return False
+		thingsToCheck = ["Imports", "Depends", "Suggests"]
+		for thing in thingsToCheck:
+			depends = record.get(thing)
+			if pd.isna(depends):
+				continue
+			depends = depends.split(",") if depends else []
+			for i in range(len(depends)):
+				package = depends[i].strip().split(" ")[0]
+				package = package.split("(")[0].strip()
+				if "r-" + package.lower().replace(".","-") in PackageMaker.packageDict.keys():
+					PackageMaker.packageDict["r-" + package.lower().replace(".","-")] = True
 
 
 class CRANPackageMaker(PackageMaker):
@@ -73,6 +72,9 @@ class CRANPackageMaker(PackageMaker):
 	def packageLoop(self):
 		record = lambda x: self.lib.loc[self.lib["Package"] == x].to_dict('records')[0]
 		super().packageLoop(self.lib["Package"], "CRAN", record)
+
+	def addPackages(self):
+		super().addPackages(self.lib["Package"])
 
 
 class BIOCPackageMaker(PackageMaker):
@@ -110,6 +112,9 @@ class BIOCPackageMaker(PackageMaker):
 		record = lambda x: self.lib[x]
 		super().packageLoop(self.lib.keys(), self.name, record)
 
+	def addPackages(self):
+		super().addPackages(self.lib.keys())
+
 class BIOCSoftware(BIOCPackageMaker):
 	url = "https://www.bioconductor.org/packages/release/bioc/"
 	cacheFilename = "libs/biocLibrary.pkl"
@@ -146,4 +151,10 @@ for p in managers:
 	p()
 
 for p in PackageMaker.packageMakers:
+	p.addPackages()
+
+for p in PackageMaker.packageMakers:
 	p.packageLoop()
+
+topLevel = [key for key, value in PackageMaker.packageDict.items() if value is False]
+print(f"{len(topLevel)} packages: {topLevel}\n\n", end="\r")
