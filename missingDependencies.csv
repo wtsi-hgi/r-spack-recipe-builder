@@ -1,2 +1,5 @@
 XVector,zlib
 rtracklayer,zlib
+VariantAnnotation,zlib
+RPostgreSQL,postgresql+client_only
+imager,libx11
