@@ -42,7 +42,7 @@
 'JAGS (https://mcmc-jags.sourceforge.net)'	jags
 'gfortran (>= 4.6.3)'	
 'JAGS'	jags
-'pandoc (>= 1.12.3), pandoc-citeproc'	pandoc@1.12.3:	pandoc-citeproc
+'pandoc (>= 1.12.3), pandoc-citeproc'	pandoc@1.12.3:
 'JAGS (http://mcmc-jags.sourceforge.io)'	jags@4.3.0:
 'JAGS >= 4.3.0 (https://mcmc-jags.sourceforge.io/)'	
 'GNU Scientific Library'	
@@ -78,7 +78,7 @@
 'GNU make, C++17'	
 'Python 3 and wxPython 4.0'	
 'pandoc'	pandoc
-'LaTeX(texi2dvi) must be present in the system to\ncreate PDF reports'	latex
+'LaTeX(texi2dvi) must be present in the system to\ncreate PDF reports'
 'Pandoc (>= 1.12.3), web browser'	
 'OpenBUGS (>= 3.2.2), hence Windows or x86 Linux'	
 'systemd, dbus-python, PyGObject,\npython-(dnf|apt|alpm)'	
@@ -116,7 +116,7 @@
 'ACER ConQuest (>=5.34.3)'	
 'GDAL (>= 2.0.1)'	gdal@2.0.1:
 'awscli: apt install -y awscli (deb), aws-configure:\naws configure (deb)'	awscli
-'pdfcrop (part of TexLive) is required to rebuild\nthe vignettes.'	pdfcrop
+'pdfcrop (part of TexLive) is required to rebuild\nthe vignettes.'
 'Java (>= 7.0); Stanford CoreNLP\n<http://nlp.stanford.edu/ software/corenlp.shtml> (>= 3.5.2)'	openjdk@1.7:
 'pandoc with https support'	pandoc
 'cppcheck'	cppcheck
@@ -144,7 +144,7 @@
 'fontconfig or zlib (only needed for platforms other\nthan modern OSX and Windows)'	fontconfig	zlib
 'java (>= 1.6)'	openjdk@1.6:
 'Julia (>= 1.6), DifferentialEquations.jl,\nModelingToolkit.jl'	julia@1.6:
-'Python (>= 2.7.0), TensorFlow\n(https://www.tensorflow.org/)'	python@2.7.0:	tensorflow
+'Python (>= 2.7.0), TensorFlow\n(https://www.tensorflow.org/)'	python@2.7.0:	py-tensorflow
 'Python, NumPy Python library'	python	py-numpy
 'fftw3 (>= 3.1.2), gsl (>= 1.15)'	fftw@3.1.2:	gsl@1.15:
 'libpq >= 9.0: libpq-dev (deb) or postgresql-devel\n(rpm)'	postgresql@9.0:+client_only
@@ -152,7 +152,7 @@
 'Docker, RStudio>=1.2'	
 'LibreOffice, Microsoft Word'	
 'LibreOffice (<https://www.libreoffice.org/>)\nrequired to extract data from .doc files or perform .pptx\nconversion.'	
-'domino (~>1.7.1)'	domino
+'domino (~>1.7.1)'
 'gsl'	gsl
 'Dynare, Octave'	dynare	octave
 'ffmpeg'	ffmpeg
@@ -202,7 +202,7 @@
 'pandoc (>= 2.0.6) - http://pandoc.org'	pandoc@2.0.6:
 'Python (>= 2.4), difflib, fuzzywuzzy ( >=0.15.0 ),\npython-Levenshtein ( >=0.12.0 ). Detailed installation\ninstructions for each operating system can be found in the\nREADME file.'	python@2.4:	py-fuzzywuzzy@0.15.0:	py-python-levenshtein@0.12.0:
 "Version Requirements to run the wild bootstrap\nthrough Julia - Julia (>= 1.8), WildBootTests.jl (>=0.9). Julia\nis downloadable via the official Julia website\n(https://julialang.org/downloads/), WildBootTests.jl via\nJulia's package manager\n(https://docs.julialang.org/en/v1/stdlib/Pkg/) or its github\nrepository (https://github.com/droodman/WildBootTests.jl)"	julia
-'TensorFlow (https://www.tensorflow.org)'	tensorflow
+'TensorFlow (https://www.tensorflow.org)'	py-tensorflow
 'Debian or Ubuntu system with access to Goto Blas,\nIntel MKL, Atlas development build as well as a Nvidia GPU with\nCUDA support'	cuda
 'Windows, Linux, OS X'	
 'GDAL (>= 2.0.1), PROJ (>= 4.8.0), netcdf, sqlite3'	gdal@2.0.1:	proj@4.8.0:	netcdf-c	sqlite3
@@ -285,7 +285,7 @@
 'Julia >= 0.6.0, RCall.jl'	julia@0.6.0:
 'Julia >= 1.0'	julia@1.0:
 'GMP (https://gmplib.org/)'	gmp
-'TensorFlow >= 2.0 (https://www.tensorflow.org/)'	tensorflow@2.0:
+'TensorFlow >= 2.0 (https://www.tensorflow.org/)'	py-tensorflow@2.0:
 'Optional: libsecret on Linux (libsecret-1-dev on\nDebian/Ubuntu, libsecret-devel on Fedora/CentOS)'	
 'SVMlight'	svmlight
 'MOSEK (http://www.mosek.com) and MOSEK license.'	mosek
@@ -356,7 +356,7 @@
 'neo4j - http://www.neo4j.com, cypher-shell -\nhttps://github.com/neo4j/cypher-shell/releases'	neo4j
 'Python (>= 3.0.0), Neptune (https://neptune.ai/)'	python@3.0.0:	neptune
 'NetMHC2pan\n(https://services.healthtech.dtu.dk/service.php?NetMHCIIpan-3.2)'	netmhc2pan
-'python (>= 3.8), keras, tensorflow'	python@3.8.0:	keras	tensorflow
+'python (>= 3.8), keras, tensorflow'	python@3.8.0:	keras	py-tensorflow
 'cmake, FSL'	cmake	fsl
 '7-zip command line tool (7z)'	7zip
 'cmake (>= 3.2.0) which is used only on Linux or\nmacOS systems when no system build of nlopt (>= 2.7.0) can be\nfound.'	cmake@3.2.0:
@@ -367,7 +367,7 @@
 'ImageMagick'	imagemagick
 'zip'	zip
 'GNU make, An ODBC3 driver manager and drivers.'	
-'GNU make, pandoc (>= 1.12.3), pandoc-citeproc,\nC++17'	pandoc@1.12.3:	pandoc
+'GNU make, pandoc (>= 1.12.3), pandoc-citeproc,\nC++17'	pandoc@1.12.3:
 'OpenCL library, GNU make'	opencl
 'pandoc, apparmor (optional)'	pandoc
 'OpenCV 3 or newer: libopencv-dev (Debian, Ubuntu)\nor opencv-devel (Fedora). The QR code detector requires at\nleast libopencv 4.5.2.'	opencnv@4.5.2:
@@ -534,7 +534,7 @@
 'fftw (>=3.2)'	fftw@3.2:
 "'Simulx' (<http://simulx.lixoft.com/>)"	simulx
 'GNU make, pandoc'	pandoc	pandoc
-'GNU make, pandoc (>= 1.12.3), pandoc-citeproc'	pandoc@1.12.3:	pandoc
+'GNU make, pandoc (>= 1.12.3), pandoc-citeproc'	pandoc@1.12.3:
 'pandoc, C++14'	pandoc
 'librsvg2'	librsvg@2:
 'GNU make, CMake (>= 3.10), pandoc, libarchive,\nlibregex, libexpat, liblzma, libzstd, liblz4, libz2, libz,\nlibbcrypt'	cmake@3.10:	pandoc	libarchive	libregex	expat	lzma	zstd	lz4	zlip	libbcrypt
@@ -543,7 +543,7 @@
 'POSIX.1-2001'	
 'embulk, embulk-output-td'	embulk
 'GSL (>=2.3)'	gsl@2.3:
-'"conda (python>=3.6 pytorch torchvision cpuonly\nnumpy ( >= 1.14.0) matplotlib pandas -c pytorch);\npython-minimal, pandoc pandoc-citeproc, qpdf; Python (>=3.6),\npytorch (>=1.4), torchvision, cpuonly, numpy ( >= 1.14.0);\npandoc (>= 2.0), qpdf ( >= 7.0) on Solaris"'	py-pytorch@1.4:	py-torchvision	py-numpy	pandoc@2.0:	python@3.6:
+'"conda (python>=3.6 pytorch torchvision cpuonly\nnumpy ( >= 1.14.0) matplotlib pandas -c pytorch);\npython-minimal, pandoc pandoc-citeproc, qpdf; Python (>=3.6),\npytorch (>=1.4), torchvision, cpuonly, numpy ( >= 1.14.0);\npandoc (>= 2.0), qpdf ( >= 7.0) on Solaris"'	py-torch@1.4:	py-torchvision	py-numpy	pandoc@2.0:	python@3.6:
 'WinEdt >= 5.2'	
 'ZeroMQ >= 3.0.0: libzmq3-dev (deb) or zeromq-devel\n(rpm)'	zeromq@3.0.0:
 'OpenSSL >= 1.0.1'	openssl@1.0.1:
@@ -583,7 +583,7 @@
 'cdo ecFlow'	
 'C++, arrow package with gzip codec, StarPU'	arrow+zlib
 'Stata'	stata
-'pdflatex'	pdflatex
+'pdflatex'
 'For all functions resp. apps: pandoc, LaTeX. For\nthe edapy() function resp. Statsomat/EDAPY app: Python (>=3).'	
 'docker'	
 'PLINK must be installed'	plink
@@ -609,9 +609,9 @@
 'pandoc (>= 1.12.3) suggested for using wordreg\nfunction; LaTeX packages tikz, booktabs, dcolumn, rotating,\nthumbpdf, longtable, paralist for the vignette'	pandoc@1.12.3:
 '"GNU make"'	
 'freetype2, harfbuzz, fribidi'	freetype@2:	harfbuzz	fribidi
-'TensorFlow >= 1.4 (https://www.tensorflow.org/)'	tensorflow@1.4:
+'TensorFlow >= 1.4 (https://www.tensorflow.org/)'	py-tensorflow@1.4:
 'libprotobuf, protobuf-compiler'	protobuf
-'TensorFlow >= 1.13.0 (https://www.tensorflow.org/)\nand TensorFlow IO >= 0.4.0 (https://github.com/tensorflow/io)'	tensorflow@1.13.0:
+'TensorFlow >= 1.13.0 (https://www.tensorflow.org/)\nand TensorFlow IO >= 0.4.0 (https://github.com/tensorflow/io)'	py-tensorflow@1.13.0:
 'TensorFlow Probability\n(https://www.tensorflow.org/probability)'	py-tensorflow-probability
 'exiftool, perl, ffmpeg, imagemagick'	exiftool	perl	ffmpeg	imagemagick
 'PhantomJS (https://phantomjs.org), pandoc (>=\n1.12.3) - https://pandoc.org.'	pandoc@1.12.3:
@@ -636,7 +636,7 @@
 'POSIX.1-2001, AppArmor (optional)'	
 'JAGS >= 4.3.0 (http://mcmc-jags.sourceforge.net)'	jags@4.3.0:
 'PARI/GP >= 2.3.0 [strongly recommended for\nlogkda()]'	pari
-'Linux or MacOS Intel chip tensorflow (1.14.0)'	tensorflow@1.14.0:
+'Linux or MacOS Intel chip tensorflow (1.14.0)'	py-tensorflow@1.14.0:
 'V8 engine version 6+ is needed for ES6 and WASM\nsupport. On Linux you can build against libv8-dev (Debian) or\nv8-devel (Fedora). We also provide static libv8 binaries for\nmost platforms, see the README for details.'	
 'valection (>= 1.0.0)'	valection@1.0.0:
 'libgdal-dev, GDAL (>= 2.2.3), PROJ (>= 4.8.0)'	gdal@2.2.3:	proj@4.8.0:
@@ -668,7 +668,7 @@
 'Julia, v 1.0 or later'	julia@1.0:
 'libxslt: libxslt1-dev (deb), libxslt-devel (rpm)'	libxslt
 'pandoc (>= 1.19.2.1)'	pandoc@1.19.2.1:
-'python, pytorch, numpy'	python	py-pytorch	py-numpy
+'python, pytorch, numpy'	python	py-torch	py-numpy
 'bcl2Fastq (versions >= 2.1.7)'	bcl2fastq@2.1.7:
 'pandoc (http://pandoc.org/installing.html) for generating reports from markdown files.'	pandoc
 'JAGS (4.3.0)'	jags@4.3.0:
@@ -746,7 +746,7 @@
 'clustalo, gs, perl'	clustalo	ghostscript	perl
 'Ensembl VEP, Samtools'	ensemble-vep	samtools
 '4GB of RAM'	
-'pandoc (>= 1.14), pandoc-citeproc'	pandoc	pandoc-citeproc
+'pandoc (>= 1.14), pandoc-citeproc'	pandoc
 'C++11 Windows: Dokan Linux&Mac: fuse, pkg-config'	pkg-config
 'Java (>= 8.0) Git'	java@1.8:	git
 'GDAL'	gdal
