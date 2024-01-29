@@ -17,3 +17,6 @@ multibiplotGUI
 seqArchR
 seqArchRplus
 SeqSQC
+RcmdrPlugin.PcaRobust
+uHMM
+MDSGUI

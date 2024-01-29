@@ -78,7 +78,7 @@
 'GNU make, C++17'	
 'Python 3 and wxPython 4.0'	
 'pandoc'	pandoc
-'LaTeX(texi2dvi) must be present in the system to\ncreate PDF reports'
+'LaTeX(texi2dvi) must be present in the system to\ncreate PDF reports'	
 'Pandoc (>= 1.12.3), web browser'	
 'OpenBUGS (>= 3.2.2), hence Windows or x86 Linux'	
 'systemd, dbus-python, PyGObject,\npython-(dnf|apt|alpm)'	
@@ -91,7 +91,7 @@
 'Python and numpyro are needed for Bayesian\ninference computations; python (>= 3.8) with header files and\nshared library; numpyro (= v0.12.1;\nhttps://https://num.pyro.ai/en/latest/index.html); arviz (=\nv0.15.1; https://https://python.arviz.org/en/stable/)'	python@3.8:	py-numpyro@0.12.1:	arviz@0.15.1
 "Cargo (Rust's package manager), rustc (>= 1.65)"	rust
 'Java (>= 7.0)'	openjdk@1.7:
-'bedtools'	bedtools
+'bedtools'	bedtools2
 'Google Chrome or other Chromium-based browser.\nchromium: chromium (rpm) or chromium-browser (deb)'	
 'gsl (with development libraries libgsl-dev)'	gsl
 'Cargo (rustc package manager) and GNU make'	rust
@@ -101,7 +101,7 @@
 'pandoc (for export clin DT to a file - inclusion of\nlist of interactive plots/objects with knitr)'	pandoc
 'xclip (https://github.com/astrand/xclip) or xsel\n(http://www.vergenet.net/~conrad/software/xsel/) for accessing\nthe X11 clipboard, or wl-clipboard\n(https://github.com/bugaevc/wl-clipboard) for systems using\nWayland.'	
 'Python (>= 2.7.0)'	python@2.7:
-'ZeroMQ (libzmq) >= 4.3.0 (optional; otherwise\nbundled)'	
+'ZeroMQ (libzmq) >= 4.3.0 (optional; otherwise\nbundled)'	libzmq@4.3.0:
 'libarmadillo: apt-get install -y libarmadillo-dev\n(deb), libblas: apt-get install -y libblas-dev (deb),\nliblapack: apt-get install -y liblapack-dev (deb),\nlibarpack++2: apt-get install -y libarpack++2-dev (deb),\ngfortran: apt-get install -y gfortran (deb), libgmp3: apt-get\ninstall -y libgmp3-dev (deb), libfftw3: apt-get install -y\nlibfftw3-dev (deb), libtiff5: apt-get install -y libtiff5-dev\n(deb)'	lapack	gcc	gmp
 'MOSEK (http://www.mosek.com) and MOSEK License for\nuse of Rmosek'	mosek
 'TensorFlow (https://www.tensorflow.org/)'	py-tensorflow
@@ -116,7 +116,7 @@
 'ACER ConQuest (>=5.34.3)'	
 'GDAL (>= 2.0.1)'	gdal@2.0.1:
 'awscli: apt install -y awscli (deb), aws-configure:\naws configure (deb)'	awscli
-'pdfcrop (part of TexLive) is required to rebuild\nthe vignettes.'
+'pdfcrop (part of TexLive) is required to rebuild\nthe vignettes.'	
 'Java (>= 7.0); Stanford CoreNLP\n<http://nlp.stanford.edu/ software/corenlp.shtml> (>= 3.5.2)'	openjdk@1.7:
 'pandoc with https support'	pandoc
 'cppcheck'	cppcheck
@@ -152,7 +152,7 @@
 'Docker, RStudio>=1.2'	
 'LibreOffice, Microsoft Word'	
 'LibreOffice (<https://www.libreoffice.org/>)\nrequired to extract data from .doc files or perform .pptx\nconversion.'	
-'domino (~>1.7.1)'
+'domino (~>1.7.1)'	
 'gsl'	gsl
 'Dynare, Octave'	dynare	octave
 'ffmpeg'	ffmpeg
@@ -205,7 +205,7 @@
 'TensorFlow (https://www.tensorflow.org)'	py-tensorflow
 'Debian or Ubuntu system with access to Goto Blas,\nIntel MKL, Atlas development build as well as a Nvidia GPU with\nCUDA support'	cuda
 'Windows, Linux, OS X'	
-'GDAL (>= 2.0.1), PROJ (>= 4.8.0), netcdf, sqlite3'	gdal@2.0.1:	proj@4.8.0:	netcdf-c	sqlite3
+'GDAL (>= 2.0.1), PROJ (>= 4.8.0), netcdf, sqlite3'	gdal@2.0.1:	proj@4.8.0:	netcdf-c	sqlite@3:
 'GDAL (>= 2.4.0, built against GEOS), PROJ (>=\n4.8.0), sqlite3'	gdal@2.4.0:+geos	proj@4.8.0:
 'cairo, freetype2, fontconfig'	cairo	freetype	fontconfig
 'gsl (>= 2.7)'	gsl@2.7:
@@ -287,7 +287,7 @@
 'GMP (https://gmplib.org/)'	gmp
 'TensorFlow >= 2.0 (https://www.tensorflow.org/)'	py-tensorflow@2.0:
 'Optional: libsecret on Linux (libsecret-1-dev on\nDebian/Ubuntu, libsecret-devel on Fedora/CentOS)'	
-'SVMlight'	svmlight
+'SVMlight'	
 'MOSEK (http://www.mosek.com) and MOSEK license.'	mosek
 'Package vignettes based on R Markdown v2 or\nreStructuredText require Pandoc (http://pandoc.org). The\nfunction rst2pdf() requires rst2pdf\n(https://github.com/rst2pdf/rst2pdf).'	
 'fftw3 (>=3.3.4)'	fftw@3.3.4:
@@ -325,7 +325,7 @@
 'JAGS (>= 4.3.0) (http://mcmc-jags.sourceforge.net)'	jags@4.3.0:
 'gcc (>= 4.0)'	gcc@4.0:
 'mdbtools: mdbtools (deb).'	mdbtools
-"windows, 'BWidget', 'Tktable'"	bwidget	tktable
+"windows, 'BWidget', 'Tktable'"	tktable
 'Python (>= 3.6)'	python@3.6:
 'mpost'	mpost
 'Little Endian'	
@@ -366,7 +366,7 @@
 'A chromium based browser, required by "webshot2"\n<https://rstudio.github.io/webshot2/>'	
 'ImageMagick'	imagemagick
 'zip'	zip
-'GNU make, An ODBC3 driver manager and drivers.'	
+'GNU make, An ODBC3 driver manager and drivers.'	unixodbc
 'GNU make, pandoc (>= 1.12.3), pandoc-citeproc,\nC++17'	pandoc@1.12.3:
 'OpenCL library, GNU make'	opencl
 'pandoc, apparmor (optional)'	pandoc
@@ -390,7 +390,7 @@
 'latex, cairo (for report creation)'	cairo
 'OpenMPI (>= 1.5.4) on Linux, Mac, and FreeBSD.\nMS-MPI (Microsoft MPI v7.1 (SDK) and Microsoft HPC Pack 2012 R2\nMS-MPI Redistributable Package) on Windows.'	openmpi
 "'OpenMPI' (>= 1.5.4) on Solaris, Linux, Mac, and\nFreeBSD. 'MS-MPI' (Microsoft HPC Pack 2012 R2 MS-MPI\nRedistributable Package) on Windows."	openmpi
-"Linux, Mac OSX, and Windows, or 'ZeroMQ' library >=\n4.0.4. Solaris 10 needs 'ZeroMQ' library 4.0.7 and 'OpenCSW'."	opencsw
+"Linux, Mac OSX, and Windows, or 'ZeroMQ' library >=\n4.0.4. Solaris 10 needs 'ZeroMQ' library 4.0.7 and 'OpenCSW'."	opencs	libzmq@4.0.7:
 'COIN-OR Clp (>= 1.17.4)'	
 'XPDF\n(4.02)(https://github.com/erikstricker/PDE/tree/master/inst/examples/bin)'	
 'Python>=3.6, pdfminer.six>=20200402, pandas'	python@3.6:	py-pdfminersix	py-pandas
@@ -464,7 +464,7 @@
 'A C++17 compiler'	
 'GNU make, libcurl'	curl
 'GDAL (>= 2.2.3), GEOS (>= 3.6.2), PROJ (>= 4.9.3)'	gdal@2.2.3:	geos@3.6.2:	proj@4.9.3:
-'Python (>= 3.7), retriever (>= 3.0.0) (version must\nbe listed to patch to allow parsing)'	python@3.7:	retriever@3.0.0:
+'Python (>= 3.7), retriever (>= 3.0.0) (version must\nbe listed to patch to allow parsing)'	python@3.7:
 'xclip (https://github.com/astrand/xclip) or xsel\n(http://www.vergenet.net/~conrad/software/xsel/) for accessing\nthe X11 clipboard'	xclip
 'GLPK (>= 4.52)'	glpk@4.52:
 'GNU GSL for the GSL random-number generators'	gsl
@@ -512,7 +512,7 @@
 'JAGS >= 4.3.1 (https://mcmc-jags.sourceforge.io/)'	jags@4.3.1:
 'An ODBC3 driver manager and drivers.'	unixodbc
 "The tools to run 'R CMD SHLIB' on 'Fortran' code.\nThe used 'Fortran' compiler must support pointer initialization\nwhich is a feature of the 2008 standard. The compiler from\nOracle Developer Studio 12.6 on Solaris 10 currently does not\nmeet this requirement."	gcc
-'roger-base (for interface functions only)'	roger-base
+'roger-base (for interface functions only)'	
 'C99'	
 'GNU Make, swi-prolog'	swipl
 'GNU Make, GCC Compiler Suite (C and Fortran)'	gcc
@@ -532,25 +532,25 @@
 'Java (>6)'	openjdk@1.6:
 'C++17, Rtools (>= 4.2) for Windows'	
 'fftw (>=3.2)'	fftw@3.2:
-"'Simulx' (<http://simulx.lixoft.com/>)"	simulx
+"'Simulx' (<http://simulx.lixoft.com/>)"	
 'GNU make, pandoc'	pandoc	pandoc
 'GNU make, pandoc (>= 1.12.3), pandoc-citeproc'	pandoc@1.12.3:
 'pandoc, C++14'	pandoc
 'librsvg2'	librsvg@2:
-'GNU make, CMake (>= 3.10), pandoc, libarchive,\nlibregex, libexpat, liblzma, libzstd, liblz4, libz2, libz,\nlibbcrypt'	cmake@3.10:	pandoc	libarchive	libregex	expat	lzma	zstd	lz4	zlip	libbcrypt
+'GNU make, CMake (>= 3.10), pandoc, libarchive,\nlibregex, libexpat, liblzma, libzstd, liblz4, libz2, libz,\nlibbcrypt'	cmake@3.10:	pandoc	libarchive	libregex	expat	lzma	zstd	lz4	zlib	libbcrypt
 'SYMPHONY libraries and headers'	
-'SyncroSim (>=2.3.10)'	syncrosim@2.3.10:
+'SyncroSim (>=2.3.10)'	
 'POSIX.1-2001'	
 'embulk, embulk-output-td'	embulk
 'GSL (>=2.3)'	gsl@2.3:
 '"conda (python>=3.6 pytorch torchvision cpuonly\nnumpy ( >= 1.14.0) matplotlib pandas -c pytorch);\npython-minimal, pandoc pandoc-citeproc, qpdf; Python (>=3.6),\npytorch (>=1.4), torchvision, cpuonly, numpy ( >= 1.14.0);\npandoc (>= 2.0), qpdf ( >= 7.0) on Solaris"'	py-torch@1.4:	py-torchvision	py-numpy	pandoc@2.0:	python@3.6:
 'WinEdt >= 5.2'	
-'ZeroMQ >= 3.0.0: libzmq3-dev (deb) or zeromq-devel\n(rpm)'	zeromq@3.0.0:
+'ZeroMQ >= 3.0.0: libzmq3-dev (deb) or zeromq-devel\n(rpm)'	libzmq@3.0.0:
 'OpenSSL >= 1.0.1'	openssl@1.0.1:
 'cdo'	
 'GSL (>=2.4), MPFR (>= 4.0.0), udunits2 (>=2.2.26-3)'	gsl@2.4:	mpfr@4.0.0:	udunits@2:
 'mallinfo, hence Linux, MacOS or Windows'	mallinfo
-'SAS'	sas
+'SAS'	
 'gmp (>= 4.2.3), mpfr (>= 3.0.0)'	gmp@4.2.3:	mpfr@3.0.0:
 'GLPK library, including -dev or -devel part'	glpk@4.52:
 'LIBSNDFILE'	libsndfile
@@ -583,7 +583,7 @@
 'cdo ecFlow'	
 'C++, arrow package with gzip codec, StarPU'	arrow+zlib
 'Stata'	stata
-'pdflatex'
+'pdflatex'	
 'For all functions resp. apps: pandoc, LaTeX. For\nthe edapy() function resp. Statsomat/EDAPY app: Python (>=3).'	
 'docker'	
 'PLINK must be installed'	plink
@@ -591,14 +591,14 @@
 'ICU4C (>= 61, optional)'	icu4c@61:
 'C++11, JAGS (>= 4.3.0) (optional), fftw3 (>= 3.3),\ngmp (>= 6.2.1), gmpxx (>= 6.2.1), mpfr (>= 3.0.0), autoconf (>=\n2.69), automake (>= 1.16.5)'	jags@4.3.0:	fftw@3.3:	fftw@3.3:	gmp@6.2.1:	gmpxx@6.2.1:	mpfr@3.0.0:
 'GNU GSL (>= 1.14)'	gsl@1.14:
-'zenity, yad'	zenity	yad
+'zenity, yad'	
 'Komodo Edit\n(https://www.activestate.com/products/komodo-ide/)'	
 'git, svn'	git	subversion
 'GNU make, cmake, gmp, mpfr'	cmake	gmp	mpfr
 'fontconfig, freetype2'	fontconfig	freetype@2:
 'pandoc (>= 1.12.3) for vignettes'	pandoc@1.12.3:
 'LilyPond v2.22.1-2+ (needed for rendering sheet\nmusic or writing MIDI files)'	
-"'tapkee' (http://tapkee.lisitsyn.me/)"	tapkee
+"'tapkee' (http://tapkee.lisitsyn.me/)"	
 'zlib headers and library'	zlib
 'Tcl/Tk (>= 8.5), Tktable (>= 2.9, optional)'	tcl@8.5:	tk@8.5:	tktable
 'gmp, GNU make'	gmp
@@ -625,7 +625,7 @@
 'Windows or X11'	libx11	libxext	libxscrnsaver
 'Tcl/Tk (>= 8.6)'	tcl@8.6:	tk@8.6:
 'Rust tool chain w/ cargo, libclang/llvm-config'	rust	llvm
-"'TooManyCells'\n(https://github.com/GregorySchwartz/too-many-cells)"	toomanycells
+"'TooManyCells'\n(https://github.com/GregorySchwartz/too-many-cells)"	
 'LibTorch (https://pytorch.org/)'	py-torch
 'LibTorch (https://pytorch.org/); Only x86_64\nplatforms are currently supported except for ARM system running\nmacOS.'	py-torch
 'Python (>=2.7), Libav, ExifTool'	python@2.7:	ffmpeg	exiv2
@@ -638,10 +638,10 @@
 'PARI/GP >= 2.3.0 [strongly recommended for\nlogkda()]'	pari
 'Linux or MacOS Intel chip tensorflow (1.14.0)'	py-tensorflow@1.14.0:
 'V8 engine version 6+ is needed for ES6 and WASM\nsupport. On Linux you can build against libv8-dev (Debian) or\nv8-devel (Fedora). We also provide static libv8 binaries for\nmost platforms, see the README for details.'	
-'valection (>= 1.0.0)'	valection@1.0.0:
+'valection (>= 1.0.0)'	
 'libgdal-dev, GDAL (>= 2.2.3), PROJ (>= 4.8.0)'	gdal@2.2.3:	proj@4.8.0:
 'perl, bedtools (>=2.27.1), bwa'	perl	bedtools@2.27.1:	bwa
-'vault'	vault
+'vault'	
 'Gnu Scientific Library'	gsl
 'libcurl: libcurl-devel (rpm) or\nlibcurl4-openssl-dev (deb), GNU make.'	curl	openssl
 'C++11, libpng'	libpng
@@ -650,17 +650,17 @@
 'GDAL (>= 3.0.0), GEOS (>= 3.4.0), PROJ (>= 7.0.0)'	gdal@3.0.0:	geos@3.4.0:	proj@7.0.0:
 'virtuoso-opensource (Linux). For Mac & Windows,\nthis package can automate Virtuoso installation.'	virtuoso
 'pandoc (>= 2.7) - http://pandoc.org'	pandoc@2.7:
-'Vagrant <https://www.vagrantup.com>'	vagrant
+'Vagrant <https://www.vagrantup.com>'	
 'GNU make, GSL, HDF5, PROJ'	gsl	hdf5	proj
 'fftw3, GNU make, sox, Ghostscript, libsndfile, GDAL'	fftw@3:	sox	ghostscript	libsndfile	gdal
 'libwebp'	libwebp
 'PhantomJS for taking screenshots, ImageMagick or\nGraphicsMagick and OptiPNG for manipulating images.'	imagemagick
 'C++11, GNU make, OpenSSL >= 1.0.2'	openssl@1.0.2:
 'asreml-R 4.x'	asreml@4.0:
-'WhiteboxTools\n(https://github.com/jblindsay/whitebox-tools/releases/latest)'	whiteboxtools
+'WhiteboxTools\n(https://github.com/jblindsay/whitebox-tools/releases/latest)'	
 'Java (>= 5.0); WordNet database files (direct\ndownload:\n<https://wordnetcode.princeton.edu/3.0/WNdb-3.0.tar.gz>; Debian\nand Fedora package: wordnet)'	openjdk@1.5:	wordnet
 'pandoc (>= 1.14) - https://pandoc.org'	pandoc@1.14:
-'Perl (>= 5.0), Unitex (>= 3.0\nhttp://www-igm.univ-mlv.fr/~unitex/)'	perl@5.0:	unitex@3.0:
+'Perl (>= 5.0), Unitex (>= 3.0\nhttp://www-igm.univ-mlv.fr/~unitex/)'	perl@5.0:
 'libxml2 (>= 2.9.1)'	libxml2@2.9.1:
 'libxml2 (>= 2.6.3)'	libxml2@2.6.3:
 'libxml2: libxml2-dev (deb), libxml2-devel (rpm)'	libxml2
@@ -675,7 +675,7 @@
 'kallisto'	kallisto
 'mailsend-go'	mailsend-go
 'python (>= 2.7), sklearn, numpy, pandas, h5py'	python@2.7:	py-scikit-learn	py-numpy	py-pandas	py-h5py
-'Tktable, BWidget'	tktable	bwidget
+'Tktable, BWidget'	tktable
 'Cytoscape (>= 3.6.1) (if used for visualization of results, heavily suggested)'	
 'Graphviz version >= 2.2'	graphviz@2.2:
 'libcurl4-openssl-dev, libxml2-dev, libssl-dev, gfortran, build-essential, libz-dev, zlib1g-dev'	curl	libxml2	openssl	gcc	zlib
@@ -708,7 +708,7 @@
 'CScapeSomatic'	cscapesomatic
 'mono-runtime 4.x or higher (including System.Data library) on Linux/macOS, .Net Framework (>= 4.5.1) on Microsoft Windows.'	
 'python'	python
-'bedtools (>= 2.28.0), Stereogene (>= v2.22), CapR (>= 1.1.1)'	bedtools@2.28.0:	stereogene@2.22:	capr@1.1.1:
+'bedtools (>= 2.28.0), Stereogene (>= v2.22), CapR (>= 1.1.1)'	bedtools2@2.28.0:
 'GNU make, Bash, Perl, Gzip'	perl	gzip
 'libxml2, libSBML (>= 5.5)'	libxml2	libsbml@5.5:
 'MAFFT (>= 7.305), OligoArrayAux (>= 3.8), ViennaRNA (>= 2.4.1), MELTING (>= 5.1.1), Pandoc (>= 1.12.3)'	mafft@7.305:	oligoarrayaux@3.8:	viennarna@2.4.1:	melting@5.1.1:	pandoc@1.12.3:
@@ -727,7 +727,7 @@
 'pyGenomeTracks (prefered to use install_pyGenomeTracks())'	py-pygenometracks
 'jQuery, jQueryUI, qTip2, D3js and Raphael are required Javascript libraries made available via the online CDNJS service (http://cdnjs.cloudflare.com).'	
 'optionally Graphviz (>= 2.16)'	graphviz
-'libbz2 & liblzma & libcurl (with header files), GNU make'	bzip2	lzma	curl
+'libbz2 & liblzma & libcurl (with header files), GNU make'	bzip2	lzma	xz	curl
 'Internal files Xba.CQV, Xba.regions (or other regions file)'	
 'OpenBabel'	openbabel
 '.NET 6.0'	mono@6:
@@ -751,3 +751,10 @@
 'Java (>= 8.0) Git'	java@1.8:	git
 'GDAL'	gdal
 'UNIX, SRA Toolkit=2.10.3, Entrez Direct=13.3, FastQC=v0.11.9, Cutadapt=2.10, datasets, SAMtools=1.9, HISAT2=2.2.0, StringTie=2.1.1, Salmon=1.2.1'	sratoolkit@2.10.3:	entrezdirect@13.3:	fastqc@0.11.9:	py-cutadapt@2.10:	py-datasets	samtools@1.9:	hisat2@2.2.0:	stringtie@2.1.1:	salmon@1.2.1:
+'Conda (>= 4.6), ArcGIS Pro (>= 3.0)'	
+'GDAL (>= 2.4.0), PROJ, libxml2'	gdal@2.4.0:	proj	libxml2
+'C++17, gmp'	c++17	gmp
+'gmp, libxml2, glpk (>= 4.57)'	gmp	libxml2	glpk@4.57:
+'Quarto command line tools\n(https://github.com/quarto-dev/quarto-cli) for the rendering\nwrapper functionality.'	
+'libpng, cairo, freetype2, fontconfig'	libpng	cairo	freetype	fontconfig
+'Fortran sources included in `tools/x13as_html` are\ncompiled via `configure`.'	
