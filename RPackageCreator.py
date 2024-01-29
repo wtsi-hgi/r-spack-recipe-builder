@@ -188,7 +188,7 @@ class R{classname}(RPackage):
 							lastline = j + k + 1
 							break
 			footer = "".join(lines[lastline:])
-		if self.getURL(record) != "":
+		if self.getURL(record) != "" and self.packman == "bioc":
 			header += f"\n\turls = [\"{self.getURL(record)}\", \"{self.url}src/contrib/Archive/{package}/{package}_{record['Version']}.tar.gz\"]"
 		if self.comment != "":
 			footer += f"\n\t# {self.comment}"
@@ -354,7 +354,7 @@ class CRANPackageMaker(PackageMaker):
 	def getChecksum(self, record, package):
 		end = ""
 		if package[-1].isdigit():
-			end = ', url="' + self.getURL(record) + '"'
+			end = f', url="{self.getURL(record)}"'
 		if "MD5sum" in record.keys():
 			return f"""\tversion("{record['Version']}", md5="{record['MD5sum']}"{end})\n"""
 		else:
@@ -420,7 +420,7 @@ class BIOCPackageMaker(PackageMaker):
 	def getChecksum(self, record, package):
 		end = ""
 		if package[-1].isdigit():
-			end = ', url="' + self.getURL(record) + '"'
+			end = f', url="{self.getURL(record)}"'
 		if "source.ver" in record.keys():
 			return f"""\tversion("{record['Version']}", md5="{record['MD5sum']}"{end})\n"""
 		if "git_url" in record.keys():

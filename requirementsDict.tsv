@@ -704,7 +704,7 @@
 'HMMER3'	hmmer@3:
 'GNU make, PhISCS (optional)'	phiscs
 'glpk (>= 4.57)'	glpk@4.57:
-'Python (>=3), numpy, pandas, h5py, scipy, argparse, sklearn, mofapy2'	python@3:	py-numpy	py-pandas	py-h5py	py-sci-py	py-scikit-learn	py-mofapy
+'Python (>=3), numpy, pandas, h5py, scipy, argparse, sklearn, mofapy2'	python@3:	py-numpy	py-pandas	py-h5py	py-scipy	py-scikit-learn	py-mofapy2
 'CScapeSomatic'	cscapesomatic
 'mono-runtime 4.x or higher (including System.Data library) on Linux/macOS, .Net Framework (>= 4.5.1) on Microsoft Windows.'	
 'python'	python
