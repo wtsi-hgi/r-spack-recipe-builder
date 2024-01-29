@@ -1,4 +1,5 @@
 import hashlib
+import re
 import shutil
 import requests
 import pyreadr
@@ -149,17 +150,17 @@ class PackageMaker:
 			depends_on.append("\tdepends_on(\"" + i[0] + i[1] + "\", type=(\"build\", \"run\"))\n")
 		return depends_on
 
-	def getTemplate(self, mode, package, name, description, homepage, classname, md5URL):
+	def getTemplate(self, mode, package, name, description, homepage, classname, record):
 		if mode == "+":
 			backslashN = "\n\t"
 			header = f"""# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-	
+
 from spack.package import *
-	
-			
+
+
 class R{classname}(RPackage):
 	\"\"\"{name}
 
@@ -169,12 +170,12 @@ class R{classname}(RPackage):
 	{f'homepage = "{homepage}"{backslashN}' if homepage != "" else ''}{self.packman} = "{package}" """
 			footer = ""
 		else:
-			f = open("packages/r-" + package.lower().replace(".","-") + "/package.py", "r")
-			lines = f.readlines()
+			with open("packages/r-" + package.lower().replace(".","-") + "/package.py", "r") as f:
+				lines = f.readlines()
 			firstline = 0
 			for i in range(len(lines)):
 				lines[i] = lines[i].replace("    ", "\t")
-				if "\tversion(" in lines[i] or "\turl =" in lines[i]:
+				if "\tversion(" in lines[i] or "\turl =" in lines[i] or "\turls =" in lines[i]:
 					firstline = i
 					break
 			header = "".join(lines[:firstline]).strip()
@@ -187,9 +188,8 @@ class R{classname}(RPackage):
 							lastline = j + k + 1
 							break
 			footer = "".join(lines[lastline:])
-
-		if md5URL != "":
-			header += f'\n\turl = "{md5URL}"'
+		if self.getURL(record) != "":
+			header += f"\n\turls= [\"{self.getURL(record)}\", \"{self.url}src/contrib/Archive/{package}/{package}_{record['Version']}.tar.gz\"]"
 		if self.comment != "":
 			footer += f"\n\t# {self.comment}"
 		return header, footer
@@ -202,9 +202,11 @@ class R{classname}(RPackage):
 			version = version[1].lower().replace(")","")
 			getversion = ""
 			fullname = k.replace(".","-")
-			versionNumber = version.replace('>','').replace('<','').replace('=','')
-			verNoFrontZeros = ".".join(str(int(i)) for i in versionNumber.split("."))
-			ver = verNoFrontZeros.replace(".0","") # If you remove verNoFrontZeros, this will break. This replace function relies on the fact the function above removes .0s that have a number after them.
+			ver = version.replace('>','').replace('<','').replace('=','')
+			ver = re.sub("\.0+([0-9])", ".\\1", ver)
+			while ver.endswith(".0"):
+				ver = ver[:-2]
+
 			type = ""
 			if ">" in version:
 				getversion = f"@{ver}:"
@@ -299,14 +301,14 @@ class R{classname}(RPackage):
 
 		homepage = getHomepage(record)
 
-		version, md5URL = self.getChecksum(record, package)
+		version = self.getChecksum(record, package)
 		if version == "":
 			print(f"{self.getProgress('x')} {self.packman} package {'r-' + package.lower().replace('.','-')}")
 			return
 
 		classname = getClassname(package)
 		
-		header, footer = self.getTemplate(mode, package, name, description, homepage, classname, md5URL)
+		header, footer = self.getTemplate(mode, package, name, description, homepage, classname, record)
 
 		writeRecipe(header, footer, version, dependencies, package)
 		print(f"{self.getProgress(mode)} {self.packman} package {'r-' + package.lower().replace('.','-')}")
@@ -322,6 +324,7 @@ class R{classname}(RPackage):
 class CRANPackageMaker(PackageMaker):
 	packman = "cran"
 	cacheFilename = "libs/cranLibrary.rds"
+	url = "https://cran.r-project.org/"
 
 	def getPackages(self):
 		url = "https://cran.r-project.org/web/packages/packages.rds"
@@ -341,22 +344,25 @@ class CRANPackageMaker(PackageMaker):
 		pandasDatabase = pd.DataFrame(database)
 		return pandasDatabase
 	
-	def getURL(self, package, record):
-		return f"https://cran.r-project.org/src/contrib/{package}_{record['Version']}.tar.gz"
+	def getURL(self, record):
+		return f"https://cran.r-project.org/src/contrib/{record['Package']}_{record['Version']}.tar.gz"
 		
 	def packageLoop(self):
 		record = lambda x: self.lib.loc[self.lib["Package"] == x].to_dict('records')[0]
 		super().packageLoop(self.lib["Package"], "CRAN", record)
 		
 	def getChecksum(self, record, package):
+		end = ""
+		if package[-1].isdigit():
+			end = ', url="' + self.getURL(record) + '"'
 		if "MD5sum" in record.keys():
-			return f"""\tversion("{record['Version']}", md5="{record['MD5sum']}")\n""", ""
+			return f"""\tversion("{record['Version']}", md5="{record['MD5sum']}"{end})\n"""
 		else:
-			baseurl = self.getURL(package, record)
+			baseurl = self.getURL(record)
 			latest = requests.get(baseurl, allow_redirects=True)
 			sha256_hash_latest = hashlib.sha256()
 			sha256_hash_latest.update(latest.content)
-			return f"""\tversion("{record['Version']}", sha256="{sha256_hash_latest.hexdigest()}")\n""", ""
+			return f"""\tversion("{record['Version']}", sha256="{sha256_hash_latest.hexdigest()}"{end})\n"""
 		
 	def exists(self, k):
 		record = self.lib.loc[self.lib['Package'] == k]
@@ -407,15 +413,19 @@ class BIOCPackageMaker(PackageMaker):
 			json.dump(self.hashes, f)
 
 	def getURL(self, record):
+		if "source.ver" not in record.keys():
+			return ""
 		return self.url + record['source.ver']
 
 	def getChecksum(self, record, package):
-		# return f"""\tversion("{record['Version']}", sha256="TODO_UNCOMMENT")\n"""
+		end = ""
+		if package[-1].isdigit():
+			end = ', url="' + self.getURL(record) + '"'
 		if "source.ver" in record.keys():
-			return f"""\tversion("{record['Version']}", md5="{record['MD5sum']}")\n""", self.getURL(record)
+			return f"""\tversion("{record['Version']}", md5="{record['MD5sum']}"{end})\n"""
 		if "git_url" in record.keys():
 			if record["git_last_commit"] in self.hashes.keys():
-				return f"""\tversion("{record['Version']}", commit="{self.hashes[record["git_last_commit"]]}")\n""", ""
+				return f"""\tversion("{record['Version']}", commit="{self.hashes[record["git_last_commit"]]}"{end})\n"""
 			gitRefs = requests.get(record['git_url'] + "/info/refs", allow_redirects=True).text.split("\n")
 			for i in range(len(gitRefs)):
 				hash = gitRefs[i].split("\trefs/heads/")
@@ -426,9 +436,9 @@ class BIOCPackageMaker(PackageMaker):
 			if len(self.hashes.keys()) % 50 == 0:
 				with open("libs/BIOCHashes.json", "w") as f:
 					json.dump(self.hashes, f)
-			return f"""\tversion("{record['Version']}", commit="{commitHash}")\n""", ""
+			return f"""\tversion("{record['Version']}", commit="{commitHash}"{end})\n"""
 		else:
-			return "", ""
+			return ""
 		
 	def exists(self, k):
 		return self.lib.get(k) is not None
@@ -465,11 +475,11 @@ systemRequirements = getSystemRequirements()
 missingDependencies = getMissingDependencies()
 
 managers = (
-	CRANPackageMaker, 
 	BIOCSoftware, 
 	BIOCAnnotations, 
 	BIOCExperiments, 
-	BIOCWorkflows
+	BIOCWorkflows,
+	CRANPackageMaker, 
 )
 
 for p in managers:
