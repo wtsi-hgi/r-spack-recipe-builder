@@ -31,3 +31,10 @@ bbmix,r-rstantools
 FLAMES,zlib,curl
 beachmat.hdf5,zlib
 island,gsl
+Rbowtie,zlib
+ncdfFlow,zlib
+flowWorkspace,zlib
+rcontroll,gsl
+snpStats,zlib
+zlib,zlib
+Rsamtools,lzma,bzip2,xz
