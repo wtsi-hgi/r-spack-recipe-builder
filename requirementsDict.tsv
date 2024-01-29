@@ -315,7 +315,7 @@
 'ImageMagick (>= 6.9.5.4)'	imagemagick
 'Tktable (>= 2.10)'	tktable@2.10:
 'java'	openjdk
-'Python 3.x with following modules: PyGMO, NumPy,\nand cloudpickle'	python@3:	py-pygmo	py-numoy	py-cloudpickle
+'Python 3.x with following modules: PyGMO, NumPy,\nand cloudpickle'	python@3:	py-pygmo	py-numpy	py-cloudpickle
 'GDAL (>= 3.0.0), PROJ (>= 4.8.0)'	gdal@3.0.0:	proj@4.8.0:
 'ADMB version 11 <http://admb-project.org/> for\nuse.admb=TRUE; see readme.txt'	admb@11:
 'Java, C++'	openjdk
@@ -755,6 +755,6 @@
 'GDAL (>= 2.4.0), PROJ, libxml2'	gdal@2.4.0:	proj	libxml2
 'C++17, gmp'	c++17	gmp
 'gmp, libxml2, glpk (>= 4.57)'	gmp	libxml2	glpk@4.57:
-'Quarto command line tools\n(https://github.com/quarto-dev/quarto-cli) for the rendering\nwrapper functionality.'	
+'Quarto command line tools\n(https://github.com/quarto-dev/quarto-cli) for the rendering\nwrapper functionality.'	quarto-cli
 'libpng, cairo, freetype2, fontconfig'	libpng	cairo	freetype	fontconfig
 'Fortran sources included in `tools/x13as_html` are\ncompiled via `configure`.'	
