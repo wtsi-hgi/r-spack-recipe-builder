@@ -189,7 +189,7 @@ class R{classname}(RPackage):
 							break
 			footer = "".join(lines[lastline:])
 		if self.getURL(record) != "":
-			header += f"\n\turls= [\"{self.getURL(record)}\", \"{self.url}src/contrib/Archive/{package}/{package}_{record['Version']}.tar.gz\"]"
+			header += f"\n\turls = [\"{self.getURL(record)}\", \"{self.url}src/contrib/Archive/{package}/{package}_{record['Version']}.tar.gz\"]"
 		if self.comment != "":
 			footer += f"\n\t# {self.comment}"
 		return header, footer
