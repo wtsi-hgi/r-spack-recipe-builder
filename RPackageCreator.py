@@ -115,7 +115,7 @@ class PackageMaker:
 	def getExistingFiles(self, package, record):
 		def pullFiles():
 			for dir in actualDirs:
-				if os.path.isfile(dir + "/packages/r-" + package.lower().replace(".","-") + "/package.py"):
+				if os.path.isdir(dir + "/packages/r-" + package.lower().replace(".","-")):
 					location = dir
 					break
 			if location != os.path.dirname(os.path.realpath(__file__)):
@@ -123,12 +123,15 @@ class PackageMaker:
 			return "*"
 
 		if "r-" + package.lower().replace(".","-") in self.packageVersions.keys():
+			if self.packman == "bioc":
+				if not os.path.isdir("packages/r-" + package.lower().replace(".","-")):
+					return pullFiles()
 			if "SystemRequirements" in record.keys():
 				if pd.notna(record["SystemRequirements"]):
 					return pullFiles()
 			if record["Version"] in self.packageVersions["r-" + package.lower().replace(".","-")]:
 				print(f"{self.getProgress('~')} {self.packman} package {'r-' + package.lower().replace('.','-')}")
-				raise Exception(f"Package {'r-' + package.lower().replace('.','-')} is already up to date")
+				return "~"
 			return pullFiles()
 		
 		return "+"
@@ -281,9 +284,8 @@ class R{classname}(RPackage):
 			print(f"{self.getProgress('x')} {self.packman} package {'r-' + package.lower().replace('.','-')}")
 			return
 
-		try:
-			mode = self.getExistingFiles(package, record)
-		except:
+		mode = self.getExistingFiles(package, record)
+		if mode == "~":
 			return
 
 		name, description = record["Title"], record["Description"].replace("\\", "")
@@ -475,11 +477,11 @@ systemRequirements = getSystemRequirements()
 missingDependencies = getMissingDependencies()
 
 managers = (
+	CRANPackageMaker, 
 	BIOCSoftware, 
 	BIOCAnnotations, 
 	BIOCExperiments, 
 	BIOCWorkflows,
-	CRANPackageMaker, 
 )
 
 for p in managers:
