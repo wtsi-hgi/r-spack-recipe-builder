@@ -157,4 +157,7 @@ for p in PackageMaker.packageMakers:
 	p.packageLoop()
 
 topLevel = [key for key, value in PackageMaker.packageDict.items() if value is False]
-print(f"{len(topLevel)} packages: {topLevel}\n\n", end="\r")
+
+with open("topLevelPackages.txt", "w") as file:
+	for i in topLevel:
+		file.write(f'\tdepends_on("{i}", type=("build", "run"))\n')
