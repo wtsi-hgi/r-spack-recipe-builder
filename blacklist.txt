@@ -20,3 +20,14 @@ SeqSQC
 RcmdrPlugin.PcaRobust
 uHMM
 MDSGUI
+opencv
+R2PPT
+R2wd
+RadioGx
+rFUSION
+RcppMeCab
+rsbml
+BiGGR
+rswipl
+rolog
+mathml
