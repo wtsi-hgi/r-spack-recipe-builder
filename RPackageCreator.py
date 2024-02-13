@@ -209,6 +209,7 @@ class R{classname}(RPackage):
 			ver = re.sub("\.0+([0-9])", ".\\1", ver)
 			while ver.endswith(".0"):
 				ver = ver[:-2]
+			ver = ver.replace("-",".")
 
 			type = ""
 			if ">" in version:
