@@ -56,6 +56,9 @@ def setSystemRequirements(dict):
 		file.write(f"{i}\t{'	'.join(dict[i])}\n")
 	file.close()
 
+def rify(package):
+	return "r-" + package.lower().replace(".","-")
+
 def getMissingDependencies():
 	if not os.path.isfile("missingDependencies.csv"):
 		return {}
@@ -85,8 +88,8 @@ def getHomepage(record):
 		return ""
 
 def writeRecipe(header, footer, versions, depends, package):
-	os.makedirs("packages/r-" + package.lower().replace(".","-"), exist_ok=True)
-	f = open("packages/r-" + package.lower().replace(".","-") + "/package.py", "w")
+	os.makedirs("packages/" + rify(package), exist_ok=True)
+	f = open("packages/" + rify(package) + "/package.py", "w")
 	f.write(f"""{header}
 
 {"".join(versions)}
@@ -115,21 +118,38 @@ class PackageMaker:
 	def getExistingFiles(self, package, record):
 		def pullFiles():
 			for dir in actualDirs:
-				if os.path.isdir(dir + "/packages/r-" + package.lower().replace(".","-")):
+				if os.path.isdir(dir + "/packages/" + rify(package)):
 					location = dir
 					break
 			if location != os.path.dirname(os.path.realpath(__file__)):
-				shutil.copytree(location + "/packages/r-" + package.lower().replace(".","-"), "packages/r-" + package.lower().replace(".","-"))		
+				try:
+					shutil.copytree(location + "/packages/" + rify(package), "packages/" + rify(package))		
+				except:
+					print(f"{self.getProgress('~')} {self.packman} package {'r-' + package.lower().replace('.','-')}")
+					return "~"
 			return "*"
 
-		if "r-" + package.lower().replace(".","-") in self.packageVersions.keys():
+		if rify(package) in self.packageVersions.keys():
 			if self.packman == "bioc":
-				if not os.path.isdir("packages/r-" + package.lower().replace(".","-")):
+				if not os.path.isdir("packages/" + rify(package)):
 					return pullFiles()
 			if "SystemRequirements" in record.keys():
 				if pd.notna(record["SystemRequirements"]):
 					return pullFiles()
-			if record["Version"] in self.packageVersions["r-" + package.lower().replace(".","-")]:
+			if record["Version"] in self.packageVersions[rify(package)]:
+				pattern = re.compile(r"@.*\d-\d")
+
+				for dir in actualDirs:
+					if os.path.isdir(dir + "/packages/" + rify(package)):
+						location = dir
+						break
+				with open(location + "/packages/" + rify(package) + "/package.py", "r") as f:
+					lines = f.readlines()
+				for i in lines:
+					if "depends_on" in i:
+						if pattern.search(i):
+							return pullFiles()
+				
 				print(f"{self.getProgress('~')} {self.packman} package {'r-' + package.lower().replace('.','-')}")
 				return "~"
 			return pullFiles()
@@ -173,7 +193,7 @@ class R{classname}(RPackage):
 	{f'homepage = "{homepage}"{backslashN}' if homepage != "" else ''}{self.packman} = "{package}" """
 			footer = ""
 		else:
-			with open("packages/r-" + package.lower().replace(".","-") + "/package.py", "r") as f:
+			with open("packages/" + rify(package) + "/package.py", "r") as f:
 				lines = f.readlines()
 			firstline = 0
 			for i in range(len(lines)):
