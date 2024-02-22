@@ -758,8 +758,13 @@
 'Quarto command line tools\n(https://github.com/quarto-dev/quarto-cli) for the rendering\nwrapper functionality.'	quarto-cli
 'libpng, cairo, freetype2, fontconfig'	libpng	cairo	freetype	fontconfig
 'Fortran sources included in `tools/x13as_html` are\ncompiled via `configure`.'	
+'Julia (>= 1.7), Bigsimr.jl, Distributions.jl'	julia
+'make'
+"fluidsynth: fluidsynth-devel (rpm) or\nlibfluidsynth-dev (deb). On Linux you also need a soundfont\nprovided by 'fluid-soundfont-gm' (Fedora) or 'sf3-soundfont-gm'\n(Debian/Ubuntu)"	
 'RStudio -\nhttps://posit.co/products/open-source/rstudio/'	
 "'QGIS' latest or long-term release currently\nsupported according to the 'QGIS' release schedule\n(<https://www.qgis.org/en/site/getinvolved/development/roadmap.html>).\nOlder 'QGIS' releases are not officially supported, but may\nwork since 'QGIS' 3.16."	qgis
 'Python (>= 3.5.0), C++ compiler (gcc/clang), CUDA\n(optional but recommended)'	python@3.5.0:
 'python(>=3.8.10)'	python@3.8.10:
 "Cargo (>= 1.56) (Rust's package manager), rustc"	rust
+'libxml2, glpk (>= 4.57)'	libxml2	glpk@4.57:
+'A C++17 compiler is required, and for macOS\ncompilation version 11.0 or later is required. Optionally cmake\n(only when TileDB source build selected), curl (only when\nTileDB source build selected)), and git (only when TileDB\nsource build selected); on x86_64 and M1 platforms pre-built\nTileDB Embedded libraries are available at GitHub and are used\nif no TileDB installation is detected, and no other option to\nbuild or download was specified by the user.'	
