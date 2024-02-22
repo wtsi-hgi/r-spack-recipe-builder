@@ -71,3 +71,7 @@ asciicast,bzip2,xz,zliba,icu4c,libiconv
 chihaya,zlib
 monocle,r-qlcmatrix
 CLVTools,gsl
+mashr,gsl
+dynr,gsl
+writexl,zlib
+fingerPro,gsl

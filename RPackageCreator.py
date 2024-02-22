@@ -265,7 +265,7 @@ class R{classname}(RPackage):
 			if not name:
 				continue
 			else:
-				result.append(self.packageName(i))
+				result.append(name)
 		return result
 
 	def writeRequirements(self, record):
