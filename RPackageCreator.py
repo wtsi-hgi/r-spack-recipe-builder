@@ -57,7 +57,7 @@ def setSystemRequirements(dict):
 	file.close()
 
 def rify(package):
-	return "r-" + package.lower().replace(".","-")
+	return "r-" + package.lower().replace(".","-").replace("_", "-").replace("++", "pp").replace("+", "-plus")
 
 def getMissingDependencies():
 	if not os.path.isfile("missingDependencies.csv"):
