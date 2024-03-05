@@ -33,7 +33,8 @@ def get_package_dependencies(package_name, package_version, recurse=False):
 	url = f"https://libraries.io/api/pypi/{package_name}/{package_version}/dependencies?api_key=ebb39aed4c41baa4c4e8a384a8775cd9"
 	response = requests.get(url)
 	if response.status_code != 200:
-		return None
+		print(f"	❌ Failed to retrieve package {package_name}")
+		return
 	
 	json = response.json()
 	dependencies = []
@@ -168,4 +169,5 @@ package_version = "latest"
 
 existingVersions = getExistingVersions()
 
+print(f"Building recipes for {package_name}...")
 get_package_dependencies(package_name, package_version, True)
