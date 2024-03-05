@@ -91,7 +91,7 @@ def getVersions(versionList):
 	return versions, filename
 
 def getClassname(package):
-	classname = package.split(".")
+	classname = package.replace("-",".").split(".")
 	for i in range(len(classname)):
 		classname[i] = classname[i].capitalize()
 	return "".join(classname)
@@ -168,4 +168,4 @@ package_version = "latest"
 
 existingVersions = getExistingVersions()
 
-get_package_dependencies(package_name, package_version)
+get_package_dependencies(package_name, package_version, True)
