@@ -49,9 +49,9 @@ def get_package_dependencies(package_name, package_version, recurse=False):
 		else:
 			continue
 	
-	header, footer = getTemplate("+", package_name, json["description"], json["homepage"], getClassname(package_name))
+	versions, filename = getVersions(pypiRequest["releases"])
+	header, footer = getTemplate("+", package_name, json["description"], json["homepage"], getClassname(package_name), filename)
 	dependencies = getDepends(dependencies)
-	versions = getVersions(pypiRequest["releases"])
 	writeRecipe(header, footer, versions, dependencies, package_name)
 
 def pyify(package):
@@ -72,15 +72,23 @@ def spackifyVersion(version):
 
 def getVersions(versionList):
 	versions = []
+	filename = ""
 	for i in versionList.keys():
 		if versionList[i] == []:
 			continue
-		info = versionList[i][0]
+		info = ""
+		for j in range(len(versionList[i])):
+			if versionList[i][j]["packagetype"] == "sdist":
+				info = versionList[i][j]
+				break
+		if info == "":
+			continue
 		if info["yanked"] == True:
 			continue
 
-		versions.append(f"\tversion(\"{i}\", md5=\"{info['md5_digest']}\")\n")
-	return versions
+		versions.append(f"\tversion(\"{i}\", sha256=\"{info['digests']['sha256']}\")\n")
+		filename = info["filename"]
+	return versions, filename
 
 def getClassname(package):
 	classname = package.split(".")
@@ -99,12 +107,12 @@ def writeRecipe(header, footer, versions, depends, package):
 	print(f"	✅ Package {package} successfully created!")
 
 def getDepends(dependencies):
-	depends_on = []
+	depends_on = ["\tdepends_on(\"py-setuptools\", type=\"build\")\n"]
 	for i in dependencies:
 		depends_on.append("\tdepends_on(\"" + pyify(i) + "\", type=(\"build\", \"run\"))\n")
 	return depends_on
 
-def getTemplate(mode, package, description, homepage, classname):
+def getTemplate(mode, package, description, homepage, classname, filename):
 	if mode == "+":
 		header = f"""# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
@@ -121,7 +129,7 @@ class Py{classname}(PythonPackage):
 	\"\"\"
 	
 	homepage = "{homepage}"
-	pypi = "{package}" """
+	pypi = "{package}/{filename}" """
 		footer = ""
 	else:
 		with open("packages/" + pyify(package) + "/package.py", "r") as f:
