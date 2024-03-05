@@ -19,29 +19,30 @@ def getExistingVersions():
 		packageVersions[row["name"]] = row["versions"]
 	return packageVersions
 
-def addPythonAsDependency(package_name):
+def getPyPiJson(package_name):
 	request = requests.get(f"https://pypi.org/pypi/{package_name}/json")
 	if request.status_code != 200:
 		print(f"Failed to retrieve package {package_name}")
 		exit()
-	python_version = request.json()["info"]["requires_python"]
-	dependencies.append("python"+python_version)
+	return request.json()
 
-dependencies = []
 def get_package_dependencies(package_name, package_version, recurse=False):
 	if pyify(package_name) in existingVersions:
-		return 
+		print(f"	✴️ {pyify(package_name)} already exists in spack") 
+		return
 	url = f"https://libraries.io/api/pypi/{package_name}/{package_version}/dependencies?api_key=ebb39aed4c41baa4c4e8a384a8775cd9"
 	response = requests.get(url)
 	if response.status_code != 200:
 		return None
 	
 	json = response.json()
-	thisPackagesDependencies = []
+	dependencies = []
+	pypiRequest = getPyPiJson(package_name)
+	python_version = spackifyVersion(pypiRequest["info"]["requires_python"])
+	dependencies.append("python"+python_version)
 	for i in json["dependencies"]:
-		if str(i["project_name"]).lower() not in dependencies and str(i["platform"]).lower() == "pypi" and i["optional"] == False:
+		if str(i["platform"]).lower() == "pypi" and i["optional"] == False:
 			dependencies.append(str(i["project_name"]).lower())
-			thisPackagesDependencies.append(str(i["project_name"]).lower())
 			# print(i["project_name"])
 			if recurse:
 				get_package_dependencies(str(i["project_name"]).lower(), i["latest_stable"], True)
@@ -49,10 +50,37 @@ def get_package_dependencies(package_name, package_version, recurse=False):
 			continue
 	
 	header, footer = getTemplate("+", package_name, json["description"], json["homepage"], getClassname(package_name))
-	dependencies = getDepends(thisPackagesDependencies)
+	dependencies = getDepends(dependencies)
+	versions = getVersions(pypiRequest["releases"])
+	writeRecipe(header, footer, versions, dependencies, package_name)
 
 def pyify(package):
-	return "py-" + package.lower().replace(".","-")
+	if package == "python" or package.startswith("python@"):
+		return package
+	return "py-" + package.lower().replace(".","-").split("[")[0]
+
+def spackifyVersion(version):
+	if ">=" in version:
+		result = version.replace(">=", "@") + ":"
+	elif "<=" in version:
+		result = version.replace("<=", "@:")
+	else :
+		result = version.replace("=", "@")
+		while "=" in result:
+			result = result.replace("=", "")
+	return result
+
+def getVersions(versionList):
+	versions = []
+	for i in versionList.keys():
+		if versionList[i] == []:
+			continue
+		info = versionList[i][0]
+		if info["yanked"] == True:
+			continue
+
+		versions.append(f"\tversion(\"{i}\", md5=\"{info['md5_digest']}\")\n")
+	return versions
 
 def getClassname(package):
 	classname = package.split(".")
@@ -68,6 +96,7 @@ def writeRecipe(header, footer, versions, depends, package):
 {"".join(versions)}
 {"".join(depends)}{footer}""")
 	f.close()
+	print(f"	✅ Package {package} successfully created!")
 
 def getDepends(dependencies):
 	depends_on = []
@@ -129,25 +158,6 @@ class Py{classname}(PythonPackage):
 package_name = str(input("Enter package name: "))
 package_version = "latest"
 
-addPythonAsDependency(package_name)
 existingVersions = getExistingVersions()
 
 get_package_dependencies(package_name, package_version)
-
-# prints the dependencies, will be replaced by a function that writes to a file
-if dependencies != None:
-	print(f"Dependencies for {package_name}:")
-	# print(dependencies)
-else:
-	print(f"Failed to retrieve dependencies for {package_name}")
-
-for i in dependencies:
-	if "python>" in i or "python<" in i:
-		print(f"	🐍 {i} required")
-		continue
-	pkg = pyify(i)
-	if pkg in existingVersions:
-		print(f"	✅ {pkg} already exists in spack")
-	else:
-		print(f"	❌ {pkg} does not exist in spack")
-		# create a package for the missing package
