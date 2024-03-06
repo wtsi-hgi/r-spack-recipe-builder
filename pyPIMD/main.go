@@ -19,11 +19,15 @@ func main() {
 }
 
 func run() error {
+	if len(os.Args) != 2 {
+		return fmt.Errorf("invalid number of arguments: %s URL", os.Args[0])
+	}
+
 	req, _ := http.NewRequest("GET", os.Args[1], nil)
 
 	htrdr, err := httpreaderat.New(nil, req, nil)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	bhtrdr := bufra.NewBufReaderAt(htrdr, 1024*1024)
 
