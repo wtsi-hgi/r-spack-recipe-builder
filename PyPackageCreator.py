@@ -124,10 +124,7 @@ from spack.package import *
 
 
 class Py{classname}(PythonPackage):
-	\"\"\"{package}
-
-	{description}
-	\"\"\"
+	\"\"\"{description}\"\"\"
 	
 	homepage = "{homepage}"
 	pypi = "{package}/{filename}" """
