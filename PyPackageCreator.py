@@ -109,9 +109,9 @@ def getVersions(versionList):
 					depends.append(j.replace("Requires-Dist: ", "").replace(" ", ""))
 			for j in depends:
 				if j in extradeps.keys():
-					extradeps[j] += i
+					extradeps[j].append(i)
 				else:
-					extradeps[j] = i
+					extradeps[j] = [i]
 			versions.append(f"\tversion(\"{i}\", sha256=\"{info['digests']['sha256']}\", expand=False, url=\"{info['url']}\")\n")
 		else:
 			versions.append(f"\tversion(\"{i}\", sha256=\"{info['digests']['sha256']}\")\n")
