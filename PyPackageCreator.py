@@ -3,7 +3,7 @@ import os
 import subprocess
 import requests
 import ast
-# currently only lists all pypi dependencies for a given pypi package
+
 spackBin = "spack/bin/spack"
 
 def getExistingVersions():
@@ -44,15 +44,15 @@ def get_package_dependencies(package_name, package_version, recurse=False):
 	for i in json["dependencies"]:
 		if str(i["platform"]).lower() == "pypi" and i["optional"] == False:
 			dependencies.append(str(i["project_name"]).lower())
-			# print(i["project_name"])
 			if recurse:
 				get_package_dependencies(str(i["project_name"]).lower(), i["latest_stable"], True)
 		else:
 			continue
 	
-	versions, filename = getVersions(pypiRequest["releases"])
+	versions, filename, extradeps = getVersions(pypiRequest["releases"])
 	header, footer = getTemplate("+", package_name, json["description"], json["homepage"], getClassname(package_name), filename)
 	dependencies = getDepends(dependencies)
+	footer += f"\n# {str(extradeps)}"
 	writeRecipe(header, footer, versions, dependencies, package_name)
 
 def pyify(package):
@@ -74,22 +74,44 @@ def spackifyVersion(version):
 def getVersions(versionList):
 	versions = []
 	filename = ""
+	extradeps = {}
 	for i in versionList.keys():
 		if versionList[i] == []:
 			continue
-		info = ""
+		info = []
+		possibleWheels = []
 		for j in range(len(versionList[i])):
-			if versionList[i][j]["packagetype"] == "sdist":
-				info = versionList[i][j]
-				break
-		if info == "":
+			if versionList[i][j]["packagetype"] == "bdist_wheel" and (versionList[i][j]["filename"].endswith("manylinux1_x86_64.whl") or versionList[i][j]["filename"].endswith("any.whl")):
+				possibleWheels.append(versionList[i][j])
+		if possibleWheels != []:
+			for j in possibleWheels:
+				if info == []:
+					info = j
+				elif float(j["python_version"].replace("cp", "").replace("py", "")) > float(info["python_version"].replace("cp", "").replace("py", "")):
+					info = j
+		else:
+			for j in range(len(versionList[i])):
+				if versionList[i][j]["packagetype"] == "sdist":
+					info = versionList[i][j]
+					break
+		if info == []:
 			continue
 		if info["yanked"] == True:
 			continue
-
-		versions.append(f"\tversion(\"{i}\", sha256=\"{info['digests']['sha256']}\")\n")
+		
+		if info['packagetype'] == 'bdist_wheel':
+			cmd = subprocess.run(["pyPIMD/pypi", info["url"]], capture_output=True)
+			decoded = cmd.stdout.decode("utf-8").split("\n\n")[0].split("\n")
+			depends = []
+			for j in decoded:
+				if j.startswith("Requires-Dist:"):
+					depends.append(j.replace("Requires-Dist: ", "").replace(" ", ""))
+			extradeps[i] = depends
+			versions.append(f"\tversion(\"{i}\", sha256=\"{info['digests']['sha256']}\", url=\"{info['url']}\", expand=False)\n")
+		else:
+			versions.append(f"\tversion(\"{i}\", sha256=\"{info['digests']['sha256']}\")\n")
 		filename = info["filename"]
-	return versions, filename
+	return versions, filename, extradeps
 
 def getClassname(package):
 	classname = package.replace("-",".").split(".")
@@ -108,7 +130,7 @@ def writeRecipe(header, footer, versions, depends, package):
 	print(f"	✅ Package {package} successfully created!")
 
 def getDepends(dependencies):
-	depends_on = ["\tdepends_on(\"py-setuptools\", type=\"build\")\n"]
+	depends_on = []
 	for i in dependencies:
 		depends_on.append("\tdepends_on(\"" + pyify(i) + "\", type=(\"build\", \"run\"))\n")
 	return depends_on

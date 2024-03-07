@@ -30,7 +30,7 @@ func run() error {
 	z, err := zip.NewReader(bhtrdr, htrdr.Size())
 
 	for _, f := range z.File {
-		if strings.HasSuffix(f.Name, "info/METADATA") {
+		if strings.HasSuffix(f.Name, "info/METADATA") || strings.HasSuffix(f.Name, "EGG-INFO/PKG-INFO") {
 			r, err := f.Open()
 			if err != nil {
 				return err
