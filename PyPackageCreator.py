@@ -106,7 +106,8 @@ def getVersions(versionList):
 			for j in decoded:
 				if j.startswith("Requires-Dist:"):
 					depends.append(j.replace("Requires-Dist: ", "").replace(" ", ""))
-			extradeps[i] = depends
+			for j in depends:
+				extradeps[j] += i
 			versions.append(f"\tversion(\"{i}\", sha256=\"{info['digests']['sha256']}\", url=\"{info['url']}\", expand=False)\n")
 		else:
 			versions.append(f"\tversion(\"{i}\", sha256=\"{info['digests']['sha256']}\")\n")
