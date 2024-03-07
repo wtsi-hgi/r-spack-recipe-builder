@@ -52,7 +52,8 @@ def get_package_dependencies(package_name, package_version, recurse=False):
 	versions, filename, extradeps = getVersions(pypiRequest["releases"])
 	header, footer = getTemplate("+", package_name, json["description"], json["homepage"], getClassname(package_name), filename)
 	dependencies = getDepends(dependencies)
-	footer += f"\n# {str(extradeps)}"
+	if extradeps != {}:
+		footer += f"\n# {str(extradeps)}"
 	writeRecipe(header, footer, versions, dependencies, package_name)
 
 def pyify(package):
