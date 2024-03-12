@@ -33,6 +33,7 @@ def getVersions(package, packman):
 			source += link.get("href").split("/")[-1]
 			break
 
+	os.makedirs("packages", exist_ok=True)
 	cmd = subprocess.run([spackBin, "create", "-fb", "--skip-editor", source], capture_output=True)
 	location = cmd.stdout.decode("utf-8").strip().split("\n")[-1].replace("==> Created package file: ", "")
 	with open(location) as file:
@@ -79,9 +80,9 @@ def get(package, repos):
 	versions = getVersions(package, packman)
 	for version in versions:
 		lines.insert(versionLine, version)
-	with open(location + "/packages/" + rify(package) + "/package.py", "w") as file:
+	with open("packages/" + rify(package) + "/package.py", "w") as file:
 		file.write("".join(lines))
-	print(f"Versions added to {location}/packages/{rify(package)}/package.py")
+	print(f"Versions added to {os.getcwd()}/packages/{rify(package)}/package.py")
 			
 repos = getRepos()
 package = str(input("Enter the package name: "))
