@@ -4,7 +4,7 @@ import subprocess
 import requests
 import ast
 
-spackBin = "spack/bin/spack"
+spackBin = "spack"
 
 def getExistingVersions():
 	os.makedirs("packages", exist_ok=True)
@@ -25,36 +25,6 @@ def getPyPiJson(package_name):
 		print(f"Failed to retrieve package {package_name}")
 		exit()
 	return request.json()
-
-def get_package_dependencies(package_name, package_version, recurse=False):
-	if pyify(package_name) in existingVersions:
-		print(f"	✴️ {pyify(package_name)} already exists in spack") 
-		return
-	url = f"https://libraries.io/api/pypi/{package_name}/{package_version}/dependencies?api_key=ebb39aed4c41baa4c4e8a384a8775cd9"
-	response = requests.get(url)
-	if response.status_code != 200:
-		print(f"	❌ Failed to retrieve package {package_name}")
-		return
-	
-	json = response.json()
-	dependencies = []
-	pypiRequest = getPyPiJson(package_name)
-	python_version = spackifyVersion(pypiRequest["info"]["requires_python"])
-	dependencies.append("python"+python_version)
-	for i in json["dependencies"]:
-		if str(i["platform"]).lower() == "pypi" and i["optional"] == False:
-			dependencies.append(str(i["project_name"]).lower())
-			if recurse:
-				get_package_dependencies(str(i["project_name"]).lower(), i["latest_stable"], True)
-		else:
-			continue
-	
-	versions, filename, extradeps = getVersions(pypiRequest["releases"])
-	header, footer = getTemplate("+", package_name, json["description"], json["homepage"], getClassname(package_name), filename)
-	dependencies = getDepends(dependencies)
-	if extradeps != {}:
-		footer += f"\n# {str(extradeps)}"
-	writeRecipe(header, footer, versions, dependencies, package_name)
 
 def pyify(package):
 	if package == "python" or package.startswith("python@"):
@@ -188,10 +158,40 @@ class Py{classname}(PythonPackage):
 		footer = "".join(lines[lastline:])
 	return header, footer
 
+def get(package_name, package_version, recurse=False):
+	if pyify(package_name) in existingVersions:
+		print(f"	✴️ {pyify(package_name)} already exists in spack") 
+		return
+	url = f"https://libraries.io/api/pypi/{package_name}/{package_version}/dependencies?api_key=ebb39aed4c41baa4c4e8a384a8775cd9"
+	response = requests.get(url)
+	if response.status_code != 200:
+		print(f"	❌ Failed to retrieve package {package_name}")
+		return
+	
+	json = response.json()
+	dependencies = []
+	pypiRequest = getPyPiJson(package_name)
+	python_version = spackifyVersion(pypiRequest["info"]["requires_python"])
+	dependencies.append("python"+python_version)
+	for i in json["dependencies"]:
+		if str(i["platform"]).lower() == "pypi" and i["optional"] == False:
+			dependencies.append(str(i["project_name"]).lower())
+			if recurse:
+				get(str(i["project_name"]).lower(), i["latest_stable"], True)
+		else:
+			continue
+	
+	versions, filename, extradeps = getVersions(pypiRequest["releases"])
+	header, footer = getTemplate("+", package_name, json["description"], json["homepage"], getClassname(package_name), filename)
+	dependencies = getDepends(dependencies)
+	if extradeps != {}:
+		footer += f"\n# {str(extradeps)}"
+	writeRecipe(header, footer, versions, dependencies, package_name)
+
 package_name = str(input("Enter package name: "))
 package_version = "latest"
 
 existingVersions = getExistingVersions()
 
 print(f"Building recipes for {package_name}...")
-get_package_dependencies(package_name, package_version, True)
+get(package_name, package_version, True)
