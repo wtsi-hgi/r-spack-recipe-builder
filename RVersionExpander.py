@@ -86,7 +86,8 @@ def get(package, repos):
 	print(f"Versions added to {os.getcwd()}/packages/{rify(package)}/package.py")
 			
 repos = getRepos()
-if len(sys.argv) != 2:
-	print("Usage: python3 RVersionExpander.py <package>")
+if len(sys.argv) < 2:
+	print("Usage: python3 RVersionExpander.py package_name [...package_name]")
 	exit()
-get(sys.argv[1], repos)
+for i in range(1, len(sys.argv)):
+	get(sys.argv[i], repos)
