@@ -31,13 +31,13 @@ def pyify(package):
 		return package
 	return "py-" + package.lower().replace(".","-").split("[")[0]
 
-def spackifyVersion(version):
+def spackifyVersion(version: str):
 	if ">=" in version:
 		result = version.replace(">=", "@") + ":"
 	elif "<=" in version:
 		result = version.replace("<=", "@:")
 	else :
-		result = version.replace("=", "@")
+		result = version.replace("=", "@", 1)
 		while "=" in result:
 			result = result.replace("=", "")
 	return result
@@ -172,7 +172,8 @@ def get(package_name, package_version, recurse=False):
 	dependencies = []
 	pypiRequest = getPyPiJson(package_name)
 	python_version = spackifyVersion(pypiRequest["info"]["requires_python"])
-	dependencies.append("python"+python_version)
+	if python_version != "":
+		dependencies.append("python"+python_version)
 	for i in json["dependencies"]:
 		if str(i["platform"]).lower() == "pypi" and i["optional"] == False:
 			dependencies.append(str(i["project_name"]).lower())
