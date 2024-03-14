@@ -2,6 +2,7 @@ import os
 import subprocess
 from bs4 import BeautifulSoup as bs
 import requests
+import sys
 
 spackBin = "spack"
 
@@ -85,5 +86,7 @@ def get(package, repos):
 	print(f"Versions added to {os.getcwd()}/packages/{rify(package)}/package.py")
 			
 repos = getRepos()
-package = str(input("Enter the package name: "))
-get(package, repos)
+if len(sys.argv) != 2:
+	print("Usage: python3 RVersionExpander.py <package>")
+	exit()
+get(sys.argv[1], repos)
