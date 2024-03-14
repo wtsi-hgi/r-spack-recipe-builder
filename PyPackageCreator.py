@@ -3,6 +3,7 @@ import os
 import subprocess
 import requests
 import ast
+import sys
 
 spackBin = "spack"
 
@@ -189,10 +190,11 @@ def get(package_name, package_version, recurse=False):
 		footer += f"\n# {str(extradeps)}"
 	writeRecipe(header, footer, versions, dependencies, package_name)
 
-package_name = str(input("Enter package name: "))
 package_version = "latest"
-
 existingVersions = getExistingVersions()
-
-print(f"Building recipes for {package_name}...")
-get(package_name, package_version, True)
+if len(sys.argv) < 2:
+	print("Usage: python3 PyPackageCreator.py package_name [...package_name]")
+	exit()
+for i in range(1, len(sys.argv)):
+	print(f"Building recipes for {sys.argv[i]}...")
+	get(sys.argv[i], package_version, True)
