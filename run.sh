@@ -2,6 +2,6 @@
 
 cd "$(dirname "$0")"
 
+echo "Installing requirements if necessary..."
+pip install -r requirements.txt > /dev/null 2>&1
 python3 RPackageCreator.py
-echo "All recipes have been created. Terminal closing in 10 seconds..."
-sleep 10
