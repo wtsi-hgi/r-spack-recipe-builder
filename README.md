@@ -3,13 +3,13 @@
 A python script which creates recipes for all R packages within CRAN and Bioconductor.
 
 ## Prerequisites
-- The spack folder must be in the repo folder, and 
+- You must have spack installed (running `spack` should give a help message)
 - You must add the repo folder to *~/.spack/repos.yaml* (See here: https://spack.readthedocs.io/en/latest/repositories.html)
 
 ## Usage
-Clone the repo, make sure the prerequisites are met, then run
+Clone the repo, make sure the prerequisites are met, then run the shell script:
 
-    python3 RPackageCreator.py
+    ./run.sh
 If you already have recipes in the packages folder, it'll take a few minutes to fetch package versions, if not then it should take a couple seconds.
 
 When you run the script, it will tell you what the different symbols it prints means, I've included it below:
