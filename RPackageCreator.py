@@ -467,25 +467,25 @@ class BIOCPackageMaker(PackageMaker):
 		return self.lib.get(k) is not None
 
 class BIOCSoftware(BIOCPackageMaker):
-	url = "https://www.bioconductor.org/packages/release/bioc/"
+	url = "https://www.bioconductor.org/packages/3.18/bioc/"
 	cacheFilename = "libs/biocLibrary.pkl"
 	name = "Bioconductor software"
 	comment = ""
 
 class BIOCAnnotations(BIOCPackageMaker):
-	url = "https://www.bioconductor.org/packages/release/data/annotation/"
+	url = "https://www.bioconductor.org/packages/3.18/data/annotation/"
 	cacheFilename = "libs/biocAnnotationLibrary.pkl"
 	name = "Bioconductor annotations"
 	comment = "annotation"
 
 class BIOCExperiments(BIOCPackageMaker):
-	url = "https://www.bioconductor.org/packages/release/data/experiment/"
+	url = "https://www.bioconductor.org/packages/3.18/data/experiment/"
 	cacheFilename = "libs/biocExperimentLibrary.pkl"
 	name = "Bioconductor experiments"
 	comment = "experiment"
 
 class BIOCWorkflows(BIOCPackageMaker):
-	url = "https://www.bioconductor.org/packages/release/workflows/"
+	url = "https://www.bioconductor.org/packages/3.18/workflows/"
 	cacheFilename = "libs/biocWorkflowLibrary.pkl"
 	name = "Bioconductor workflows"
 	comment = "workflow"
