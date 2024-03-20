@@ -30,7 +30,7 @@ def getPyPiJson(package_name):
 def pyify(package):
 	if package == "python" or package.startswith("python@"):
 		return package
-	return "py-" + package.lower().replace(".","-").split("[")[0]
+	return "py-" + package.lower().replace(".","-").replace("_","-").replace(" ", "-").split("[")[0]
 
 def spackifyVersion(version: str):
 	if ">=" in version:
@@ -90,7 +90,7 @@ def getVersions(versionList):
 	return versions, filename, extradeps
 
 def getClassname(package):
-	classname = package.replace("-",".").split(".")
+	classname = package.replace("-",".").replace("_",".").split(".")
 	for i in range(len(classname)):
 		classname[i] = classname[i].capitalize()
 	return "".join(classname)
