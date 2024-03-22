@@ -27,7 +27,11 @@ def getExistingVersions():
 	print("Fetching package versions, this could take a while...")
 	stream = subprocess.run([spackBin, "list", "--format", "version_json", "r-*"], capture_output=True)
 	decoded = stream.stdout.decode("utf-8").strip()
-	builtin = json.loads(decoded)
+	try:
+		builtin = json.loads(decoded)
+	except:
+		print(stream.stderr.decode("utf-8"))
+		exit(1)
 	print("Versions successfully fetched!\n")
 	packageVersions = {}
 	for row in builtin:
@@ -91,7 +95,6 @@ def writeRecipe(header, footer, versions, depends, package):
 	os.makedirs("packages/" + rify(package), exist_ok=True)
 	f = open("packages/" + rify(package) + "/package.py", "w")
 	f.write(f"""{header}
-
 {"".join(versions)}
 {"".join(depends)}{footer}""")
 	f.close()
@@ -195,12 +198,20 @@ class R{classname}(RPackage):
 		else:
 			with open("packages/" + rify(package) + "/package.py", "r") as f:
 				lines = f.readlines()
-			firstline = 0
+			firstline = len(lines)
+			version = record["Version"]
 			for i in range(len(lines)):
 				lines[i] = lines[i].replace("    ", "\t")
-				if "\tversion(" in lines[i] or "\turl =" in lines[i] or "\turls =" in lines[i]:
+				if version in lines[i] and "\tversion(" in lines[i]:
+					lines[i] = "REMOVE_THIS_LINE"
+				if "\turl =" in lines[i] or "\turls =" in lines[i]:
+					lines[i] = "REMOVE_THIS_LINE"
+				if "\tdepends_on(" in lines[i]:
 					firstline = i
 					break
+			newLines = [i for i in lines if i != "REMOVE_THIS_LINE"]
+			firstline = firstline - (len(lines) - len(newLines))
+			lines = newLines
 			header = "".join(lines[:firstline]).strip()
 			lastline = len(lines)
 			for j in range(len(lines)):
