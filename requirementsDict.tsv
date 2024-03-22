@@ -103,14 +103,14 @@
 'Python (>= 2.7.0)'	python@2.7:
 'ZeroMQ (libzmq) >= 4.3.0 (optional; otherwise\nbundled)'	libzmq@4.3.0:
 'libarmadillo: apt-get install -y libarmadillo-dev\n(deb), libblas: apt-get install -y libblas-dev (deb),\nliblapack: apt-get install -y liblapack-dev (deb),\nlibarpack++2: apt-get install -y libarpack++2-dev (deb),\ngfortran: apt-get install -y gfortran (deb), libgmp3: apt-get\ninstall -y libgmp3-dev (deb), libfftw3: apt-get install -y\nlibfftw3-dev (deb), libtiff5: apt-get install -y libtiff5-dev\n(deb)'	lapack	gcc	gmp
-'MOSEK (http://www.mosek.com) and MOSEK License for\nuse of Rmosek'
+'MOSEK (http://www.mosek.com) and MOSEK License for\nuse of Rmosek'	
 'TensorFlow (https://www.tensorflow.org/)'	py-tensorflow
 'GNU GSL'	gsl
 'libcurl: libcurl-devel (rpm) or\nlibcurl4-openssl-dev (deb).'	curl
 'Java (>= 1.6)'	openjdk@1.6:
 'ImageMagick++: ImageMagick-c++-devel (rpm) or\nlibmagick++-dev (deb)'	imagemagick
 'GDAL (>= 2.0.0), GEOS (>= 3.3.0), PROJ.4 (>= 4.8.0)'	gdal@2.0.0:	geos@3.3.0:	proj@4.8.0:
-'htcondor'
+'htcondor'	
 'pandoc (>= 1.12.3) - https://pandoc.org'	pandoc@1.12.3:
 'python3'	python@3:
 'ACER ConQuest (>=5.34.3)'	
@@ -133,7 +133,7 @@
 'GNU make, pandoc (>=1.12.3, needed for vignettes)'	pandoc@1.12.3:
 'pandoc (>= 2.0; https://pandoc.org), git, whoami'	pandoc@2.0:	git
 'PATHd8'	
-'dat (>= 13.10.0)'
+'dat (>= 13.10.0)'	
 'pandoc, GNU make'	pandoc
 'none, one or more of JAGS (>= 3.0.0), WinBUGS (>=\n1.4), OpenBUGS (>= 3.2.2), Stan'	jags@3.0.0:
 'JAGS (>= 3.0.0)'	jags@3.0.0:
@@ -162,10 +162,10 @@
 'GDAL binaries'	gdal
 "'unrar' (Linux/macOS) or '7-Zip' (Windows) to work\nwith '.rar' files, GDAL (>= 3.0.2), GEOS (>= 3.8.0), PROJ (>=\n6.2.1)"	unrar	gdal@3.0.2:	geos@3.8.0:	proj@6.2.1
 'JAGS (>= 4.3)'	jags@4.3:
-'Requires the OpenMP library for parallel computing.\nIf the OpenMP library is not available, the code is executed\nsequentially and a warning is printed.'
+'Requires the OpenMP library for parallel computing.\nIf the OpenMP library is not available, the code is executed\nsequentially and a warning is printed.'	
 'The package required the jq command line library.\nPlease check https://stedolan.github.io/jq/download/ for\ndownload instructions.'	jq
 'Python (>= 2.7 or >= 3.5) and elex package'	python@3.5:
-'pari/gp'
+'pari/gp'	
 'The function render() requires Pandoc\n(http://pandoc.org). To use PGP/GnuPG encryption requires gpg.'	pandoc
 'pandoc (>= 1.12.3)'	pandoc@1.12.3:
 'EnergyPlus (optional) (<https://energyplus.net>);\nudunits2'	udunits
@@ -173,7 +173,7 @@
 'gipptools dataselect'	
 'C++14'	
 'PROJ (>= 6, https://proj.org/download.html), GDAL\n(>= 3, https://gdal.org/download.html), NetCDF(>= 4,\nhttps://www.unidata.ucar.edu/software/netcdf/).'	proj@6:	gdal@3:	netcdf-c@4:
-'EViews (>= 8)'
+'EViews (>= 8)'	
 'GEOS (>= 3.5.0)'	geos@3.5.0:
 'pandoc (>= 2.0)'	pandoc@2.0:
 'Gnu Scientific Library version >= 2.1'	gsl@2.1:
@@ -209,8 +209,8 @@
 'GDAL (>= 2.4.0, built against GEOS), PROJ (>=\n4.8.0), sqlite3'	gdal@2.4.0:+geos	proj@4.8.0:
 'cairo, freetype2, fontconfig'	cairo	freetype	fontconfig
 'gsl (>= 2.7)'	gsl@2.7:
-'OpenMP, C++11'
-'OpenMP'
+'OpenMP, C++11'	
+'OpenMP'	
 'RStudio - http://www.rstudio.com/products/rstudio/'	
 'Perl (>= 2.0.0)'	perl@2.0.0:
 'libarmadillo: apt-get install -y libarmadillo-dev\n(deb)'	armadillo
@@ -223,18 +223,18 @@
 'openssl'	openssl
 'libpng'	libpng
 'Chromium-based browser (Google Chrome, Brave, ...)'	
-'GNU make, MeCab'
+'GNU make, MeCab'	
 'By default, git2r uses a system installation of the\nlibgit2 headers and library. However, if a system installation\nis not available, builds and uses a bundled version of the\nlibgit2 source. zlib headers and library. OpenSSL headers and\nlibrary (non-macOS). LibSSH2 (optional on non-Windows) to\nenable the SSH transport.'	libgit2
 'git'	git
 'Git (>= 2.0.0)'	git@2.0.0:
 'GLPK (>= 4.42)'	glpk@4.42:
-'MuseScore - https://musescore.org/'
+'MuseScore - https://musescore.org/'	
 'gmt'	gmt
 'pandoc (>= 2.0) - http://pandoc.org'	pandoc@2.0:
 'GNU Scientific Library version >= 2.5'	gsl@2.5:
 "GPGME: libgpgme-dev (deb), gpgme-devel (rpm) gpgme\n(brew). On Linux 'haveged' is recommended for generating\nentropy when using the GPG key generator."	gpgme
 'Python (>= 2.7.0) with header files and shared\nlibrary; TensorFlow (v1.14; https://www.tensorflow.org/);\nTensorFlow Probability (v0.7.0;\nhttps://www.tensorflow.org/probability/)'	python@2.7.0:	py-tensorflow@1.14:	py-tensorflow-probability
-'gretl (>= 1.9.4)'
+'gretl (>= 1.9.4)'	
 'graphviz'	graphviz
 'ghostscript'	ghostscript
 'Gnu Scientific Library version >= 2.5'	gsl@2.5:
@@ -245,7 +245,7 @@
 'C++11, GDAL (>= 2.0.1), GEOS (>= 3.4.0), PROJ (>=\n4.8.0), sqlite3'	gdal@2.0.1:	geos@3.4.0:	proj@4.8.0:	sqlite@3:
 'GNU make, zlib: zlib1g-dev (deb), zlib-devel (rpm)'	zlib
 'HDF5 (>= 1.8.13)'	hdf5@1.8.13:
-'HDFql (>= 2.1.0)'
+'HDFql (>= 2.1.0)'	
 'NetCDF (>= 4.1)'	netcdf-c@4.1:
 'Bash, PkgConfig, CMAKE (>=3.16), C++11'	bash	pkgconfig	cmake@3.1.6:
 'Apache Hadoop >= 2.7.2\n(https://hadoop.apache.org/releases.html#Download); Obsolete:\nHadoop core >= 0.19.1 and <= 1.0.3 or CDH3\n(https://www.cloudera.com); standard unix tools (e.g., chmod)'	hadoop@2.7.2:
@@ -263,7 +263,7 @@
 'fftw3,libtiff,X11'	fftw@3:	libtiff
 "Impala driver to support a 'DBI'-compatible R\ninterface"	
 'Java(>=8)'	openjdk@1.8:
-'Package vignettes require pandoc\n(https://pandoc.org/). Text mining using n-grams requires\nAmazon Corretto (https://aws.amazon.com/corretto/).'
+'Package vignettes require pandoc\n(https://pandoc.org/). Text mining using n-grams requires\nAmazon Corretto (https://aws.amazon.com/corretto/).'	
 'XPDF (http://www.foolabs.com/xpdf/download.html)'	
 'Java (>= 7)'	java@1.7:
 'C++ 17, gmp'	gmp
@@ -277,7 +277,7 @@
 'JAGS (http://mcmc-jags.sourceforge.net)'	jags
 'GNU make and Java JDK 1.2 or higher'	openjdk@1.2:
 'Julia (>= 1.8)'	julia@1.8:
-'jamovi (>= 1.2.8), C++11'
+'jamovi (>= 1.2.8), C++11'	
 'JAGS (https://mcmc-jags.sourceforge.io/)'	jags
 'libjpeg'	libjpeg
 'libjq: jq-devel (rpm) or libjq-dev (deb)'	jq
@@ -288,7 +288,7 @@
 'TensorFlow >= 2.0 (https://www.tensorflow.org/)'	py-tensorflow@2.0:
 'Optional: libsecret on Linux (libsecret-1-dev on\nDebian/Ubuntu, libsecret-devel on Fedora/CentOS)'	
 'SVMlight'	
-'MOSEK (http://www.mosek.com) and MOSEK license.'
+'MOSEK (http://www.mosek.com) and MOSEK license.'	
 'Package vignettes based on R Markdown v2 or\nreStructuredText require Pandoc (http://pandoc.org). The\nfunction rst2pdf() requires rst2pdf\n(https://github.com/rst2pdf/rst2pdf).'	
 'fftw3 (>=3.3.4)'	fftw@3.3.4:
 'fftw (>= 3.2.2)'	fftw@3.2.2:
@@ -300,11 +300,11 @@
 'C++11 little-endian platform'	
 'JAGS 4.x.y or WinBUGS 1.4'	jags@4.0.0:
 'ImageJ (>=1.48), ij.jar (see\nhttp://imagej.nih.gov/ij/), Java (>=1.6.0)'	openjdk@1.6.0:
-'ledger (>= 3.1), hledger (>= 1.2), beancount (>=\n2.0)'
+'ledger (>= 3.1), hledger (>= 1.2), beancount (>=\n2.0)'	
 'GNU make (optional), libxml2 (optional), glpk (>=\n4.57, optional)'	gmp	libxml2	glpk@4.57:
 'GNU Scientific Library (GSL)'	gsl
 'Docker (see <https://docs.docker.com/install/>)'	
-'MOSEK (>= 6), MOSEK License (>= 6)'
+'MOSEK (>= 6), MOSEK License (>= 6)'	
 'JAGS (>= 3.0.0) (see\nhttp://mcmc-jags.sourceforge.net)'	jags@3.0.0:
 'libR'	
 'At least trial version of LocalSolver to be\ndownloaded from http://www.localsolver.com/download.html'	
@@ -317,17 +317,17 @@
 'java'	openjdk
 'Python 3.x with following modules: PyGMO, NumPy,\nand cloudpickle'	python@3:	py-numpy	py-cloudpickle
 'GDAL (>= 3.0.0), PROJ (>= 4.8.0)'	gdal@3.0.0:	proj@4.8.0:
-'ADMB version 11 <http://admb-project.org/> for\nuse.admb=TRUE; see readme.txt'
+'ADMB version 11 <http://admb-project.org/> for\nuse.admb=TRUE; see readme.txt'	
 'Java, C++'	openjdk
 'MATLAB'	matlab
 'maxent.jar file'	
 'JAGS (>= 4.3.0)\n(https://mcmc-jags.sourceforge.net/)'	jags@4.3.0:
 'JAGS (>= 4.3.0) (http://mcmc-jags.sourceforge.net)'	jags@4.3.0:
 'gcc (>= 4.0)'	gcc@4.0:
-'mdbtools: mdbtools (deb).'
+'mdbtools: mdbtools (deb).'	
 "windows, 'BWidget', 'Tktable'"	tktable
 'Python (>= 3.6)'	python@3.6:
-'mpost'
+'mpost'	
 'Little Endian'	
 'libfftw3 (>= 3.3.4)'	fftw@3.3.4:
 'Python (>= 3.8.0)'	python@3.8.0:
@@ -337,12 +337,12 @@
 'TensorFlow (https://www.tensorflow.org), Keras\n(https://keras.io), TensorFlow Probability\n(https://www.tensorflow.org/probability)'	py-tensorflow-probability
 'A C++14 compiler. Version 5 or later of GCC will be\nfine.'	gcc@5:
 'gdal (optional), geos (optional), proj (optional),\nudunits (optional), gsl (optional), gmp (optional), glu\n(optional), jags (optional), mpfr (optional), openmpi\n(optional)'	gdal	geos	proj	udunits	gsl	gmp	glu	gl	jags	mpfr	openmpi
-'MRTSwath'
-'MonetDB, available from http://www.monetdb.org'
+'MRTSwath'	
+'MonetDB, available from http://www.monetdb.org'	
 'OpenSSL, Cyrus SASL (aka libsasl2)'	openssl	cyrus-sasl
 'JAGS (>= 4.0.0) (see\nhttps://mcmc-jags.sourceforge.io)'	jags@4.0.0:
 'Python (>= 3.0.0), numpy, pandas'	python@3:	py-numpy	py-pandas
-"'Mplus' (<http://www.statmodel.com>)"
+"'Mplus' (<http://www.statmodel.com>)"	
 'libcurl: libcurl-devel (rpm) or\nlibcurl4-openssl-dev (deb)'	curl
 "A valid account MUST be registered with Microsoft's\nCognitive Services website\n<https://www.microsoft.com/cognitive-services/> in order to\nobtain a (free) API key. Without an API key, this package will\nnot work properly."	
 'GNU make, mpfr (>= 3.0.0), gmp (>= 6.2.1_1)'	mpfr	gmp
@@ -355,7 +355,7 @@
 'neo4j (>=3 AND <=5) <https://neo4j.com/>'	neo4j@3:6
 'neo4j - http://www.neo4j.com, cypher-shell -\nhttps://github.com/neo4j/cypher-shell/releases'	neo4j
 'Python (>= 3.0.0), Neptune (https://neptune.ai/)'	python@3.0.0:
-'NetMHC2pan\n(https://services.healthtech.dtu.dk/service.php?NetMHCIIpan-3.2)'
+'NetMHC2pan\n(https://services.healthtech.dtu.dk/service.php?NetMHCIIpan-3.2)'	
 'python (>= 3.8), keras, tensorflow'	python@3.8.0:	py-tensorflow
 'cmake, FSL'	cmake	fsl
 '7-zip command line tool (7z)'	7zip
@@ -383,8 +383,8 @@
 'pandoc (https://johnmacfarlane.net/pandoc) for\nexporting markdown files to other formats.'	pandoc
 'pandoc (> 1.12)'	pandoc@1.12:
 'Rendering the document template requires pandoc (>=\n2.0; https://pandoc.org) and for PDFs a TeX distribution, such\nas TinyTeX (>= 0.12; https://yihui.org/tinytex/)'	pandoc@2.0:
-"For multipoint linkage analysis, 'MERLIN'\n(http://csg.sph.umich.edu/abecasis/merlin/index.html)."
-'MERLIN (https://csg.sph.umich.edu/abecasis/merlin/)\nfor multipoint linkage analysis.'
+"For multipoint linkage analysis, 'MERLIN'\n(http://csg.sph.umich.edu/abecasis/merlin/index.html)."	
+'MERLIN (https://csg.sph.umich.edu/abecasis/merlin/)\nfor multipoint linkage analysis.'	
 "The 'Japanese.Rnw' vignette requires uplatex and\ndvipdfmx."	
 'Spark: 3.4.x'	spark@3.4:
 'latex, cairo (for report creation)'	cairo
@@ -395,7 +395,7 @@
 'XPDF\n(4.02)(https://github.com/erikstricker/PDE/tree/master/inst/examples/bin)'	
 'Python>=3.6, pdfminer.six>=20200402, pandas'	python@3.6:	py-pandas
 'Poppler C++ API: libpoppler-cpp-dev (deb) or\npoppler-cpp-devel (rpm), and poppler-data (rpm/deb) package.'	poppler+cpp
-'MERLIN (https://csg.sph.umich.edu/abecasis/merlin/)\nfor calculations involving multiple linked markers.'
+'MERLIN (https://csg.sph.umich.edu/abecasis/merlin/)\nfor calculations involving multiple linked markers.'	
 'Python (>= 3.9.0)'	python@3.9.0:
 'Tcl/Tk package TkTable.'	tcl	tk	tktable
 'OpenSSL library and headers (openssl-dev or\nsimilar)'	openssl@1.0.2:
@@ -421,7 +421,7 @@
 'curl (https://curl.se/)'	curl
 'ncbi-blast+ (see\n<https://blast.ncbi.nlm.nih.gov/doc/blast-help/downloadblastdata.html>)'	
 'pandoc (http://pandoc.org) for building Vignettes\nand output reports as HTML'	pandoc
-'PureseqTM\n(https://github.com/PureseqTM/pureseqTM_package)'
+'PureseqTM\n(https://github.com/PureseqTM/pureseqTM_package)'	
 'pylint'	py-pylint
 "'python3' needs to built for the same architecture\nR is built for (32 or 64 bit)."	python@3:
 "'QGIS' latest or long-term release, currently\nsupported according to the 'QGIS' release schedule\n(<https://www.qgis.org/en/site/getinvolved/development/roadmap.html>).\nOlder 'QGIS' releases are not officially supported, but may\nwork since 'QGIS' 3.16."	qgis
@@ -441,14 +441,14 @@
 'python >= 2.6, by default rasciidoc uses a system\ninstallation of asciidoc. If a system installation of asciidoc\nis not available, it downloads the sources from\n(<http://gitlab.com/asciidoc>). GNU source-highlight is\nrecommended.'	python@2.6:	asciidoc
 'fftw3 (libfftw3-dev (deb), or fftw-devel (rpm)),\npkg-config'	fftw@3:	pkg-config
 "Needs a running BaseX server instance. The testuser\nwith credentials ('Test'/'testBasex') should have admin rights."	
-'BCHunlimited (>= 1.9.2)'
+'BCHunlimited (>= 1.9.2)'	
 'cmake, zlib, GNU make, Solaris: g++ is a\nrequirement'	cmake	zlib
 'GNU make, pandoc (>= 1.12.3), pngquant, C++17'	pandoc@1.12.3:	pngquant
-'LibBi (>= 1.4.2)'
-'libbi (>= 1.4.2)'
+'LibBi (>= 1.4.2)'	
+'libbi (>= 1.4.2)'	
 'A valid Bloomberg installation. The API headers and\ndynamic library are downloaded from\n<https://github.com/Rblp/blp> during the build step. See\n<https://bloomberg.github.io/blpapi-docs/cpp/3.8> as well as\n<https://www.bloomberg.com/professional/support/api-library/>\nfor API documentation. A recent-enough compiler with C++11\nsupport is required.'	
 'libhdf5 (>= 1.8.12)'	hdf5@1.8.12:
-'MOSEK (http://www.mosek.com) and MOSEK License for\nuse of Rmosek,'
+'MOSEK (http://www.mosek.com) and MOSEK License for\nuse of Rmosek,'	
 'GMP (GNU MP bignum library from\n<https://gmplib.org/>)'	gmp
 'C++ 17'	
 'XQuartz (on OSX)'	
@@ -457,7 +457,7 @@
 'A 64-bit POSIX OS such as Linux or OS X with IANA\ntime zone data in /usr/share/zoneinfo as well as a\nrecent-enough C++11 compiler (such as g++-4.9 or later which is\npreferred, g++-4.8 works too). On Windows the zoneinfo included\nwith R is used; and time parsing support is enabled via a\nbackport of std::get_time from the LLVM libc++ library.'	
 'GNU make, pcre2 (>= 10.00), GLib (>= 2.0.0). On\nWindows, no prior installations are necessary, as pre-built\n(i.e. cross-compiled) binaries of required libraries are\ndownloaded from a GitHub repository\n(<https://github.com/PolMine/libcl>) during installation. On\nmacOS, static libraries of Glib are downloaded\n(<https://github.com/PolMine/libglib>) if Glib is not present.'	pcre2	glib@2.0.0:
 'A POSIX system. Currently Linux and OS X are known\nto work.'	
-'MeCab 0.996 (or mecab-ko 0.9.2) or higher, GNU make'
+'MeCab 0.996 (or mecab-ko 0.9.2) or higher, GNU make'	
 'GNU make, Intel TBB, Windows: cmd.exe and\ncscript.exe, Solaris: g++ is required'	intel-tbb
 "An available hiredis library (eg via package\nlibhiredis-dev on Debian/Ubuntu, hiredis-devel on\nFedora/RedHat, or directly from source from\n<https://github.com/redis/hiredis>) can be used but version\n1.0.2 is also included and built on demand if needed. The\noptional 'rredis' package can be installed from the 'ghrr'\n'drat' repo for additional illustrations and tests."	hiredis
 'A C++17 compiler is required'	
@@ -488,12 +488,12 @@
 'Python (>= 3.7), rgf_python, scikit-learn (>=\n0.18.0), scipy, numpy. Detailed installation instructions for\neach operating system can be found in the README file.'	python@3.7:	py-scikit-learn@0.18.0:	py-scipy	py-numpy
 'OpenGL and GLU Library (Required for display in R.\nSee "Installing OpenGL support" in README.md. Not needed if\nonly browser displays using rglwidget() are wanted.), zlib\n(optional), libpng (>=1.2.9, optional), FreeType (optional),\npandoc (>=1.14, needed for vignettes)'	gl	glu	zlib	libpng	freetype
 'GLPK library package (e.g., libglpk-dev on\nDebian/Ubuntu)'	glpk
-'gnparser (<https://github.com/gnames/gnparser>)'
+'gnparser (<https://github.com/gnames/gnparser>)'	
 'GRASS (>= 7)'	grass@7:
 'java runtime'	openjdk
 'Gnu Scientific Library version >= 1.14'	gsl@1.14:
-'Maxima (https://sourceforge.net/projects/maxima/,\ntested with versions 5.42.0 - 5.46.0), needs to be on PATH'
-'iRODS C++ REST API 0.9.3\n(https://github.com/irods/irods_client_rest_cpp)'
+'Maxima (https://sourceforge.net/projects/maxima/,\ntested with versions 5.42.0 - 5.46.0), needs to be on PATH'	
+'iRODS C++ REST API 0.9.3\n(https://github.com/irods/irods_client_rest_cpp)'	
 'Java JDK 1.2 or higher (for JRI/REngine JDK 1.4 or\nhigher), GNU make'	openjdk@1.2:
 'Java JDK 1.7 or higher'	openjdk@1.7:
 'C++11, cmake (>= 3.10), clang (optional), CUDA\n(optional but recommended)'	cmake	cuda
@@ -504,7 +504,7 @@
 "pandoc (>=2.11.3 with 'commonmark_x' processing and\n'sourcepos' extension, needed for 'rmarkdown' formats)."	pandoc@2.11.3:
 'pandoc (>= 2.0; https://pandoc.org)'	pandoc@2.0:
 'pandoc (>=1.14, needed for the vignette)'	pandoc@1.14:
-'MOSEK (>= 6) and MOSEK License (>= 6)'
+'MOSEK (>= 6) and MOSEK License (>= 6)'	
 'gmp (>= 4.2.3), mpfr (>= 3.0.0), pdfcrop (part of\nTexLive) is required to rebuild the vignettes.'	gmp@4.2.3:	mpfr@3.0.0:
 'libmariadb-client-dev | libmariadb-client-lgpl-dev\n| libmysqlclient-dev (deb), mariadb-devel (rpm), mariadb |\nmysql-connector-c (brew), mysql56_dev (csw)'	mariadb-c-client
 'netcdf (>=4.1.3), udunits-2 (>=2.0.4)'	netcdf-c@4.1.3:	udunits@2.0.4:
@@ -528,7 +528,7 @@
 'SAGA-GIS (>= 2.3.1)'	saga-gis@2.3.1:
 'libR, GNU make'	
 'rustc & cargo if building from source'	rust
-"'Monolix' (<https://monolix.lixoft.com>)"
+"'Monolix' (<https://monolix.lixoft.com>)"	
 'Java (>6)'	openjdk@1.6:
 'C++17, Rtools (>= 4.2) for Windows'	
 'fftw (>=3.2)'	fftw@3.2:
@@ -541,7 +541,7 @@
 'SYMPHONY libraries and headers'	
 'SyncroSim (>=2.3.10)'	
 'POSIX.1-2001'	
-'embulk, embulk-output-td'
+'embulk, embulk-output-td'	
 'GSL (>=2.3)'	gsl@2.3:
 '"conda (python>=3.6 pytorch torchvision cpuonly\nnumpy ( >= 1.14.0) matplotlib pandas -c pytorch);\npython-minimal, pandoc pandoc-citeproc, qpdf; Python (>=3.6),\npytorch (>=1.4), torchvision, cpuonly, numpy ( >= 1.14.0);\npandoc (>= 2.0), qpdf ( >= 7.0) on Solaris"'	py-torch@1.4:	py-torchvision	py-numpy	pandoc@2.0:	python@3.6:
 'WinEdt >= 5.2'	
@@ -549,7 +549,7 @@
 'OpenSSL >= 1.0.1'	openssl@1.0.1:
 'cdo'	
 'GSL (>=2.4), MPFR (>= 4.0.0), udunits2 (>=2.2.26-3)'	gsl@2.4:	mpfr@4.0.0:	udunits@2:
-'mallinfo, hence Linux, MacOS or Windows'
+'mallinfo, hence Linux, MacOS or Windows'	
 'SAS'	
 'gmp (>= 4.2.3), mpfr (>= 3.0.0)'	gmp@4.2.3:	mpfr@3.0.0:
 'GLPK library, including -dev or -devel part'	glpk@4.52:
@@ -561,7 +561,7 @@
 'jags (>= 1.0.3)'	jags@1.0.3:
 'yarn 1.22.17 or higher, Node 12 or higher'	
 'pandoc (>= 2.2) - http://pandoc.org'	pandoc@2.2:
-'PhantomJS (http://phantomjs.org/)'
+'PhantomJS (http://phantomjs.org/)'	
 'RStudio'	
 'Java (>= 11.0)'	java@11:
 'Pandoc (http://pandoc.org) needs to installed and\navailable in the search path.'	pandoc
@@ -583,7 +583,7 @@
 'cdo ecFlow'	
 'C++, arrow package with gzip codec, StarPU'	arrow+zlib
 'Stata'	stata
-'pdflatex'
+'pdflatex'	
 'For all functions resp. apps: pandoc, LaTeX. For\nthe edapy() function resp. Statsomat/EDAPY app: Python (>=3).'	
 'docker'	
 'PLINK must be installed'	plink
@@ -617,7 +617,7 @@
 'PhantomJS (https://phantomjs.org), pandoc (>=\n1.12.3) - https://pandoc.org.'	pandoc@1.12.3:
 'netcdf udunits-2'	netcdf-c@4.1.3:	udunits@2:
 'tiff and jpeg libraries'	libtiff	libjpeg
-'pgf (>= 2.00)'
+'pgf (>= 2.00)'	
 'A C++17 compiler is required, and on macOS\ncompilation for version 10.14 is required. Optionally cmake\n(only when TileDB source build selected), curl (only when\nTileDB source build selected)), and git (only when TileDB\nsource build selected); on x86_64 and M1 platforms pre-built\nTileDB Embedded libraries are available at GitHub and are used\nif no TileDB installation is detected, and no other option to\nbuild or download was specified by the user.'	
 'Python (>= 2.7), python-gdal library (For Windows,\ngdal installed via OSGeo4W <https://trac.osgeo.org/osgeo4w/>\nrecommended) clipboard'	python@2.7:	py-pygdal
 'A system with zoneinfo data (e.g.\n/usr/share/zoneinfo) as well as a recent-enough C++11 compiler\n(such as g++-4.8 or later). On Windows the zoneinfo included\nwith R is used.'	
@@ -635,7 +635,7 @@
 'udunits-2'	udunits@2:
 'POSIX.1-2001, AppArmor (optional)'	
 'JAGS >= 4.3.0 (http://mcmc-jags.sourceforge.net)'	jags@4.3.0:
-'PARI/GP >= 2.3.0 [strongly recommended for\nlogkda()]'
+'PARI/GP >= 2.3.0 [strongly recommended for\nlogkda()]'	
 'Linux or MacOS Intel chip tensorflow (1.14.0)'	py-tensorflow@1.14.0:
 'V8 engine version 6+ is needed for ES6 and WASM\nsupport. On Linux you can build against libv8-dev (Debian) or\nv8-devel (Fedora). We also provide static libv8 binaries for\nmost platforms, see the README for details.'	
 'valection (>= 1.0.0)'	
@@ -656,7 +656,7 @@
 'libwebp'	libwebp
 'PhantomJS for taking screenshots, ImageMagick or\nGraphicsMagick and OptiPNG for manipulating images.'	imagemagick
 'C++11, GNU make, OpenSSL >= 1.0.2'	openssl@1.0.2:
-'asreml-R 4.x'
+'asreml-R 4.x'	
 'WhiteboxTools\n(https://github.com/jblindsay/whitebox-tools/releases/latest)'	
 'Java (>= 5.0); WordNet database files (direct\ndownload:\n<https://wordnetcode.princeton.edu/3.0/WNdb-3.0.tar.gz>; Debian\nand Fedora package: wordnet)'	openjdk@1.5:	wordnet
 'pandoc (>= 1.14) - https://pandoc.org'	pandoc@1.14:
@@ -669,11 +669,11 @@
 'libxslt: libxslt1-dev (deb), libxslt-devel (rpm)'	libxslt
 'pandoc (>= 1.19.2.1)'	pandoc@1.19.2.1:
 'python, pytorch, numpy'	python	py-torch	py-numpy
-'bcl2Fastq (versions >= 2.1.7)'
+'bcl2Fastq (versions >= 2.1.7)'	
 'pandoc (http://pandoc.org/installing.html) for generating reports from markdown files.'	pandoc
 'JAGS (4.3.0)'	jags@4.3.0:
 'kallisto'	kallisto
-'mailsend-go'
+'mailsend-go'	
 'python (>= 2.7), sklearn, numpy, pandas, h5py'	python@2.7:	py-scikit-learn	py-numpy	py-pandas	py-h5py
 'Tktable, BWidget'	tktable
 'Cytoscape (>= 3.6.1) (if used for visualization of results, heavily suggested)'	
@@ -698,14 +698,14 @@
 'GSL and OpenMP'	gsl	openmp
 'Python (>= 3.5.0), hic-straw'	python@3.5.0:
 'Cytoscape (>= 3.3.0), Java (>= 8)'	openjdk@1.8:
-'megadepth (<https://github.com/ChristopherWilks/megadepth>)'
-'Meme Suite (v5.3.3 or above) <http://meme-suite.org/doc/download.html>'
-'Cytoscape (>= 3.9.0) for the cytoPath() examples'
+'megadepth (<https://github.com/ChristopherWilks/megadepth>)'	
+'Meme Suite (v5.3.3 or above) <http://meme-suite.org/doc/download.html>'	
+'Cytoscape (>= 3.9.0) for the cytoPath() examples'	
 'HMMER3'	hmmer@3:
 'GNU make, PhISCS (optional)'	phiscs
 'glpk (>= 4.57)'	glpk@4.57:
 'Python (>=3), numpy, pandas, h5py, scipy, argparse, sklearn, mofapy2'	python@3:	py-numpy	py-pandas	py-h5py	py-scipy	py-scikit-learn	py-mofapy2
-'CScapeSomatic'
+'CScapeSomatic'	
 'mono-runtime 4.x or higher (including System.Data library) on Linux/macOS, .Net Framework (>= 4.5.1) on Microsoft Windows.'	
 'python'	python
 'bedtools (>= 2.28.0), Stereogene (>= v2.22), CapR (>= 1.1.1)'	bedtools2@2.28.0:
@@ -718,13 +718,13 @@
 'C++11, Rtools (>= 3.1)'	
 'Java (>= 1.7)'	openjdk@1.7:
 'C++11, GNU make, samtools'	samtools
-'collectl'
-'nodejs'
-'Cytoscape (>= 3.7.1), CyREST (>= 3.8.0)'
+'collectl'	
+'nodejs'	
+'Cytoscape (>= 3.7.1), CyREST (>= 3.8.0)'	
 'None'	
 'Java Runtime Environment (Java>= 11)'	openjdk@11:
 'Java version >= 1.6'	openjdk@1.6:
-'pyGenomeTracks (prefered to use install_pyGenomeTracks())'
+'pyGenomeTracks (prefered to use install_pyGenomeTracks())'	
 'jQuery, jQueryUI, qTip2, D3js and Raphael are required Javascript libraries made available via the online CDNJS service (http://cdnjs.cloudflare.com).'	
 'optionally Graphviz (>= 2.16)'	graphviz
 'libbz2 & liblzma & libcurl (with header files), GNU make'	bzip2	lzma	xz	curl
@@ -775,3 +775,6 @@
 'libxml2 (optional), glpk (>= 4.57, optional)'	libxml2	glpk@4.57:
 'Text mining using n-grams requires Amazon Corretto\n(https://aws.amazon.com/corretto/).'	
 'OpenGL and GLU Library (Required for display in R.\nSee "Installing OpenGL support" in README.md. Not needed if\nonly browser displays using rglwidget() are wanted.), zlib\n(optional), libpng (>=1.2.9, optional), FreeType (optional)'	gl	glu	zlib	libpng	freetype
+'GDAL (>= 3.1.0)'	gdal@3.1:
+'CMake (>=3.20) , C++ (>= 11)'	cmake
+'iRODS C++ HTTP API 0.2.0\n(<https://github.com/irods/irods_client_http_api>)'	
