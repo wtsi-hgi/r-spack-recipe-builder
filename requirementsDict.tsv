@@ -778,3 +778,5 @@
 'GDAL (>= 3.1.0)'	gdal@3.1:
 'CMake (>=3.20) , C++ (>= 11)'	cmake
 'iRODS C++ HTTP API 0.2.0\n(<https://github.com/irods/irods_client_http_api>)'	
+'Gnu Scientific Library version >= 1.12'	
+'GDAL (>= 2.4.0, built against GEOS), PROJ, libxml2'	gdal@2.4.0:	proj	libxml2
