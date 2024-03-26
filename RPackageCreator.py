@@ -459,7 +459,7 @@ class BIOCPackageMaker(PackageMaker):
 			return f"""\tversion("{record['Version']}", md5="{record['MD5sum']}"{end})\n"""
 		if "git_url" in record.keys():
 			if record["git_last_commit"] in self.hashes.keys():
-				return f"""\tversion("{record['Version']}", commit="{self.hashes[record["git_last_commit"]]}"{end})\n"""
+				return f"""\tversion("{record['Version']}", commit="{self.hashes[record["git_last_commit"]]}")\n"""
 			gitRefs = requests.get(record['git_url'] + "/info/refs", allow_redirects=True).text.split("\n")
 			for i in range(len(gitRefs)):
 				hash = gitRefs[i].split("\trefs/heads/")
@@ -470,9 +470,8 @@ class BIOCPackageMaker(PackageMaker):
 			if len(self.hashes.keys()) % 50 == 0:
 				with open("libs/BIOCHashes.json", "w") as f:
 					json.dump(self.hashes, f)
-			return f"""\tversion("{record['Version']}", commit="{commitHash}"{end})\n"""
-		else:
-			return ""
+			return f"""\tversion("{record['Version']}", commit="{commitHash}")\n"""
+		return ""
 		
 	def exists(self, k):
 		return self.lib.get(k) is not None
