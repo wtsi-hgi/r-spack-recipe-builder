@@ -35,3 +35,13 @@ virtuoso
 taskscheduleR
 Statamarkdown
 RWinEdt
+RInno
+Rcplex
+BallMapper
+DICOMread
+excel.link
+fsdaR
+KeyboardSimulator
+matlabr
+MediaNews
+RAppArmor
