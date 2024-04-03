@@ -93,10 +93,17 @@ def getHomepage(record):
 
 def writeRecipe(header, footer, versions, depends, package):
 	os.makedirs("packages/" + rify(package), exist_ok=True)
-	f = open("packages/" + rify(package) + "/package.py", "w")
-	f.write(f"""{header}
+	content = f"""{header}
 {"".join(versions)}
-{"".join(depends)}{footer}""")
+{"".join(depends)}{footer}"""
+	content = content.split("\n")
+	for i in range(len(content)):
+		if "\tversion(" in content[i]:
+			content[i] = "\n" + content[i]
+			break
+	content = "\n".join(content)
+	f = open("packages/" + rify(package) + "/package.py", "w")
+	f.write(content)
 	f.close()
 
 class PackageMaker:
@@ -198,8 +205,14 @@ class R{classname}(RPackage):
 		else:
 			with open("packages/" + rify(package) + "/package.py", "r") as f:
 				lines = f.readlines()
-			firstline = len(lines)
+			firstline = 0
+			middleline = len(lines)
 			version = record["Version"]
+			for i in range(len(lines)):
+				lines[i] = lines[i].replace("    ", "\t")
+				if "\tversion(" in lines[i] or "\turl =" in lines[i] or "\turls =" in lines[i]:
+					firstline = i
+					break
 			for i in range(len(lines)):
 				lines[i] = lines[i].replace("    ", "\t")
 				if version in lines[i] and "\tversion(" in lines[i]:
@@ -207,25 +220,25 @@ class R{classname}(RPackage):
 				if "\turl =" in lines[i] or "\turls =" in lines[i]:
 					lines[i] = "REMOVE_THIS_LINE"
 				if "\tdepends_on(" in lines[i]:
-					firstline = i
+					middleline = i
 					break
-			newLines = [i for i in lines if i != "REMOVE_THIS_LINE"]
-			firstline = firstline - (len(lines) - len(newLines))
-			lines = newLines
-			header = "".join(lines[:firstline]).strip()
+			header = "".join([i for i in lines[:firstline] if i != "REMOVE_THIS_LINE"]).strip()
+			middle = "".join([i for i in lines[firstline:middleline] if i != "REMOVE_THIS_LINE"]).strip()
 			lastline = len(lines)
-			for j in range(len(lines)):
-				lines[j] = lines[j].replace("    ", "\t")
-				if "\tdepends_on(" in lines[j] or "\tversion(" in lines[j]:
+			for i in range(len(lines)):
+				lines[i] = lines[i].replace("    ", "\t")
+				if "\tdepends_on(" in lines[i] or "\tversion(" in lines[i]:
 					for k in range(3):
-						if "\")" in lines[j]:
-							lastline = j + k + 1
+						if "\")" in lines[i]:
+							lastline = i + k + 1
 							break
 			footer = "".join(lines[lastline:])
 		if self.getURL(record) != "" and self.packman == "bioc":
 			header += f"\n\turls = [\"{self.getURL(record)}\", \"{self.url}src/contrib/Archive/{package}/{package}_{record['Version']}.tar.gz\"]"
 		if self.comment != "":
 			footer += f"\n\t# {self.comment}"
+		if mode != "+":
+			header += f"\n\t{middle}"
 		return header, footer
 
 
@@ -508,11 +521,11 @@ systemRequirements = getSystemRequirements()
 missingDependencies = getMissingDependencies()
 
 managers = (
-	CRANPackageMaker, 
 	BIOCSoftware, 
 	BIOCAnnotations, 
 	BIOCExperiments, 
 	BIOCWorkflows,
+	CRANPackageMaker, 
 )
 
 for p in managers:
