@@ -39,8 +39,7 @@ def spackifyVersion(version: str):
 		result = version.replace("<=", "@:")
 	else :
 		result = version.replace("=", "@", 1)
-		while "=" in result:
-			result = result.replace("=", "")
+		result = result.replace("=", "")
 	return result
 
 def getVersions(versionList):
