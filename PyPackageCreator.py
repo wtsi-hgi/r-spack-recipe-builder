@@ -189,11 +189,11 @@ def get(package_name, package_version, recurse=False):
 		footer += f"\n# {str(extradeps)}"
 	writeRecipe(header, footer, versions, dependencies, package_name)
 
-package_version = "latest"
-existingVersions = getExistingVersions()
 if len(sys.argv) < 2:
 	print("Usage: python3 PyPackageCreator.py package_name [...package_name]")
 	exit()
+package_version = "latest"
+existingVersions = getExistingVersions()
 for i in range(1, len(sys.argv)):
 	print(f"Building recipes for {sys.argv[i]}...")
 	get(sys.argv[i], package_version, True)
