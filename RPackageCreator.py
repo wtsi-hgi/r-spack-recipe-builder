@@ -513,25 +513,26 @@ class BIOCWorkflows(BIOCPackageMaker):
 	name = "Bioconductor workflows"
 	comment = "workflow"
 
-print("Welcome to the Spack recipe creator for R!\n [+] means a package is freshly created\n [*] means a package is updated\n [~] means a package is already up to date\n [x] means a package can't be created or is blacklisted\n")
+if __name__ == "__main__":
+	print("Welcome to the Spack recipe creator for R!\n [+] means a package is freshly created\n [*] means a package is updated\n [~] means a package is already up to date\n [x] means a package can't be created or is blacklisted\n")
 
-actualDirs = getRepos()
-packageVersions = getExistingVersions()
-systemRequirements = getSystemRequirements()
-missingDependencies = getMissingDependencies()
+	actualDirs = getRepos()
+	packageVersions = getExistingVersions()
+	systemRequirements = getSystemRequirements()
+	missingDependencies = getMissingDependencies()
 
-managers = (
-	BIOCSoftware, 
-	BIOCAnnotations, 
-	BIOCExperiments, 
-	BIOCWorkflows,
-	CRANPackageMaker, 
-)
+	managers = (
+		BIOCSoftware, 
+		BIOCAnnotations, 
+		BIOCExperiments, 
+		BIOCWorkflows,
+		CRANPackageMaker, 
+	)
 
-for p in managers:
-	p(actualDirs, packageVersions, systemRequirements, missingDependencies)
+	for p in managers:
+		p(actualDirs, packageVersions, systemRequirements, missingDependencies)
 
-for p in PackageMaker.packageMakers:
-	p.packageLoop()
+	for p in PackageMaker.packageMakers:
+		p.packageLoop()
 
-setSystemRequirements(systemRequirements)
+	setSystemRequirements(systemRequirements)
