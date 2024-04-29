@@ -461,12 +461,13 @@ class BIOCPackageMaker(PackageMaker):
 
 	def getURL(self, record):
 		if "source.ver" not in record.keys():
-			return ""
+			return False
 		return self.url + record['source.ver']
 
 	def getChecksum(self, record, package):
 		end = ""
-		if package[-1].isdigit():
+		url = self.getURL(record)
+		if url != False:
 			end = f', url="{self.getURL(record)}"'
 		if "source.ver" in record.keys():
 			return f"""\tversion("{record['Version']}", md5="{record['MD5sum']}"{end})\n"""
