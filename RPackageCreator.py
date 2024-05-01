@@ -128,7 +128,7 @@ class PackageMaker:
 	def getExistingFiles(self, package, record):
 		def pullFiles():
 			for dir in actualDirs:
-				if os.path.isdir(dir + "/packages/" + rify(package)):
+				if os.path.isfile(dir + "/packages/" + rify(package) + "/package.py"):
 					location = dir
 					break
 			if location != os.path.dirname(os.path.realpath(__file__)):
@@ -141,7 +141,7 @@ class PackageMaker:
 
 		if rify(package) in self.packageVersions.keys():
 			if self.packman == "bioc":
-				if not os.path.isdir("packages/" + rify(package)):
+				if not os.path.isfile("packages/" + rify(package) + "/package.py"):
 					return pullFiles()
 			if "SystemRequirements" in record.keys():
 				if pd.notna(record["SystemRequirements"]):
@@ -150,7 +150,7 @@ class PackageMaker:
 				pattern = re.compile(r"@.*\d-\d")
 
 				for dir in actualDirs:
-					if os.path.isdir(dir + "/packages/" + rify(package)):
+					if os.path.isfile(dir + "/packages/" + rify(package) + "/package.py"):
 						location = dir
 						break
 				with open(location + "/packages/" + rify(package) + "/package.py", "r") as f:
@@ -183,7 +183,7 @@ class PackageMaker:
 			depends_on.append("\tdepends_on(\"" + i[0] + i[1] + "\", type=(\"build\", \"run\"))\n")
 		return depends_on
 
-	def getTemplate(self, mode, package, name, description, homepage, classname, record):
+	def getTemplate(self, mode, package, name, description, homepage, classname, record, dependencies):
 		if mode == "+":
 			backslashN = "\n\t"
 			header = f"""# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
@@ -201,12 +201,15 @@ class R{classname}(RPackage):
 	\"\"\"
 	
 	{f'homepage = "{homepage}"{backslashN}' if homepage != "" else ''}{self.packman} = "{package}" """
+			versionlines = ""
+			depends = ""
 			footer = ""
 		else:
 			with open("packages/" + rify(package) + "/package.py", "r") as f:
 				lines = f.readlines()
 			firstline = 0
 			middleline = len(lines)
+			dependsline = len(lines)
 			version = record["Version"]
 			for i in range(len(lines)):
 				lines[i] = lines[i].replace("    ", "\t")
@@ -222,8 +225,14 @@ class R{classname}(RPackage):
 				if "\tdepends_on(" in lines[i]:
 					middleline = i
 					break
+				if "\tdepends_on()" in lines[i-1] and "\tdepends_on(" not in lines[i]:
+					dependsline = i
+					break
 			header = "".join([i for i in lines[:firstline] if i != "REMOVE_THIS_LINE"]).strip()
-			middle = "".join([i for i in lines[firstline:middleline] if i != "REMOVE_THIS_LINE"]).strip()
+			versionlines = "".join([i for i in lines[firstline:middleline] if i != "REMOVE_THIS_LINE"]).strip()
+			depends = "".join([i for i in lines[middleline:dependsline] if i != "REMOVE_THIS_LINE"]).strip()
+			if "when=" not in depends:
+				depends = ""
 			lastline = len(lines)
 			for i in range(len(lines)):
 				lines[i] = lines[i].replace("    ", "\t")
@@ -237,9 +246,13 @@ class R{classname}(RPackage):
 			header += f"\n\turls = [\"{self.getURL(record)}\", \"{self.url}src/contrib/Archive/{package}/{package}_{record['Version']}.tar.gz\"]"
 		if self.comment != "":
 			footer += f"\n\t# {self.comment}"
-		if mode != "+":
-			header += f"\n\t{middle}"
-		return header, footer
+
+		versionlines = versionlines.strip()
+		depends = depends.strip()
+		if mode != "+" and versionlines != "":
+			header += f"\n\t{versionlines}"
+
+		return header, depends, footer
 
 
 	def packageName(self, k):
@@ -355,7 +368,10 @@ class R{classname}(RPackage):
 
 		classname = getClassname(package)
 		
-		header, footer = self.getTemplate(mode, package, name, description, homepage, classname, record)
+		header, depends, footer = self.getTemplate(mode, package, name, description, homepage, classname, record, dependencies)
+
+		if depends != "":
+			dependencies = f"\t{depends}\n"
 
 		writeRecipe(header, footer, version, dependencies, package)
 		print(f"{self.getProgress(mode)} {self.packman} package {'r-' + package.lower().replace('.','-')}")

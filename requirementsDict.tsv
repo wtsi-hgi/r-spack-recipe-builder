@@ -782,3 +782,12 @@
 'GDAL (>= 2.4.0, built against GEOS), PROJ, libxml2'	gdal@2.4.0:	proj	libxml2
 'Java (>= 11) Git'	openjdk@11:	git
 'gmp (>= 4.2.0), gsl'	gmp@4.2:	gsl
+'OfficeToPDF -\nhttps://github.com/cognidox/OfficeToPDF, pandoc (>= 1.14) -\nhttps://pandoc.org'	
+'CmdStan\n(https://mc-stan.org/users/interfaces/cmdstan)'	cmdstan
+'fftw3, libtiff, X11'	fftw@3:	libtiff
+'python (>= 3.10), keras, tensorflow'	python	keras	py-tensorflow
+'cmdstan'	cmdstan
+'Java JDK (>= 21.0)'	
+'Spark: 2.x, or 3.x'	
+'A C++17 compiler is required; on macOS compilation\nversion 11.0 or later is required. Optionally cmake (only when\nTileDB source build selected), curl (only when TileDB source\nbuild selected)), and git (only when TileDB source build\nselected); on x86_64 and M1 platforms pre-built TileDB Embedded\nlibraries are available at GitHub and are used if no TileDB\ninstallation is detected, and no other option to build or\ndownload was specified by the user.'	
+'Python (>= 2.7.0), Conda'	python@2.7:
