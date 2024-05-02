@@ -248,7 +248,7 @@ class R{classname}(RPackage):
 			footer += f"\n\t# {self.comment}"
 
 		versionlines = versionlines.strip()
-		depends = depends.strip()
+		depends = depends.strip().replace("    ", "\t")
 		if mode != "+" and versionlines != "":
 			header += f"\n\t{versionlines}"
 

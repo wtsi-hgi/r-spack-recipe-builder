@@ -265,7 +265,7 @@
 'Java(>=8)'	openjdk@1.8:
 'Package vignettes require pandoc\n(https://pandoc.org/). Text mining using n-grams requires\nAmazon Corretto (https://aws.amazon.com/corretto/).'	
 'XPDF (http://www.foolabs.com/xpdf/download.html)'	
-'Java (>= 7)'	java@1.7:
+'Java (>= 7)'	openjdk@1.7:
 'C++ 17, gmp'	gmp
 'pandoc (to export an interactive summary table to a\nfile)'	pandoc
 'libidn: libidn11-dev (deb)'	libidn2
@@ -563,7 +563,7 @@
 'pandoc (>= 2.2) - http://pandoc.org'	pandoc@2.2:
 'PhantomJS (http://phantomjs.org/)'	
 'RStudio'	
-'Java (>= 11.0)'	java@11:
+'Java (>= 11.0)'	openjdk@11:
 'Pandoc (http://pandoc.org) needs to installed and\navailable in the search path.'	pandoc
 'GNU Scientific Library version >= 1.8'	gsl@1.8:
 "'SLiM' is a forward simulation software for\npopulation genetics and evolutionary biology. See\n<https://messerlab.org/slim/> for installation instructions and\nfurther information. The 'Python' coalescent framework\n'msprime' and the 'tskit' module can by installed by following\nthe instructions at <https://tskit.dev/>."	
@@ -736,7 +736,7 @@
 'Python (>= 3.6), leidenalg (>= 0.8.2)'	python@3.6:
 'Python (>= 3.5), scikit-learn (>= 0.21.2), packaging'	python@3.5:	py-scikit-learn	py-packaging
 'samtools'	samtools
-'Perl, Java'	perl	java
+'Perl, Java'	perl	openjdk
 'systemPipeR can be used to run external command-line software (e.g. short read aligners), but the corresponding tool needs to be installed on a system.'	
 'Primer3 (>= 2.5.0), BLAST+ (>=2.6.0)'	primer3@2.5.0:	blast-plus@2.6.0:
 'Java Runtime Environment (>= 6)'	openjdk@1.6:
@@ -748,7 +748,7 @@
 '4GB of RAM'	
 'pandoc (>= 1.14), pandoc-citeproc'	pandoc
 'C++11 Windows: Dokan Linux&Mac: fuse, pkg-config'	pkg-config
-'Java (>= 8.0) Git'	java@1.8:	git
+'Java (>= 8.0) Git'	openjdk@1.8:	git
 'GDAL'	gdal
 'UNIX, SRA Toolkit=2.10.3, Entrez Direct=13.3, FastQC=v0.11.9, Cutadapt=2.10, datasets, SAMtools=1.9, HISAT2=2.2.0, StringTie=2.1.1, Salmon=1.2.1'	sratoolkit@2.10.3:	entrezdirect@13.3:	fastqc@0.11.9:	py-cutadapt@2.10:	py-datasets	samtools@1.9:	hisat2@2.2.0:	stringtie@2.1.1:	salmon@1.2.1:
 'Conda (>= 4.6), ArcGIS Pro (>= 3.0)'	
@@ -787,7 +787,8 @@
 'fftw3, libtiff, X11'	fftw@3:	libtiff
 'python (>= 3.10), keras, tensorflow'	python	keras	py-tensorflow
 'cmdstan'	cmdstan
-'Java JDK (>= 21.0)'	
-'Spark: 2.x, or 3.x'	
+'Java JDK (>= 21.0)'	openjdk@21:
+'Spark: 2.x, or 3.x'	spark@2:
 'A C++17 compiler is required; on macOS compilation\nversion 11.0 or later is required. Optionally cmake (only when\nTileDB source build selected), curl (only when TileDB source\nbuild selected)), and git (only when TileDB source build\nselected); on x86_64 and M1 platforms pre-built TileDB Embedded\nlibraries are available at GitHub and are used if no TileDB\ninstallation is detected, and no other option to build or\ndownload was specified by the user.'	
 'Python (>= 2.7.0), Conda'	python@2.7:
+"'libnng' >= 1.6 and 'libmbedtls' >= 2.5, or 'cmake'\nand 'xz' to compile NNG and/or Mbed TLS included in package\nsources"	cmake
