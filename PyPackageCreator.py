@@ -56,7 +56,7 @@ def getVersions(versionList):
 				possibleWheels.append(versionList[i][j])
 		if possibleWheels != []:
 			for j in possibleWheels:
-				if info == []:
+				if info == [] or j["python_version"] == "any":
 					info = j
 				elif float(j["python_version"].replace("cp", "").replace("py", "")) > float(info["python_version"].replace("cp", "").replace("py", "")):
 					info = j
