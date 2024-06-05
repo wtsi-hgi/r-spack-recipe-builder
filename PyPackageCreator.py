@@ -4,6 +4,7 @@ import subprocess
 import requests
 import ast
 import sys
+from packaging.version import Version
 
 spackBin = "spack"
 
@@ -58,7 +59,7 @@ def getVersions(versionList):
 			for j in possibleWheels:
 				if info == [] or j["python_version"] == "any":
 					info = j
-				elif float(j["python_version"].replace("cp", "").replace("py", "")) > float(info["python_version"].replace("cp", "").replace("py", "")):
+				elif Version(j["python_version"].replace("cp", "").replace("py", "").replace("pp", "")) > Version(info["python_version"].replace("cp", "").replace("py", "").replace("pp", "")):
 					info = j
 		else:
 			for j in range(len(versionList[i])):
