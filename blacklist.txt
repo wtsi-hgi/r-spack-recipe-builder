@@ -45,3 +45,6 @@ KeyboardSimulator
 matlabr
 MediaNews
 RAppArmor
+CancerInSilico
+DeepBlueR
+
