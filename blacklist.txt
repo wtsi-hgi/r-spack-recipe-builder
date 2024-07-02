@@ -48,3 +48,5 @@ RAppArmor
 CancerInSilico
 DeepBlueR
 BRugs
+fslr
+neuronorm
