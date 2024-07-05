@@ -14,7 +14,11 @@ def getExistingVersions():
 	print("Fetching package versions, this could take a while...")
 	stream = subprocess.run([spackBin, "list", "--format", "version_json", "py-*"], capture_output=True)
 	decoded = stream.stdout.decode("utf-8").strip()
-	builtin = json.loads(decoded)
+	try:
+		builtin = json.loads(decoded)
+	except:
+		print(stream.stderr.decode("utf-8"))
+		exit(1)
 	print("Versions successfully fetched!\n")
 	packageVersions = {}
 	for row in builtin:
