@@ -33,7 +33,9 @@ def pyify(package):
 		return package
 	return "py-" + package.lower().replace(".","-").replace("_","-").replace(" ", "-").split("[")[0]
 
-def spackifyVersion(version: str):
+def spackifyVersion(version):
+	if version == None:
+		return ""
 	if ">=" in version:
 		result = version.replace(">=", "@") + ":"
 	elif "<=" in version:
