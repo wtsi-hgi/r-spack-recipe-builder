@@ -40,14 +40,19 @@ def pyify(package):
 def spackifyVersion(version):
 	if version == None:
 		return ""
+	if "," in version:
+		split = version.split(",")
+		if len(split) != 2:
+			return version
+		if "<" in split[0]:
+			split[0], split[1] = split[1], split[0]
+		return split[0].replace(">=", "@") + ":" + split[1].replace("<", "")
 	if ">=" in version:
-		result = version.replace(">=", "@") + ":"
-	elif "<=" in version:
-		result = version.replace("<=", "@:")
+		return version.replace(">=", "@") + ":"
+	elif "<=" in version or "<" in version:
+		return version.replace("<=", "@:").replace("<", "@:")
 	else :
-		result = version.replace("=", "@", 1)
-		result = result.replace("=", "")
-	return result
+		return version.replace("=", "@", 1).replace("=", "")
 
 def getVersions(versionList):
 	versions = []
