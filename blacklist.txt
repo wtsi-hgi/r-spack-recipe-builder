@@ -51,3 +51,4 @@ BRugs
 fslr
 neuronorm
 _r-mutex
+spectrino
