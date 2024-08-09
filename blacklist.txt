@@ -52,3 +52,5 @@ fslr
 neuronorm
 _r-mutex
 spectrino
+Rcplex
+ROI.plugin.cplex
