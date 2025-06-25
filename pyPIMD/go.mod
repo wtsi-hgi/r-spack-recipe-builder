@@ -1,6 +1,6 @@
 module example.com/pypi
 
-go 1.22.0
+go 1.22
 
 require (
 	github.com/avvmoto/buf-readerat v0.0.0-20171115124131-a17c8cb89270
