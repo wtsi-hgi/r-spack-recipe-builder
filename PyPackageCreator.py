@@ -150,15 +150,14 @@ def getClassname(package):
 
 def writeRecipe(header, footer, versions, depends, package):
     os.makedirs("packages/" + pyify(package), exist_ok=True)
-    f = open("packages/" + pyify(package) + "/package.py", "w")
-    f.write(
-        f"""{header}
+    content = f"""{header}
 
 {"".join(versions)}
 {"".join(depends)}{footer}"""
-    )
-    f.close()
-    print(f"	✅ Package {package} successfully created!")
+    # Replace all tabs with 4 spaces for PEP8 compliance
+    content = content.replace("\t", "    ")
+    with open("packages/" + pyify(package) + "/package.py", "w") as f:
+        f.write(content)
 
 
 def getDepends(dependencies, py_deps=None):
@@ -189,40 +188,30 @@ class Py{classname}(PythonPackage):
 	pypi = "{package}/{filename}" """
         footer = ""
     else:
+        # Read existing package file
         with open("packages/" + pyify(package) + "/package.py", "r") as f:
-            lines = ast.parse(f.read())
+            lines = f.readlines()
+        
+        # Find the first version line
         firstline = 0
-        for node in ast.walk(lines):
-            if isinstance(node, ast.Assign) or isinstance(node, ast.Call):
-                if (isinstance(node.value.func, ast.Name) and node.value.func.id == "version") or (
-                    isinstance(node.value.func, ast.Attribute)
-                    and (node.value.func.attr == "url" or node.value.func.attr == "urls")
-                ):
-                    firstline = i
-                    break
-        header = "".join(lines[:firstline]).strip()
-        lastline = len(lines)
-        for node in ast.walk(lines):
-            if isinstance(node, ast.Assign) or isinstance(node, ast.Call):
-                if (isinstance(node.value.func, ast.Name) and node.value.func.id == "depends_on") or (
-                    isinstance(node.value.func, ast.Attribute) and (node.value.func.attr == "depends_on")
-                ):
-                    lastline = i + 1
-                    break
-        for i in range(len(lines)):
-            lines[i] = lines[i].replace("    ", "\t")
-            if "\tversion(" in lines[i] or "\turl =" in lines[i] or "\turls =" in lines[i]:
+        for i, line in enumerate(lines):
+            line = line.replace("    ", "\t")  # Normalize indentation
+            if "\tversion(" in line or "\turl =" in line or "\turls =" in line:
                 firstline = i
                 break
-        header = "".join(lines[:firstline]).strip()
+        
+        # Find the first depends_on line
         lastline = len(lines)
-        for j in range(len(lines)):
-            lines[j] = lines[j].replace("    ", "\t")
-            if "\tdepends_on(" in lines[j] or "\tversion(" in lines[j]:
-                ast.parse()
-                lastline = j + 1
+        for i, line in enumerate(lines):
+            line = line.replace("    ", "\t")  # Normalize indentation
+            if "\tdepends_on(" in line:
+                lastline = i
                 break
+        
+        # Extract header and footer
+        header = "".join(lines[:firstline]).strip()
         footer = "".join(lines[lastline:])
+        
     return header, footer
 
 
@@ -263,11 +252,18 @@ def get(package_name, package_version, recurse=False, force=False):
             version = ver.group(1)
         if "-py" in version:
             _, py_ver = version.split("-py")
-            if py_ver[0] == "3":
+            # Fix: Handle cases where py_ver already contains dots (e.g., "3.7") or not (e.g., "37")
+            if "." in py_ver:
+                # py_ver is already formatted like "3.7"
+                python_deps[version] = py_ver
+            elif py_ver[0] == "3":
+                # py_ver is like "37", convert to "3.7"
                 py_ver = "3." + py_ver[1:]
-            else:
+                python_deps[version] = py_ver
+            elif py_ver[0] == "2":
+                # py_ver is like "27", convert to "2.7"
                 py_ver = "2." + py_ver[1:]
-            python_deps[version] = py_ver
+                python_deps[version] = py_ver
 
     dependencies = getDepends(dependencies, python_deps)
 
