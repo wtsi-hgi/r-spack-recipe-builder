@@ -79,7 +79,9 @@ def getVersions(versionList):
                 continue
 
             if release["packagetype"] == "bdist_wheel" and (
-                release["filename"].endswith("manylinux1_x86_64.whl") or release["filename"].endswith("any.whl")
+                release["filename"].endswith("manylinux1_x86_64.whl") or 
+                release["filename"].endswith("manylinux_2_31_x86_64.whl") or 
+                release["filename"].endswith("any.whl")
             ):
                 py_ver = release["python_version"]
                 if py_ver not in python_version_wheels:
@@ -244,6 +246,12 @@ def get(package_name, package_version, recurse=False, force=False):
     header, footer = getTemplate(
         "+", package_name, json["description"], json["homepage"], getClassname(package_name), filename
     )
+    
+    # Merge wheel dependencies with Libraries.io dependencies
+    for dep in extradeps.keys():
+        if dep not in dependencies:
+            dependencies.append(dep)
+    
     # Add Python version dependencies for specific wheel versions
     python_deps = {}
     for version in versions:
