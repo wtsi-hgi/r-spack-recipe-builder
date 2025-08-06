@@ -79,9 +79,8 @@ def getVersions(versionList):
                 continue
 
             if release["packagetype"] == "bdist_wheel" and (
-                release["filename"].endswith("manylinux1_x86_64.whl") or 
-                release["filename"].endswith("manylinux_2_31_x86_64.whl") or 
-                release["filename"].endswith("any.whl")
+                release["filename"].endswith("any.whl") or
+                re.search(r"manylinux[^x]*_x86_64\.whl", release["filename"])
             ):
                 py_ver = release["python_version"]
                 if py_ver not in python_version_wheels:
