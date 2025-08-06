@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import ast
 import json
 import os
 import re
@@ -20,7 +19,7 @@ def getExistingVersions():
     decoded = stream.stdout.decode("utf-8").strip()
     try:
         builtin = json.loads(decoded)
-    except:
+    except json.JSONDecodeError:
         print(stream.stderr.decode("utf-8"))
         exit(1)
     print("Versions successfully fetched!\n")
@@ -45,7 +44,7 @@ def pyify(package):
 
 
 def spackifyVersion(version):
-    if version == None:
+    if version is None:
         return ""
     if "," in version:
         split = version.split(",")
@@ -76,6 +75,10 @@ def getVersions(versionList):
 
         for release in versionList[i]:
             if release["yanked"]:
+                continue
+            
+            # Skip release candidate versions
+            if "rc" in i.lower():
                 continue
 
             if release["packagetype"] == "bdist_wheel" and (
