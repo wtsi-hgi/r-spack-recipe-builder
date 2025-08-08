@@ -3,28 +3,34 @@ package main
 import "testing"
 
 func TestTransformVersionPart(t *testing.T) {
-    tests := map[string]string{
-        ">=1.2.3": "@1.2.3:",
-        "<=2.0":   "@:2.0",
-        "<2.1":    "@:2.1",
-        "==0.9":   "@0.9",
-        "~=1.2.3": "@1.2.3:@1.3",
-        "~=1":      "@1:",
-        "":         "",
+    dp := NewDependencyProcessor()
+    cases := []struct{ in, want string }{
+        {">=1.2.3", "@1.2.3:"},
+        {"<=2.0", "@:2.0"},
+        {"<2.1", "@:2.1"},
+        {"==0.9", "@0.9:"}, // treat == as lower bound
+        {"~=1.2.3", "@1.2.3:@1.3"},
+        {"~=1", "@1:"},
+        {">=1.2, <2.0", "@1.2:@2.0"},
+        {"(>=3.7)", "@3.7:"},
+        {"", ""},
     }
-    for in, want := range tests {
-        got := transformVersionPart(in)
-        if got != want {
-            t.Fatalf("transformVersionPart(%q) = %q, want %q", in, got, want)
+    for _, c := range cases {
+        if got := dp.transformVersionConstraint(c.in); got != c.want {
+            t.Fatalf("transformVersionConstraint(%q) = %q, want %q", c.in, got, c.want)
         }
     }
 }
 
 func TestDependencyProcessorExtract(t *testing.T) {
     dp := NewDependencyProcessor()
-    dep := dp.Extract("pkg[dev,extras]>=1.0")
+    dep := dp.Extract("pkg[dev,extras](>=1.0)")
     if dep.Package != "pkg" || dep.Version != ">=1.0" || len(dep.Extras) != 2 {
         t.Fatalf("unexpected extract: %+v", dep)
+    }
+    dep2 := dp.Extract("pkg (>=1.0) ; extra == 'foo'")
+    if dep2.Package != "pkg" || dep2.Version != ">=1.0" || len(dep2.Extras) != 1 || dep2.Extras[0] != "foo" {
+        t.Fatalf("unexpected extract 2: %+v", dep2)
     }
 }
 

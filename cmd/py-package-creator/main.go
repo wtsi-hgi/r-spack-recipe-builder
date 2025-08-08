@@ -42,62 +42,59 @@ func NewDependencyProcessor() *DependencyProcessor {
 }
 
 func (dp *DependencyProcessor) Extract(depSpec string) dependencyInfo {
-    // Handle: package; extra == "dev"
-    reExtraDouble := regexp.MustCompile(`^([^;]+);\s*extra\s*==\s*"([^"]+)"(.*)$`)
-    if m := reExtraDouble.FindStringSubmatch(depSpec); m != nil {
-        packagePart := strings.TrimSpace(m[1])
-        extraName := strings.TrimSpace(m[2])
-        versionConstraint := strings.TrimSpace(m[3])
+    raw := strings.TrimSpace(depSpec)
 
-        rePkgVer := regexp.MustCompile(`^([^<>=!~]+)(.*)$`)
-        var packageName string
-        if mv := rePkgVer.FindStringSubmatch(packagePart); mv != nil {
-            packageName = strings.TrimSpace(mv[1])
-            versionConstraint = strings.TrimSpace(mv[2]) + versionConstraint
-        } else {
-            packageName = packagePart
-        }
-        return dependencyInfo{Package: packageName, Extras: []string{extraName}, Version: versionConstraint}
+    // Collect extras from "; extra == 'name'" conditions and remove them
+    extras := []string{}
+    reExtraCondD := regexp.MustCompile(`;\s*extra\s*==\s*"([^"]+)"`)
+    for {
+        m := reExtraCondD.FindStringSubmatch(raw)
+        if m == nil { break }
+        extras = append(extras, strings.TrimSpace(m[1]))
+        raw = strings.Replace(raw, m[0], "", 1)
+    }
+    reExtraCondS := regexp.MustCompile(`;\s*extra\s*==\s*'([^']+)'`)
+    for {
+        m := reExtraCondS.FindStringSubmatch(raw)
+        if m == nil { break }
+        extras = append(extras, strings.TrimSpace(m[1]))
+        raw = strings.Replace(raw, m[0], "", 1)
     }
 
-    // Handle: package; extra == 'dev'
-    reExtraSingle := regexp.MustCompile(`^([^;]+);\s*extra\s*==\s*'([^']+)'(.*)$`)
-    if m := reExtraSingle.FindStringSubmatch(depSpec); m != nil {
-        packagePart := strings.TrimSpace(m[1])
-        extraName := strings.TrimSpace(m[2])
-        versionConstraint := strings.TrimSpace(m[3])
-
-        rePkgVer := regexp.MustCompile(`^([^<>=!~]+)(.*)$`)
-        var packageName string
-        if mv := rePkgVer.FindStringSubmatch(packagePart); mv != nil {
-            packageName = strings.TrimSpace(mv[1])
-            versionConstraint = strings.TrimSpace(mv[2]) + versionConstraint
-        } else {
-            packageName = packagePart
+    // Parse name, optional [extras], optional (constraints)
+    reNameExtrasConstraints := regexp.MustCompile(`^([^\s\[\(]+)\s*(?:\[([^\]]+)\])?\s*(?:\(([^\)]+)\))?\s*$`)
+    if m := reNameExtrasConstraints.FindStringSubmatch(raw); m != nil {
+        name := strings.TrimSpace(m[1])
+        if m[2] != "" {
+            parts := strings.Split(m[2], ",")
+            for _, e := range parts {
+                e = strings.TrimSpace(e)
+                if e != "" { extras = append(extras, e) }
+            }
         }
-        return dependencyInfo{Package: packageName, Extras: []string{extraName}, Version: versionConstraint}
+        versionConstraint := strings.TrimSpace(m[3])
+        return dependencyInfo{Package: name, Extras: extras, Version: versionConstraint}
     }
 
-    // Handle extras: package[extra1,extra2]>=1.0
+    // Fallback: extras style like package[extra1,extra2]>=1.0
     reExtras := regexp.MustCompile(`^([^\[]+)\[([^\]]+)\](.*)$`)
-    if m := reExtras.FindStringSubmatch(depSpec); m != nil {
+    if m := reExtras.FindStringSubmatch(raw); m != nil {
         packageName := strings.TrimSpace(m[1])
-        extras := strings.Split(m[2], ",")
-        for i := range extras {
-            extras[i] = strings.TrimSpace(extras[i])
+        ex := strings.Split(m[2], ",")
+        for i := range ex {
+            ex[i] = strings.TrimSpace(ex[i])
         }
         versionConstraint := strings.TrimSpace(m[3])
-        return dependencyInfo{Package: packageName, Extras: extras, Version: versionConstraint}
+        return dependencyInfo{Package: packageName, Extras: append(extras, ex...), Version: versionConstraint}
     }
 
-    // Handle version constraints: package>=1.0
-    rePkgVer := regexp.MustCompile(`^([^<>=!~]+)(.*)$`)
-    if m := rePkgVer.FindStringSubmatch(depSpec); m != nil {
-        return dependencyInfo{Package: strings.TrimSpace(m[1]), Extras: []string{}, Version: strings.TrimSpace(m[2])}
+    // Fallback: name followed by operators without parentheses: package>=1.0
+    rePkgVer := regexp.MustCompile(`^([^<>=!~\s]+)\s*(.*)$`)
+    if m := rePkgVer.FindStringSubmatch(raw); m != nil {
+        return dependencyInfo{Package: strings.TrimSpace(m[1]), Extras: extras, Version: strings.TrimSpace(m[2])}
     }
 
-    // No version constraint
-    return dependencyInfo{Package: strings.TrimSpace(depSpec), Extras: []string{}, Version: ""}
+    return dependencyInfo{Package: strings.TrimSpace(raw), Extras: extras, Version: ""}
 }
 
 func (dp *DependencyProcessor) transformVersionConstraint(versionConstraint string) string {
@@ -105,61 +102,66 @@ func (dp *DependencyProcessor) transformVersionConstraint(versionConstraint stri
     if versionConstraint == "" {
         return ""
     }
-    if strings.Contains(versionConstraint, ",") {
-        parts := strings.Split(versionConstraint, ",")
-        var out []string
-        for _, p := range parts {
-            if t := dp.transformSingleConstraint(strings.TrimSpace(p)); t != "" {
-                out = append(out, t)
-            }
+    // accept comma separated constraints, possibly with spaces
+    parts := strings.Split(versionConstraint, ",")
+    var minVer, maxVer string
+    for _, p := range parts {
+        p = strings.TrimSpace(p)
+        if p == "" { continue }
+        // strip any trailing/leading parentheses just in case
+        p = strings.TrimPrefix(p, "(")
+        p = strings.TrimSuffix(p, ")")
+        // ignore environment markers after ';'
+        if idx := strings.Index(p, ";"); idx >= 0 {
+            p = strings.TrimSpace(p[:idx])
         }
-        return strings.Join(out, ",")
-    }
-    return dp.transformSingleConstraint(versionConstraint)
-}
-
-func (*DependencyProcessor) transformSingleConstraint(constraint string) string {
-    constraint = strings.TrimSpace(constraint)
-    if strings.Contains(constraint, ";") {
-        segs := strings.SplitN(constraint, ";", 2)
-        versionPart := strings.TrimSpace(segs[0])
-        return transformVersionPart(versionPart)
-    }
-    return transformVersionPart(constraint)
-}
-
-func transformVersionPart(versionPart string) string {
-    versionPart = strings.TrimSpace(versionPart)
-    switch {
-    case strings.Contains(versionPart, ">="):
-        v := strings.TrimSpace(strings.ReplaceAll(versionPart, ">=", ""))
-        return "@" + v + ":"
-    case strings.Contains(versionPart, "<="):
-        v := strings.TrimSpace(strings.ReplaceAll(versionPart, "<=", ""))
-        return "@:" + v
-    case strings.Contains(versionPart, "<"):
-        v := strings.TrimSpace(strings.ReplaceAll(versionPart, "<", ""))
-        return "@:" + v
-    case strings.Contains(versionPart, "=="):
-        v := strings.TrimSpace(strings.ReplaceAll(versionPart, "==", ""))
-        return "@" + v
-    case strings.Contains(versionPart, "~="):
-        base := strings.TrimSpace(strings.ReplaceAll(versionPart, "~=", ""))
-        parts := strings.Split(base, ".")
-        if len(parts) >= 2 {
-            major := parts[0]
-            minor := parts[1]
-            // increment minor
-            nextMinor := minor
-            if n, err := atoiSafe(minor); err == nil {
-                nextMinor = fmt.Sprintf("%d", n+1)
+        switch {
+        case strings.HasPrefix(p, ">="):
+            v := strings.TrimSpace(strings.TrimPrefix(p, ">="))
+            if minVer == "" { minVer = v }
+        case strings.HasPrefix(p, ">"):
+            v := strings.TrimSpace(strings.TrimPrefix(p, ">"))
+            // approximate >v as >=v
+            if minVer == "" { minVer = v }
+        case strings.HasPrefix(p, "<="):
+            v := strings.TrimSpace(strings.TrimPrefix(p, "<="))
+            if maxVer == "" { maxVer = v }
+        case strings.HasPrefix(p, "<"):
+            v := strings.TrimSpace(strings.TrimPrefix(p, "<"))
+            if maxVer == "" { maxVer = v }
+        case strings.HasPrefix(p, "=="):
+            v := strings.TrimSpace(strings.TrimPrefix(p, "=="))
+            // avoid strict pin; treat as lower bound only
+            if minVer == "" { minVer = v }
+        case strings.HasPrefix(p, "~="):
+            base := strings.TrimSpace(strings.TrimPrefix(p, "~="))
+            parts := strings.Split(base, ".")
+            if len(parts) >= 2 {
+                major := parts[0]
+                minor := parts[1]
+                nextMinor := minor
+                if n, err := atoiSafe(minor); err == nil {
+                    nextMinor = fmt.Sprintf("%d", n+1)
+                }
+                if minVer == "" { minVer = base }
+                if maxVer == "" { maxVer = fmt.Sprintf("%s.%s", major, nextMinor) }
+            } else {
+                if minVer == "" { minVer = base }
             }
-            return fmt.Sprintf("@%s:@%s.%s", base, major, nextMinor)
+        default:
+            // no operator case
         }
-        return "@" + base + ":"
-    default:
-        return ""
     }
+    if minVer != "" && maxVer != "" {
+        return fmt.Sprintf("@%s:@%s", minVer, maxVer)
+    }
+    if minVer != "" {
+        return fmt.Sprintf("@%s:", minVer)
+    }
+    if maxVer != "" {
+        return fmt.Sprintf("@:%s", maxVer)
+    }
+    return ""
 }
 
 func atoiSafe(s string) (int, error) {
@@ -490,7 +492,6 @@ func addWheelDependencies(dp *DependencyProcessor, wheelURL string) error {
     for _, line := range lines {
         if strings.HasPrefix(line, "Requires-Dist:") {
             dep := strings.TrimSpace(strings.TrimPrefix(line, "Requires-Dist:"))
-            dep = strings.ReplaceAll(dep, " ", "")
             dp.ProcessDependency(dep)
         }
     }
@@ -617,29 +618,25 @@ func get(packageName, packageVersion string, recurse, force bool) error {
     for _, d := range libs.Dependencies {
         if strings.ToLower(d.Platform) == "pypi" && !d.Optional {
             depName := strings.ToLower(d.ProjectName)
-            if d.LatestStable != "" {
-                depProcessor.ProcessDependency(fmt.Sprintf("%s==%s", depName, d.LatestStable))
-            } else {
-                depProcessor.ProcessDependency(depName)
-            }
+            // Do not pin to a specific version from libraries.io; rely on PIMD wheel metadata for ranges
+            depProcessor.ProcessDependency(depName)
             if recurse {
                 _ = get(depName, d.LatestStable, true, false)
             }
         }
     }
 
-    versions, filename, wheelDP, err := getVersions(pypiResp.Releases)
+    versions, filename, _, err := getVersions(pypiResp.Releases)
     if err != nil {
         return err
     }
 
-    // Merge wheel dependencies into main
-    for d := range wheelDP.regularDeps {
-        depProcessor.ProcessDependency(strings.TrimPrefix(d, "py-"))
-    }
-    for _, deps := range wheelDP.variantDeps {
-        for d := range deps {
-            depProcessor.ProcessDependency(strings.TrimPrefix(d, "py-"))
+    // Re-parse PIMD dependencies from the selected wheel URLs to build ranges
+    urlRe := regexp.MustCompile(`url=\"([^\"]+)\"`)
+    for _, v := range versions {
+        m := urlRe.FindStringSubmatch(v)
+        if len(m) == 2 {
+            _ = addWheelDependencies(depProcessor, m[1])
         }
     }
 
