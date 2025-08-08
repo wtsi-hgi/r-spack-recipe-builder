@@ -1,12 +1,10 @@
 package main
 
 import (
-    "bufio"
     "bytes"
     "encoding/json"
     "errors"
     "fmt"
-    "io"
     "net/http"
     "os"
     "os/exec"
@@ -299,7 +297,7 @@ func getExistingVersions() (map[string][]string, error) {
         fmt.Println(stderr.String())
         return nil, err
     }
-    fmt.Println("Versions successfully fetched!\n")
+    fmt.Println("Versions successfully fetched!")
     res := make(map[string][]string)
     for _, e := range arr {
         res[e.Name] = e.Versions
@@ -591,7 +589,7 @@ class Py%s(PythonPackage):
 }
 
 func get(packageName, packageVersion string, recurse, force bool) error {
-    if versions, ok := existingVersions[pyify(packageName)]; ok && !force && len(versions) >= 0 {
+    if shouldSkipExisting(packageName, force) {
         fmt.Printf("\t✴️ %s already exists in spack\n", pyify(packageName))
         return nil
     }
@@ -682,6 +680,16 @@ func get(packageName, packageVersion string, recurse, force bool) error {
 }
 
 // ---------------- main ----------------
+
+func shouldSkipExisting(packageName string, force bool) bool {
+    if force {
+        return false
+    }
+    if versions, ok := existingVersions[pyify(packageName)]; ok && len(versions) > 0 {
+        return true
+    }
+    return false
+}
 
 func main() {
     if len(os.Args) < 2 {
