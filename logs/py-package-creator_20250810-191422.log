@@ -1,0 +1,8 @@
+Forcing replacing of builtin Spack packages
+Building recipes for peppy...
+	✴️ py-numpy already exists in spack
+	❌ Failed to retrieve package pandas>=0-24-2
+	❌ Failed to retrieve package pephubclient>=0-4-2
+	✴️ py-pyyaml already exists in spack
+	❌ Failed to retrieve package rich>=10-3-0
+	❌ Failed to retrieve package ubiquerg>=0-6-2
