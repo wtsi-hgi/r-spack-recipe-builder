@@ -478,8 +478,16 @@ func getLibrariesIO(packageName, packageVersion string) (*librariesResponse, err
 // ---------------- Helpers ----------------
 
 func pyify(packageName string) string {
-    if packageName == "python" || strings.HasPrefix(packageName, "python@") {
-        return packageName
+    // Preserve bare python and version-qualified python deps as core 'python'
+    if strings.EqualFold(packageName, "python") {
+        return "python"
+    }
+    if strings.HasPrefix(strings.ToLower(packageName), "python@") {
+        at := strings.Index(packageName, "@")
+        if at >= 0 {
+            return "python" + packageName[at:]
+        }
+        return "python"
     }
     lowered := strings.ToLower(packageName)
     lowered = strings.ReplaceAll(lowered, ".", "-")
@@ -576,6 +584,10 @@ func normalizeConstraint(dep string) string {
         // reuse version constraint transformer
         sp := NewDependencyProcessor().transformVersionConstraint(vc)
         if sp != "" {
+            // Never prefix python with 'py-'
+            if pkg == "python" {
+                return "python" + sp
+            }
             return pkgify(pkg) + sp
         }
     }
@@ -995,8 +1007,15 @@ func writeRecipe(header, footer string, versions []string, depends []string, pac
             python("-c", '%s')
 `, smokeCmd)
 
-    content := header + variantsSection + "\n\n" + debugBannerIndented + strings.Join(versions, "") + "\n" + strings.Join(depends, "") + testSection + footer
+    content := header + variantsSection + "\n\n" + strings.Join(versions, "") + "\n" + strings.Join(depends, "") + testSection + "\n" + debugBannerIndented + footer
     content = strings.ReplaceAll(content, "\t", "    ")
+    // Final guards on formatting/content
+    // - ensure we never emit the core 'python' as 'py-python', but do NOT touch
+    //   legitimate packages that start with 'python-' such as 'py-python-multipart'.
+    content = strings.ReplaceAll(content, "depends_on(\"py-python@", "depends_on(\"python@")
+    content = strings.ReplaceAll(content, "depends_on(\"py-python\",", "depends_on(\"python\",")
+    // - remove accidental leading indentation before the class declaration
+    content = strings.ReplaceAll(content, "\n        class Py", "\nclass Py")
 
     outPath := filepath.Join(dir, "package.py")
     if err := os.WriteFile(outPath, []byte(content), 0o644); err != nil {
@@ -1082,6 +1101,11 @@ func getDepends(dp *DependencyProcessor, perVersion map[string]map[string]struct
     if dp != nil {
         bestGlobal := map[string]string{}
         for dep := range dp.regularDeps {
+            // Normalize only the core interpreter spec 'py-python@...' to 'python@...'
+            // Do not alter real packages like 'py-python-multipart' or 'py-python-dotenv'.
+            if strings.HasPrefix(dep, "py-python@") {
+                dep = "python@" + strings.TrimPrefix(dep, "py-python@")
+            }
             if strings.HasPrefix(dep, "python@") { continue }
             pkg := extractPkgName(dep)
             if _, excluded := perVersionBestAll[pkg]; excluded { continue }
@@ -1169,6 +1193,9 @@ func getDepends(dp *DependencyProcessor, perVersion map[string]map[string]struct
     if (pyDeps == nil || len(pyDeps) == 0) && dp != nil {
         bestPython := ""
         for d := range dp.regularDeps {
+            if strings.HasPrefix(d, "py-python@") {
+                d = "python@" + strings.TrimPrefix(d, "py-python@")
+            }
             if strings.HasPrefix(d, "python@") {
                 if bestPython == "" || len(d) > len(bestPython) {
                     bestPython = d
@@ -1176,6 +1203,10 @@ func getDepends(dp *DependencyProcessor, perVersion map[string]map[string]struct
             }
         }
         if bestPython != "" {
+            // Guard against accidental 'py-python@' strings sneaking in
+            if strings.HasPrefix(bestPython, "py-python@") {
+                bestPython = "python@" + strings.TrimPrefix(bestPython, "py-python@")
+            }
             dependsOn = append(dependsOn, fmt.Sprintf("\tdepends_on(\"%s\", type=(\"build\", \"run\"))\n", bestPython))
         }
     }
@@ -1185,7 +1216,7 @@ func getDepends(dp *DependencyProcessor, perVersion map[string]map[string]struct
         hasPython = true
     } else if dp != nil {
         for d := range dp.regularDeps {
-            if strings.HasPrefix(d, "python") { hasPython = true; break }
+            if strings.HasPrefix(d, "py-python") || strings.HasPrefix(d, "python") { hasPython = true; break }
         }
     }
     if !hasPython {
@@ -1301,13 +1332,12 @@ func getTemplate(mode, packageName, description, homepage, className, filename s
 
 from spack.package import *
 
-        
-        class Py%s(PythonPackage):
+class Py%s(PythonPackage):
 %s
-            homepage = "%s"
-            pypi = "%s/%s-%s%s"
-            import_modules = ["%s"]
-         `, className, descBlock, pyQuote(homepage), pypiName, pypiName, pypiVersionToken, suffix, moduleImportName(packageName))
+    homepage = "%s"
+    pypi = "%s/%s-%s%s"
+    import_modules = ["%s"]
+`, className, descBlock, pyQuote(homepage), pypiName, pypiName, pypiVersionToken, suffix, moduleImportName(packageName))
         footer := ""
         return header, footer, nil
     }
@@ -1424,6 +1454,10 @@ func get(packageName, packageVersion string, recurse, force bool) error {
         rootPIMDExcerpt = lastPIMDExcerpt
         // merge vdp into depProcessor to keep global deps relaxed
         for d := range vdp.regularDeps {
+            // Normalize accidental 'py-python@' into core 'python@'
+            if strings.HasPrefix(d, "py-python@") {
+                d = "python@" + strings.TrimPrefix(d, "py-python@")
+            }
             // Keep as-is: vdp already uses py- prefix; avoid double prefixing in output later
             // Avoid circular linking back to the root package
             if extractPkgName(d) == pyify(packageName) { continue }
@@ -1487,12 +1521,15 @@ func get(packageName, packageVersion string, recurse, force bool) error {
             }
         }
         for d := range vdp.regularDeps {
+            if strings.HasPrefix(d, "py-python@") {
+                d = "python@" + strings.TrimPrefix(d, "py-python@")
+            }
             if strings.HasPrefix(d, "python@") {
                 versionToPython[selectedEntry.Version] = strings.TrimPrefix(d, "python@")
             }
         }
         for d := range vdp.regularDeps {
-            if strings.HasPrefix(d, "python@") { continue }
+            if strings.HasPrefix(d, "py-python@") || strings.HasPrefix(d, "python@") { continue }
             if _, ok := perVersionDeps[selectedEntry.Version]; !ok {
                 perVersionDeps[selectedEntry.Version] = make(map[string]struct{})
             }

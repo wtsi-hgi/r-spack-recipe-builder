@@ -1,7 +1,0 @@
-==> Error: Package 'py-pephubclient' not found.
-Use 'spack create' to create a new package.
-
-Did you mean one of the following packages?
-  py-nbclient
-  py-prometheus-client
-  py-sseclient
