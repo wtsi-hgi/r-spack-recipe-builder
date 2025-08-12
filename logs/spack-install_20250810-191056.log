@@ -1,3 +1,0 @@
-==> Error: cannot load package 'py-peppy' from the 'dan.hgi' repository: unexpected tokens in the spec string
-py-pandas>=0-24-2
-         ^^      

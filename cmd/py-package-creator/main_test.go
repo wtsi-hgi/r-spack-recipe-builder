@@ -99,6 +99,33 @@ func TestGetDependsAddsDefaultPython(t *testing.T) {
     }
 }
 
+func TestWriteRecipeDoesNotRewritePythonMultipart(t *testing.T) {
+    header := "from spack.package import *\n\nclass PyFoo(PythonPackage):\n    pass\n"
+    footer := ""
+    versions := []string{"\tversion(\"1.0\", sha256=\"deadbeef\")\n"}
+    deps := []string{
+        "\tdepends_on(\"py-python-multipart@0.0.20:\", type=(\"build\", \"run\"))\n",
+        "\tdepends_on(\"py-python-dotenv@0.19.0:\", type=(\"build\", \"run\"))\n",
+        "\tdepends_on(\"py-python@3.9:\", type=(\"build\", \"run\"))\n",
+    }
+    _ = os.RemoveAll("packages/py-foo")
+    if err := writeRecipe(header, footer, versions, deps, "foo", nil, ""); err != nil {
+        t.Fatalf("writeRecipe error: %v", err)
+    }
+    data, err := os.ReadFile("packages/py-foo/package.py")
+    if err != nil { t.Fatalf("failed reading generated recipe: %v", err) }
+    content := string(data)
+    if !strings.Contains(content, "depends_on(\"py-python-multipart@0.0.20:") {
+        t.Fatalf("expected python-multipart to remain prefixed as py-python-multipart, got: %s", content)
+    }
+    if !strings.Contains(content, "depends_on(\"py-python-dotenv@0.19.0:") {
+        t.Fatalf("expected python-dotenv to remain prefixed as py-python-dotenv, got: %s", content)
+    }
+    if !strings.Contains(content, "depends_on(\"python@3.9:") {
+        t.Fatalf("expected core python to be normalized to python@, got: %s", content)
+    }
+}
+
 func TestTemplateHasImportModulesAndNormalizedPypi(t *testing.T) {
     header, _, err := getTemplate("+", "Peppy", "desc", "https://example.com", "Peppy", "ignored.tar.gz", "")
     if err != nil {
