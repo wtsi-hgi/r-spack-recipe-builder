@@ -14,6 +14,7 @@ import (
     "sort"
     "strings"
     "time"
+    "runtime"
 )
 
 // Extremely small utility to generate Spack PythonPackage recipes that install
@@ -149,14 +150,27 @@ func selectChosenArtifacts(releases map[string][]pypiRelease, preferred string) 
     // First pass: determine suffix and whether sdists present and their casings
     type chosen struct{ v string; sdist *pypiRelease; wheel *pypiRelease }
     chosenList := []chosen{}
+    // Determine current platform arch tag for linux wheels
+    archTag := ""
+    if runtime.GOOS == "linux" {
+        switch runtime.GOARCH {
+        case "amd64":
+            archTag = "x86_64"
+        case "arm64":
+            archTag = "aarch64"
+        case "ppc64le":
+            archTag = "ppc64le"
+        }
+    }
+
     for i := len(keys) - 1; i >= 0; i-- {
         v := keys[i]
         if !filter(v) { continue }
         arts := releases[v]
         if len(arts) == 0 { continue }
         var sdist *pypiRelease
-        // select a preferred Linux-compatible or universal wheel
-        var wheelAny, wheelLinux *pypiRelease
+        // select a preferred universal wheel or linux wheel matching current arch
+        var wheelAny, wheelLinuxMatchingArch *pypiRelease
         for _, a := range arts {
             if a.Yanked { continue }
             if strings.EqualFold(a.Packagetype, "sdist") {
@@ -169,10 +183,10 @@ func selectChosenArtifacts(releases map[string][]pypiRelease, preferred string) 
                 lname := strings.ToLower(a.Filename)
                 // universal wheels (pure python) are ok everywhere
                 if strings.Contains(lname, "-any.whl") && wheelAny == nil { tmp := a; wheelAny = &tmp; continue }
-                // prefer manylinux/linux wheels for x86_64 or aarch64
-                if (strings.Contains(lname, "manylinux") || strings.Contains(lname, "linux_")) &&
-                   (strings.Contains(lname, "x86_64") || strings.Contains(lname, "aarch64")) && wheelLinux == nil {
-                    tmp := a; wheelLinux = &tmp; continue
+                // prefer manylinux/musllinux/linux wheels for current arch only
+                if archTag != "" && (strings.Contains(lname, "manylinux") || strings.Contains(lname, "musllinux") || strings.Contains(lname, "linux_")) &&
+                   strings.Contains(lname, archTag) && wheelLinuxMatchingArch == nil {
+                    tmp := a; wheelLinuxMatchingArch = &tmp; continue
                 }
             }
         }
@@ -180,9 +194,9 @@ func selectChosenArtifacts(releases map[string][]pypiRelease, preferred string) 
         if sdist != nil && pypiSuffix == "" {
             if m := sdistSuffixRe.FindStringSubmatch(strings.ToLower(sdist.Filename)); len(m) > 1 { pypiSuffix = "." + m[1] } else { pypiSuffix = ".tar.gz" }
         }
-        // choose wheel preference: universal first, then linux-specific
+        // choose wheel preference: universal first, then linux-specific matching current arch
         wheel := wheelAny
-        if wheel == nil { wheel = wheelLinux }
+        if wheel == nil { wheel = wheelLinuxMatchingArch }
         chosenList = append(chosenList, chosen{v: v, sdist: sdist, wheel: wheel})
         if preferred != "" && preferred != "latest" { break }
     }

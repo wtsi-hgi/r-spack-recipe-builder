@@ -335,6 +335,41 @@ func TestRunCLI_WithFlagFParsesNextArg(t *testing.T) {
     }
 }
 
+func TestSelectArtifactsPrefersLinuxWheelMatchingArch(t *testing.T) {
+    // Provide both aarch64 and x86_64 linux wheels and ensure x86_64 is chosen on amd64 hosts.
+    rels := map[string][]pypiRelease{
+        "1.0.0": {
+            {Yanked:false, Packagetype:"bdist_wheel", Filename:"demo-1.0.0-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", URL:"https://files/demo-1.0.0-aarch64.whl", Digests: struct{Sha256 string `json:"sha256"`}{Sha256:"wsha_aarch64"}},
+            {Yanked:false, Packagetype:"bdist_wheel", Filename:"demo-1.0.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", URL:"https://files/demo-1.0.0-x86_64.whl", Digests: struct{Sha256 string `json:"sha256"`}{Sha256:"wsha_x86_64"}},
+        },
+    }
+    lines, _, err := chooseArtifacts(rels, "")
+    if err != nil { t.Fatalf("chooseArtifacts error: %v", err) }
+    got := strings.Join(lines, "")
+    if !strings.Contains(got, "https://files/demo-1.0.0-x86_64.whl") {
+        t.Fatalf("expected x86_64 wheel to be selected, got: %s", got)
+    }
+    if strings.Contains(got, "aarch64.whl") {
+        t.Fatalf("did not expect aarch64 wheel on x86_64 host: %s", got)
+    }
+}
+
+func TestSelectArtifactsFallsBackToSdistIfOnlyOtherArchWheel(t *testing.T) {
+    // Only aarch64 wheel available; should fall back to sdist on x86_64 hosts.
+    rels := map[string][]pypiRelease{
+        "1.0.0": {
+            {Yanked:false, Packagetype:"sdist", Filename:"demo-1.0.0.tar.gz", URL:"https://files/demo-1.0.0.tar.gz", Digests: struct{Sha256 string `json:"sha256"`}{Sha256:"sdistsha"}},
+            {Yanked:false, Packagetype:"bdist_wheel", Filename:"demo-1.0.0-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", URL:"https://files/demo-1.0.0-aarch64.whl", Digests: struct{Sha256 string `json:"sha256"`}{Sha256:"wsha_aarch64"}},
+        },
+    }
+    lines, _, err := chooseArtifacts(rels, "")
+    if err != nil { t.Fatalf("chooseArtifacts error: %v", err) }
+    got := strings.Join(lines, "")
+    if !strings.Contains(got, "url=\"https://files/demo-1.0.0.tar.gz\"") || strings.Contains(got, "aarch64.whl") {
+        t.Fatalf("expected fallback to sdist when wheel is wrong arch, got: %s", got)
+    }
+}
+
 func TestWriteRecipe_EmitsPythonConstraints(t *testing.T) {
     // Simulate project with two versions and per-file requires_python metadata
     resp := pypiResponse{
