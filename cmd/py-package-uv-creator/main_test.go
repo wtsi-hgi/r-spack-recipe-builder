@@ -218,9 +218,12 @@ func TestWriteRecipe_EndToEnd(t *testing.T) {
     b, err := os.ReadFile(path)
     if err != nil { t.Fatalf("reading recipe: %v", err) }
     s := string(b)
-    // Check pypi path suffix
-    if !strings.Contains(s, "pypi = \"metroapi/metroapi-@.tar.gz\"") {
-        t.Fatalf("missing pypi helper path: %s", s)
+    // Ensure explicit URLs are present for versions
+    if !strings.Contains(s, "version(\"0.0.12\", sha256=\"wsha12\", expand=False, url=\"https://files/metroapi-0.0.12.whl\")") {
+        t.Fatalf("expected wheel URL for 0.0.12: %s", s)
+    }
+    if !strings.Contains(s, "version(\"0.0.9\", sha256=\"sha09\", url=\"https://files/metroapi-0.0.9.tar.gz\")") {
+        t.Fatalf("expected sdist URL for 0.0.9: %s", s)
     }
     // Check descending versions
     i12 := strings.Index(s, "version(\"0.0.12\"")
@@ -260,7 +263,7 @@ func TestEscapePyStr(t *testing.T) {
     }
 }
 
-func TestPypiHelperPathPreservesCanonicalCase(t *testing.T) {
+func TestRecipeOmitsPypiHelperAndUsesExplicitURLs(t *testing.T) {
     // Simulate project with canonical name having capital letters (e.g., adjustText)
     resp := pypiResponse{
         Info: pypiInfo{
@@ -287,8 +290,11 @@ func TestPypiHelperPathPreservesCanonicalCase(t *testing.T) {
     b, err := os.ReadFile(path)
     if err != nil { t.Fatalf("reading recipe: %v", err) }
     s := string(b)
-    if !strings.Contains(s, "pypi = \"adjusttext/adjustText-@.tar.gz\"") {
-        t.Fatalf("expected canonical-case filename in pypi path, got: %s", s)
+    if strings.Contains(s, "pypi = ") {
+        t.Fatalf("did not expect pypi helper path, got: %s", s)
+    }
+    if !strings.Contains(s, "url=\"https://files/adjustText-1.3.0.tar.gz\"") {
+        t.Fatalf("expected explicit sdist URL, got: %s", s)
     }
 }
 
