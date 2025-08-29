@@ -97,6 +97,19 @@ func TestChooseArtifactsWheelFallback(t *testing.T) {
     }
 }
 
+func TestChooseArtifactsMixedCaseSdistForcesURL(t *testing.T) {
+    rels := map[string][]pypiRelease{
+        "1.0.0": {{Yanked:false, Packagetype:"sdist", Filename:"Demo-1.0.0.tar.gz", URL:"https://files/Demo-1.0.0.tar.gz", Digests: struct{Sha256 string `json:"sha256"`}{Sha256:"sha10"}}},
+        "0.9.0": {{Yanked:false, Packagetype:"sdist", Filename:"demo-0.9.0.tar.gz", URL:"https://files/demo-0.9.0.tar.gz", Digests: struct{Sha256 string `json:"sha256"`}{Sha256:"sha09"}}},
+    }
+    lines, _, err := chooseArtifacts(rels, "")
+    if err != nil { t.Fatalf("chooseArtifacts error: %v", err) }
+    got := strings.Join(lines, "")
+    if !strings.Contains(got, "expand=False") || !strings.Contains(got, "Demo-1.0.0.tar.gz") || !strings.Contains(got, "demo-0.9.0.tar.gz") {
+        t.Fatalf("expected explicit URLs for mixed-case sdists, got: %s", got)
+    }
+}
+
 func TestDownloadAndDiscoverTopLevelModules_TopLevelTxt(t *testing.T) {
     wheel := buildWheel([]string{"metro", "conductor"}, true)
     restore := withHTTPStub(t, roundTripFunc(func(req *http.Request) *http.Response {
@@ -202,12 +215,9 @@ func TestWriteRecipe_EndToEnd(t *testing.T) {
     b, err := os.ReadFile(path)
     if err != nil { t.Fatalf("reading recipe: %v", err) }
     s := string(b)
-    // Check pypi path suffix and dependency
+    // Check pypi path suffix
     if !strings.Contains(s, "pypi = \"metroapi/metroapi-@.tar.gz\"") {
         t.Fatalf("missing pypi helper path: %s", s)
-    }
-    if !strings.Contains(s, "depends_on(\"py-uv\"") {
-        t.Fatalf("missing py-uv dependency: %s", s)
     }
     // Check descending versions
     i12 := strings.Index(s, "version(\"0.0.12\"")
@@ -226,10 +236,7 @@ func TestWriteRecipe_EndToEnd(t *testing.T) {
     if !strings.Contains(s, "_pypi_package = \"metroapi\"") {
         t.Fatalf("missing _pypi_package: %s", s)
     }
-    // UV_PYTHON is set
-    if !strings.Contains(s, "UV_PYTHON") {
-        t.Fatalf("expected UV_PYTHON to be set: %s", s)
-    }
+    // No explicit uv dependency or env vars in recipe; handled by custom builder
 }
 
 func TestFormatImportModules(t *testing.T) {
@@ -250,3 +257,34 @@ func TestEscapePyStr(t *testing.T) {
     }
 }
 
+func TestPypiHelperPathPreservesCanonicalCase(t *testing.T) {
+    // Simulate project with canonical name having capital letters (e.g., adjustText)
+    resp := pypiResponse{
+        Info: pypiInfo{
+            Name: "adjustText",
+            HomePage: "https://github.com/Phlya/adjustText",
+        },
+        Releases: map[string][]pypiRelease{
+            "1.3.0": {{Yanked:false, Packagetype:"sdist", Filename:"adjustText-1.3.0.tar.gz", URL:"https://files/adjustText-1.3.0.tar.gz", Digests: struct{Sha256 string `json:"sha256"`}{Sha256:"sha"}}},
+        },
+    }
+    data, _ := json.Marshal(resp)
+    restore := withHTTPStub(t, roundTripFunc(func(req *http.Request) *http.Response {
+        return httpResponse(200, "application/json", data)
+    }))
+    defer restore()
+
+    cwd, _ := os.Getwd()
+    dir := t.TempDir()
+    _ = os.Chdir(dir)
+    defer os.Chdir(cwd)
+
+    if err := writeRecipe("adjusttext", ""); err != nil { t.Fatalf("writeRecipe: %v", err) }
+    path := filepath.Join("packages", "py-adjusttext", "package.py")
+    b, err := os.ReadFile(path)
+    if err != nil { t.Fatalf("reading recipe: %v", err) }
+    s := string(b)
+    if !strings.Contains(s, "pypi = \"adjusttext/adjustText-@.tar.gz\"") {
+        t.Fatalf("expected canonical-case filename in pypi path, got: %s", s)
+    }
+}

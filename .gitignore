@@ -4,3 +4,5 @@ packages
 spack
 packages.zip
 pypi
+logs/
+py-package-uv-creator

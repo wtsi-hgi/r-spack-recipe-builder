@@ -116,7 +116,7 @@ func detectPypiSuffix(filename string) string {
 }
 
 func chooseArtifacts(releases map[string][]pypiRelease, preferred string) ([]string, string, error) {
-    // Return: version lines, pypi helper path (if we can determine a stable suffix), error
+    // Return: version lines, pypi helper path suffix (if we can determine a stable suffix), error
     var versionLines []string
     // Collect and sort versions ascending using numeric-dotted comparator, then emit descending
     var keys []string
@@ -129,33 +129,42 @@ func chooseArtifacts(releases map[string][]pypiRelease, preferred string) ([]str
 
     // Determine a default pypi helper suffix from any sdist we find
     pypiSuffix := ""
-    pypiName := ""
+    // Track sdist name casing (prefix before version and suffix). If multiple
+    // casings are seen across releases, we'll avoid relying on the pypi helper
+    // and emit explicit URLs even for sdists, since filenames are case-sensitive.
+    sdistNameCases := map[string]struct{}{}
     sdistSuffixRe := regexp.MustCompile(`(?i)\.(tar\.gz|tar\.bz2|tar\.xz|tgz|zip)$`)
 
-    // First pass: choose suffix and accumulate lines
+    // First pass: determine suffix and whether sdists present and their casings
+    type chosen struct{ v string; sdist, any, wheel *pypiRelease }
+    chosenList := []chosen{}
     for i := len(keys) - 1; i >= 0; i-- {
         v := keys[i]
         if !filter(v) { continue }
         arts := releases[v]
         if len(arts) == 0 { continue }
-
         var sdist *pypiRelease
         var any *pypiRelease
+        // select a preferred wheel
+        var wheelFirst, wheelAny, wheelPy3, wheelPy2py3 *pypiRelease
         for _, a := range arts {
             if a.Yanked { continue }
             if any == nil { any = &a }
             if strings.EqualFold(a.Packagetype, "sdist") {
-                // ensure sha256 present
                 if strings.TrimSpace(a.Digests.Sha256) != "" {
                     tmp := a
                     sdist = &tmp
-                    break
+                    // don't break; keep any for wheel fallback if needed
                 }
+            } else if strings.EqualFold(a.Packagetype, "bdist_wheel") {
+                if wheelFirst == nil { tmp := a; wheelFirst = &tmp }
+                lname := strings.ToLower(a.Filename)
+                if strings.Contains(lname, "-any.whl") && wheelAny == nil { tmp := a; wheelAny = &tmp }
+                if strings.Contains(lname, "-py3-") && wheelPy3 == nil { tmp := a; wheelPy3 = &tmp }
+                if strings.Contains(lname, "-py2.py3-") && wheelPy2py3 == nil { tmp := a; wheelPy2py3 = &tmp }
             }
         }
-
         if sdist != nil {
-            // Adopt suffix for pypi helper if not set yet
             if pypiSuffix == "" {
                 if m := sdistSuffixRe.FindStringSubmatch(strings.ToLower(sdist.Filename)); len(m) > 1 {
                     pypiSuffix = "." + m[1]
@@ -163,26 +172,43 @@ func chooseArtifacts(releases map[string][]pypiRelease, preferred string) ([]str
                     pypiSuffix = ".tar.gz"
                 }
             }
-            // version line using sha256 only (Spack will use pypi helper)
-            versionLines = append(versionLines, fmt.Sprintf("\tversion(\"%s\", sha256=\"%s\")\n", v, sdist.Digests.Sha256))
-        } else if any != nil {
-            // Fallback: use wheel (or first artifact) with explicit URL
-            versionLines = append(versionLines, fmt.Sprintf("\tversion(\"%s\", sha256=\"%s\", expand=False, url=\"%s\")\n", v, any.Digests.Sha256, any.URL))
+            base := sdist.Filename
+            base = sdistSuffixRe.ReplaceAllString(base, "")
+            if idx := strings.LastIndex(base, "-"); idx > 0 { base = base[:idx] }
+            if base != "" { sdistNameCases[base] = struct{}{} }
         }
-
-        // Stop early if single version requested
-        if preferred != "" && preferred != "latest" {
-            break
-        }
+        // choose wheel preference
+        wheel := wheelAny
+        if wheel == nil { wheel = wheelPy3 }
+        if wheel == nil { wheel = wheelPy2py3 }
+        if wheel == nil { wheel = wheelFirst }
+        chosenList = append(chosenList, chosen{v: v, sdist: sdist, any: any, wheel: wheel})
+        if preferred != "" && preferred != "latest" { break }
     }
 
-    if len(versionLines) == 0 {
+    if len(chosenList) == 0 {
         return nil, "", errors.New("no usable artifacts found")
     }
 
-    // pypiName is normalized project name used in helper path
-    // We can't reliably infer a canonicalized name from artifacts here, pass blank to signal omission
-    _ = pypiName
+    // Determine if mixed-case sdist names are present
+    mixedCase := len(sdistNameCases) > 1
+
+    // Second pass: emit version lines using our decision criteria
+    versionLines = nil
+    for idx, ch := range chosenList {
+        if ch.sdist != nil {
+            // Prefer wheel for the newest version if available to maximize install success
+            if idx == 0 && ch.wheel != nil {
+                versionLines = append(versionLines, fmt.Sprintf("\tversion(\"%s\", sha256=\"%s\", expand=False, url=\"%s\")\n", ch.v, ch.wheel.Digests.Sha256, ch.wheel.URL))
+            } else if mixedCase {
+                versionLines = append(versionLines, fmt.Sprintf("\tversion(\"%s\", sha256=\"%s\", expand=False, url=\"%s\")\n", ch.v, ch.sdist.Digests.Sha256, ch.sdist.URL))
+            } else {
+                versionLines = append(versionLines, fmt.Sprintf("\tversion(\"%s\", sha256=\"%s\")\n", ch.v, ch.sdist.Digests.Sha256))
+            }
+        } else if ch.any != nil {
+            versionLines = append(versionLines, fmt.Sprintf("\tversion(\"%s\", sha256=\"%s\", expand=False, url=\"%s\")\n", ch.v, ch.any.Digests.Sha256, ch.any.URL))
+        }
+    }
 
     // Without knowing the canonicalized name's first-letter folder, Spack's pypi helper accepts
     // the compact form "name/name-@.suffix" just like we set in recipes elsewhere.
@@ -436,8 +462,10 @@ func writeRecipe(packageName, versionPin string) error {
     outPath := filepath.Join(outDir, "package.py")
 
     // Render recipe
-    // We purposely keep this minimal: homepage, pypi helper, versions, py-uv only, uv-based install, smoke test
-    pypiPath := fmt.Sprintf("%s/%s-@%s", strings.ToLower(packageName), strings.ToLower(packageName), suffix)
+    // We purposely keep this minimal: homepage, pypi helper, versions, uv-based install, smoke test
+    // Use the canonical PyPI project name for the filename portion to preserve case
+    // (e.g., adjustText/adjustText-@.tar.gz), while normalizing the directory to lowercase.
+    pypiPath := fmt.Sprintf("%s/%s-@%s", strings.ToLower(canonicalName), canonicalName, suffix)
 
     header := fmt.Sprintf(`# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
@@ -445,9 +473,8 @@ func writeRecipe(packageName, versionPin string) error {
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.package import *
-import os
 
-class Py%s(PythonPackage):
+class Py%s(UvPackage):
     homepage = "%s"
     pypi = "%s"
     import_modules = [%s]
@@ -459,17 +486,7 @@ class Py%s(PythonPackage):
     body := strings.Join(versionLines, "") + "\n"
 
     // Dependencies and install/test
-    tail := `    depends_on("py-uv", type=("build", "run"))
-
-    def install(self, spec, prefix):
-        python_exe = self.spec["python"].command.path
-        uv_path = join_path(self.spec["py-uv"].prefix.bin, "uv")
-        uv_exe = Executable(uv_path)
-        env = os.environ.copy()
-        env["UV_PYTHON"] = python_exe
-        pkg_spec = f"{self._pypi_package}=={self.version}"
-        uv_exe("pip", "install", pkg_spec, f"--prefix={prefix}", env=env)
-
+    tail := `
     @run_after("install")
     def install_test(self):
         with working_dir("spack-test", create=True):
@@ -538,4 +555,3 @@ func main() {
         }
     }
 }
-
