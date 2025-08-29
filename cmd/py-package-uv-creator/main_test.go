@@ -370,6 +370,22 @@ func TestSelectArtifactsFallsBackToSdistIfOnlyOtherArchWheel(t *testing.T) {
     }
 }
 
+func TestSelectArtifactsSkipsPy2OnlyWheel(t *testing.T) {
+    // Provide a py2-only universal wheel and an sdist; should pick the sdist.
+    rels := map[string][]pypiRelease{
+        "1.7": {
+            {Yanked:false, Packagetype:"bdist_wheel", Filename:"demo-1.7-py2-none-any.whl", URL:"https://files/demo-1.7-py2-none-any.whl", Digests: struct{Sha256 string `json:"sha256"`}{Sha256:"wsha_py2"}},
+            {Yanked:false, Packagetype:"sdist", Filename:"demo-1.7.tar.gz", URL:"https://files/demo-1.7.tar.gz", Digests: struct{Sha256 string `json:"sha256"`}{Sha256:"sdistsha"}},
+        },
+    }
+    lines, _, err := chooseArtifacts(rels, "")
+    if err != nil { t.Fatalf("chooseArtifacts error: %v", err) }
+    got := strings.Join(lines, "")
+    if !strings.Contains(got, "url=\"https://files/demo-1.7.tar.gz\"") || strings.Contains(got, "py2-none-any.whl") {
+        t.Fatalf("expected to skip py2-only wheel and use sdist, got: %s", got)
+    }
+}
+
 func TestWriteRecipe_EmitsPythonConstraints(t *testing.T) {
     // Simulate project with two versions and per-file requires_python metadata
     resp := pypiResponse{

@@ -181,7 +181,16 @@ func selectChosenArtifacts(releases map[string][]pypiRelease, preferred string) 
                 }
             } else if strings.EqualFold(a.Packagetype, "bdist_wheel") {
                 lname := strings.ToLower(a.Filename)
-                // universal wheels (pure python) are ok everywhere
+                // Skip wheels that are clearly Python 2-only (e.g., "-py2-" without py3)
+                isPy2Only := strings.Contains(lname, "-py2-") && !strings.Contains(lname, "-py2.py3-")
+                // Detect wheels that advertise Python 3 compatibility via tags
+                isPy3Tagged := strings.Contains(lname, "-py3-") || strings.Contains(lname, "-py2.py3-") ||
+                    strings.Contains(lname, "-cp3") || strings.Contains(lname, "-pp3") || strings.Contains(lname, "-abi3-")
+                if isPy2Only || !isPy3Tagged {
+                    // do not consider this wheel; try others or fall back to sdist
+                    continue
+                }
+                // universal wheels (pure python) with py3 tags are ok everywhere
                 if strings.Contains(lname, "-any.whl") && wheelAny == nil { tmp := a; wheelAny = &tmp; continue }
                 // prefer manylinux/musllinux/linux wheels for current arch only
                 if archTag != "" && (strings.Contains(lname, "manylinux") || strings.Contains(lname, "musllinux") || strings.Contains(lname, "linux_")) &&
