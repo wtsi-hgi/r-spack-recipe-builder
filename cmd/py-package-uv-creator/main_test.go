@@ -335,6 +335,72 @@ func TestRunCLI_WithFlagFParsesNextArg(t *testing.T) {
     }
 }
 
+func TestWriteRecipe_EmitsPythonConstraints(t *testing.T) {
+    // Simulate project with two versions and per-file requires_python metadata
+    resp := pypiResponse{
+        Info: pypiInfo{
+            Name:     "requirespy",
+            HomePage: "https://example.com/requirespy",
+        },
+        Releases: map[string][]pypiRelease{
+            "1.2.0": {
+                {Yanked:false, Packagetype:"bdist_wheel", Filename:"requirespy-1.2.0-py3-none-any.whl", URL:"https://files/requirespy-1.2.0.whl", Digests: struct{Sha256 string `json:"sha256"`}{Sha256:"wsha120"}, RequiresPython: ">=3.11"},
+            },
+            "1.1.0": {
+                {Yanked:false, Packagetype:"bdist_wheel", Filename:"requirespy-1.1.0-py3-none-any.whl", URL:"https://files/requirespy-1.1.0.whl", Digests: struct{Sha256 string `json:"sha256"`}{Sha256:"wsha110"}, RequiresPython: ">=3.8,<3.12"},
+            },
+        },
+    }
+    data, _ := json.Marshal(resp)
+    // Make the wheel fetch responder (not used for constraints, but discovery may call it)
+    wheel := buildWheel([]string{"requirespy"}, true)
+    restore := withHTTPStub(t, roundTripFunc(func(req *http.Request) *http.Response {
+        if strings.Contains(req.URL.String(), "/pypi/requirespy/json") {
+            return httpResponse(200, "application/json", data)
+        }
+        return httpResponse(200, "application/zip", wheel)
+    }))
+    defer restore()
+
+    // Work in a temp directory
+    cwd, _ := os.Getwd()
+    dir := t.TempDir()
+    _ = os.Chdir(dir)
+    defer os.Chdir(cwd)
+
+    if err := writeRecipe("requirespy", ""); err != nil {
+        t.Fatalf("writeRecipe: %v", err)
+    }
+
+    path := filepath.Join("packages", "py-requirespy", "package.py")
+    b, err := os.ReadFile(path)
+    if err != nil { t.Fatalf("reading recipe: %v", err) }
+    s := string(b)
+    // Should contain per-version python constraints derived from requires_python
+    if !strings.Contains(s, "depends_on(\"python@3.11:\"") || !strings.Contains(s, "when=\"@1.2.0\"") {
+        t.Fatalf("missing python>=3.11 constraint for 1.2.0: %s", s)
+    }
+    if !strings.Contains(s, "depends_on(\"python@3.8:3.11\"") || !strings.Contains(s, "when=\"@1.1.0\"") {
+        t.Fatalf("missing python>=3.8,<3.12 constraint mapped for 1.1.0: %s", s)
+    }
+}
+
+func TestParseRequiresPython(t *testing.T) {
+    cases := map[string]string{
+        ">=3.11":         "3.11:",
+        ">=3.8,<3.12":    "3.8:3.11",
+        "==3.9.*":        "3.9:3.9",
+        "<=3.10":         "0:3.10",
+        "~=3.8":          "3.8:4.0",
+    }
+    for in, want := range cases {
+        got := parseRequiresPython(in)
+        if got != want {
+            t.Fatalf("parseRequiresPython(%q) => %q, want %q", in, got, want)
+        }
+    }
+}
+
 func TestHomepageSelectionAndModuleChoiceFromProjectURLs(t *testing.T) {
     // HomePage field is empty; ProjectURLs includes a repository URL.
     resp := pypiResponse{

@@ -31,6 +31,10 @@ type pypiRelease struct {
     Digests     struct {
         Sha256 string `json:"sha256"`
     } `json:"digests"`
+    // RequiresPython provides the PEP 440 requires-python string for this file
+    // (e.g., ">=3.8,<3.12"). We use it to derive per-version Python
+    // constraints so Spack can concretize a compatible interpreter.
+    RequiresPython string `json:"requires_python"`
 }
 
 type pypiInfo struct {
@@ -115,9 +119,20 @@ func detectPypiSuffix(filename string) string {
     }
 }
 
-func chooseArtifacts(releases map[string][]pypiRelease, preferred string) ([]string, string, error) {
+// artifactSel represents a chosen (version, artifact) pair among a release's files.
+type artifactSel struct{
+    version string
+    file    *pypiRelease
+}
+
+// selectChosenArtifacts applies selection rules to choose one artifact per version
+// in descending version order. Preference:
+// - universal wheels (py3-none-any)
+// - linux wheels for x86_64/aarch64
+// - sdist as last resort
+// Only versions matching the preferred pin (if any) are considered.
+func selectChosenArtifacts(releases map[string][]pypiRelease, preferred string) ([]artifactSel, string, error) {
     // Return: version lines, pypi helper path suffix (if we can determine a stable suffix), error
-    var versionLines []string
     // Collect and sort versions ascending using numeric-dotted comparator, then emit descending
     var keys []string
     for v := range releases { keys = append(keys, v) }
@@ -176,21 +191,125 @@ func chooseArtifacts(releases map[string][]pypiRelease, preferred string) ([]str
         return nil, "", errors.New("no usable artifacts found")
     }
 
-    // Second pass: emit version lines using our decision criteria
-    versionLines = nil
+    // Emit artifact selections in order
+    sels := []artifactSel{}
     for _, ch := range chosenList {
         if ch.wheel != nil {
-            versionLines = append(versionLines, fmt.Sprintf("\tversion(\"%s\", sha256=\"%s\", expand=False, url=\"%s\")\n", ch.v, ch.wheel.Digests.Sha256, ch.wheel.URL))
+            sels = append(sels, artifactSel{version: ch.v, file: ch.wheel})
             continue
         }
         if ch.sdist != nil {
-            versionLines = append(versionLines, fmt.Sprintf("\tversion(\"%s\", sha256=\"%s\", url=\"%s\")\n", ch.v, ch.sdist.Digests.Sha256, ch.sdist.URL))
+            sels = append(sels, artifactSel{version: ch.v, file: ch.sdist})
             continue
         }
     }
-
     if pypiSuffix == "" { pypiSuffix = ".tar.gz" }
-    return versionLines, pypiSuffix, nil
+    return sels, pypiSuffix, nil
+}
+
+func chooseArtifacts(releases map[string][]pypiRelease, preferred string) ([]string, string, error) {
+    sels, suffix, err := selectChosenArtifacts(releases, preferred)
+    if err != nil { return nil, suffix, err }
+    var versionLines []string
+    for _, s := range sels {
+        if s.file == nil { continue }
+        if strings.EqualFold(s.file.Packagetype, "bdist_wheel") {
+            versionLines = append(versionLines, fmt.Sprintf("\tversion(\"%s\", sha256=\"%s\", expand=False, url=\"%s\")\n", s.version, s.file.Digests.Sha256, s.file.URL))
+        } else {
+            versionLines = append(versionLines, fmt.Sprintf("\tversion(\"%s\", sha256=\"%s\", url=\"%s\")\n", s.version, s.file.Digests.Sha256, s.file.URL))
+        }
+    }
+    return versionLines, suffix, nil
+}
+
+// parseRequiresPython converts a PEP 440 requires-python string (e.g., ">=3.8,<3.12")
+// into a Spack version range like "3.8:3.11". Returns empty string if parsing fails
+// or if the constraint cannot be reasonably represented.
+func parseRequiresPython(req string) string {
+    s := strings.TrimSpace(req)
+    if s == "" { return "" }
+    s = strings.ReplaceAll(s, " ", "")
+    parts := strings.Split(s, ",")
+    lower := ""
+    upper := ""
+    upperInclusive := false
+    for _, p := range parts {
+        if p == "" { continue }
+        switch {
+        case strings.HasPrefix(p, ">="):
+            lower = strings.TrimPrefix(p, ">=")
+        case strings.HasPrefix(p, ">"):
+            // Approximate >X by using X.0.1 as lower bound; if that's not parseable, skip
+            v := strings.TrimPrefix(p, ">")
+            lower = bumpPatch(v)
+        case strings.HasPrefix(p, "<="):
+            upper = strings.TrimPrefix(p, "<=")
+            upperInclusive = true
+        case strings.HasPrefix(p, "<"):
+            v := strings.TrimPrefix(p, "<")
+            // Convert exclusive upper bound <A.B to inclusive previous minor A.(B-1)
+            upper = decMinor(v)
+            upperInclusive = true
+        case strings.HasPrefix(p, "=="):
+            v := strings.TrimPrefix(p, "==")
+            // Handle "==3.11.*" -> lower=3.11, upper=3.11
+            v = strings.TrimSuffix(v, ".*")
+            lower = v
+            upper = v
+            upperInclusive = true
+        case strings.HasPrefix(p, "~="):
+            // ~=3.8 -> >=3.8 and <4.0; we approximate with inclusive 4.0 upper bound
+            v := strings.TrimPrefix(p, "~=")
+            lower = v
+            upper = nextMajor(v)
+            upperInclusive = true
+        }
+    }
+    if lower == "" && upper == "" { return "" }
+    // Compose a Spack range
+    if lower == "" { lower = "0" }
+    if upper == "" {
+        return fmt.Sprintf("%s:", lower)
+    }
+    if !upperInclusive {
+        // Convert exclusive upper into inclusive previous minor if possible
+        u := decMinor(upper)
+        if u != "" { upper = u }
+    }
+    return fmt.Sprintf("%s:%s", lower, upper)
+}
+
+func bumpPatch(v string) string {
+    // Convert X.Y to X.Y.1 for rough > bounds
+    if v == "" { return "" }
+    if strings.Count(v, ".") == 0 { return v + ".0.1" }
+    return v + ".1"
+}
+
+func decMinor(v string) string {
+    // Decrement the minor component: A.B[.C] -> A.(B-1)
+    if v == "" { return "" }
+    parts := strings.Split(v, ".")
+    if len(parts) == 0 { return "" }
+    // ensure at least major.minor
+    if len(parts) == 1 { parts = append(parts, "0") }
+    // parse minor
+    var maj, min int
+    fmt.Sscanf(parts[0], "%d", &maj)
+    fmt.Sscanf(parts[1], "%d", &min)
+    if min == 0 {
+        if maj == 0 { return "" }
+        return fmt.Sprintf("%d", maj-1)
+    }
+    return fmt.Sprintf("%d.%d", maj, min-1)
+}
+
+func nextMajor(v string) string {
+    if v == "" { return "" }
+    parts := strings.Split(v, ".")
+    var maj int
+    fmt.Sscanf(parts[0], "%d", &maj)
+    return fmt.Sprintf("%d.0", maj+1)
 }
 
 func selectIntrospectionVersion(releases map[string][]pypiRelease, preferred string) string {
@@ -407,8 +526,18 @@ func writeRecipe(packageName, versionPin string) error {
     if err != nil { return err }
 
     // Choose versions
-    versionLines, _, err := chooseArtifacts(resp.Releases, versionPin)
+    sels, _, err := selectChosenArtifacts(resp.Releases, versionPin)
     if err != nil { return err }
+    // Construct version lines from selections
+    var versionLines []string
+    for _, s := range sels {
+        if s.file == nil { continue }
+        if strings.EqualFold(s.file.Packagetype, "bdist_wheel") {
+            versionLines = append(versionLines, fmt.Sprintf("\tversion(\"%s\", sha256=\"%s\", expand=False, url=\"%s\")\n", s.version, s.file.Digests.Sha256, s.file.URL))
+        } else {
+            versionLines = append(versionLines, fmt.Sprintf("\tversion(\"%s\", sha256=\"%s\", url=\"%s\")\n", s.version, s.file.Digests.Sha256, s.file.URL))
+        }
+    }
 
     // Metadata
     homepage := selectHomepage(resp.Info, packageName)
@@ -446,7 +575,16 @@ class Py%s(UvPackage):
     body := strings.Join(versionLines, "") + "\n"
 
     // Dependencies and install/test
-    tail := `
+    // Add per-version Python constraints if available, so Spack can choose a compatible interpreter.
+    depLines := ""
+    for _, s := range sels {
+        if s.file == nil { continue }
+        pySpec := parseRequiresPython(s.file.RequiresPython)
+        if strings.TrimSpace(pySpec) == "" { continue }
+        depLines += fmt.Sprintf("\n    depends_on(\"python@%s\", type=(\"build\", \"run\"), when=\"@%s\")\n", pySpec, s.version)
+    }
+
+    tail := depLines + `
     @run_after("install")
     def install_test(self):
         with working_dir("spack-test", create=True):

@@ -13,4 +13,8 @@ This guide for iteratively improving the script `cmd/py-package-uv-creator/main.
 8) If the installation succeeds, and no changes are needed, you can exit.
 9) If any changes are made, make a commit with an appropriate message.
 
+## Notes
+- the `py-package-uv-creator` tool should prefer the wheel package over the sdist package, if available.
+- the tool should only use wheels that are compatible with the linux platform.
+
 
