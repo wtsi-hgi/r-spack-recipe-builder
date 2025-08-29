@@ -534,14 +534,29 @@ func formatImportModules(mods []string, fallback string) string {
     return strings.Join(out, ", ")
 }
 
-func main() {
-    if len(os.Args) < 2 {
-        fmt.Println("Usage: py-package-uv-creator <pypi_pkg>[==<version>] [...]")
-        os.Exit(1)
+// runCLI parses args and writes recipes. Supports optional "-f" which just
+// indicates that the next argument(s) are package names (compat with scripts).
+func runCLI(args []string) error {
+    if len(args) == 0 {
+        return errors.New("no packages provided")
     }
-    // Process one or more packages; no recursion
-    for i := 1; i < len(os.Args); i++ {
-        arg := strings.TrimSpace(os.Args[i])
+    // Collect (name, ver) pairs
+    type pair struct{ name, ver string }
+    var todo []pair
+    for i := 0; i < len(args); i++ {
+        arg := strings.TrimSpace(args[i])
+        if arg == "" {
+            continue
+        }
+        if arg == "-f" || arg == "--from" {
+            // consume next as the actual package argument, if present
+            if i+1 < len(args) {
+                i++
+                arg = strings.TrimSpace(args[i])
+            } else {
+                break
+            }
+        }
         if arg == "" { continue }
         name := arg
         ver := ""
@@ -550,8 +565,25 @@ func main() {
             name = parts[0]
             if len(parts) > 1 { ver = strings.TrimSpace(parts[1]) }
         }
-        if err := writeRecipe(name, ver); err != nil {
+        todo = append(todo, pair{name: name, ver: ver})
+    }
+    if len(todo) == 0 {
+        return errors.New("no packages parsed from args")
+    }
+    var retErr error
+    for _, p := range todo {
+        if err := writeRecipe(p.name, p.ver); err != nil {
             fmt.Fprintf(os.Stderr, "error: %v\n", err)
+            retErr = err
         }
     }
+    return retErr
+}
+
+func main() {
+    if len(os.Args) < 2 {
+        fmt.Println("Usage: py-package-uv-creator [-f] <pypi_pkg>[==<version>] [...]")
+        os.Exit(1)
+    }
+    _ = runCLI(os.Args[1:])
 }

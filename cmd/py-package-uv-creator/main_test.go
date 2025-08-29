@@ -288,3 +288,40 @@ func TestPypiHelperPathPreservesCanonicalCase(t *testing.T) {
         t.Fatalf("expected canonical-case filename in pypi path, got: %s", s)
     }
 }
+
+func TestRunCLI_WithFlagFParsesNextArg(t *testing.T) {
+    // Minimal PyPI JSON for package 'demopkg' with one sdist; also provide a wheel for import discovery
+    resp := pypiResponse{
+        Info: pypiInfo{
+            Name:     "demopkg",
+            HomePage: "https://example.com/demopkg",
+        },
+        Releases: map[string][]pypiRelease{
+            "1.0.0": {
+                {Yanked:false, Packagetype:"sdist", Filename:"demopkg-1.0.0.tar.gz", URL:"https://files/demopkg-1.0.0.tar.gz", Digests: struct{Sha256 string `json:"sha256"`}{Sha256:"sdistsha"}},
+                {Yanked:false, Packagetype:"bdist_wheel", Filename:"demopkg-1.0.0-py3-none-any.whl", URL:"https://files/demopkg-1.0.0.whl", Digests: struct{Sha256 string `json:"sha256"`}{Sha256:"wheelsha"}},
+            },
+        },
+    }
+    data, _ := json.Marshal(resp)
+    wheel := buildWheel([]string{"demopkg"}, true)
+    restore := withHTTPStub(t, roundTripFunc(func(req *http.Request) *http.Response {
+        if strings.Contains(req.URL.String(), "/pypi/demopkg/json") {
+            return httpResponse(200, "application/json", data)
+        }
+        return httpResponse(200, "application/zip", wheel)
+    }))
+    defer restore()
+
+    cwd, _ := os.Getwd()
+    dir := t.TempDir()
+    _ = os.Chdir(dir)
+    defer os.Chdir(cwd)
+
+    if err := runCLI([]string{"-f", "demopkg==1.0.0"}); err != nil {
+        t.Fatalf("runCLI failed: %v", err)
+    }
+    if _, err := os.Stat(filepath.Join("packages", "py-demopkg", "package.py")); err != nil {
+        t.Fatalf("expected recipe file to be created: %v", err)
+    }
+}
