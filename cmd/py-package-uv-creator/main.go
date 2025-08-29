@@ -448,6 +448,21 @@ func downloadAndDiscoverTopLevelModules(wheelURL string) ([]string, error) {
         for k := range seen { topLevels = append(topLevels, k) }
         sort.Strings(topLevels)
     }
+    // Filter out common non-module entries frequently present in top_level.txt
+    if len(topLevels) > 0 {
+        junk := map[string]struct{}{
+            "dev":{}, "build":{}, "example":{}, "examples":{}, "scripts":{}, "script":{},
+            "docs":{}, "doc":{}, "presentations":{}, "presentation":{}, "conda":{},
+            "conda_recipe":{}, "conda-recipe":{},
+        }
+        cleaned := make([]string, 0, len(topLevels))
+        for _, m := range topLevels {
+            mm := strings.ToLower(strings.TrimSpace(m))
+            if _, drop := junk[mm]; drop { continue }
+            cleaned = append(cleaned, m)
+        }
+        topLevels = cleaned
+    }
     // Dedup and sanitize
     out := []string{}
     seen := map[string]struct{}{}
@@ -513,7 +528,10 @@ func choosePrimaryImportModule(mods []string, pkgName, canonicalName, homepage s
     // candidates derived from names/homepage
     want := []string{}
     if homepage != "" { want = append(want, sanitizeBaseName(lastPathSegment(homepage))) }
-    want = append(want, sanitizeBaseName(pkgName))
+    // prefer exact package name, and its root namespace (first segment)
+    sanitized := sanitizeBaseName(pkgName)
+    want = append(want, sanitized)
+    if idx := strings.Index(sanitized, "_"); idx > 0 { want = append(want, sanitized[:idx]) }
     if canonicalName != "" { want = append(want, sanitizeBaseName(canonicalName)) }
 
     // prefer exact matches to any of desired tokens
@@ -524,7 +542,11 @@ func choosePrimaryImportModule(mods []string, pkgName, canonicalName, homepage s
         }
     }
     // deprioritize obvious non-primary names
-    bad := map[string]struct{}{"tests":{}, "test":{}, "examples":{}, "example":{}, "docs":{}, "conductor":{}}
+    bad := map[string]struct{}{
+        "tests":{}, "test":{}, "examples":{}, "example":{}, "docs":{}, "doc":{},
+        "conductor":{}, "dev":{}, "build":{}, "scripts":{}, "script":{},
+        "presentations":{}, "presentation":{}, "conda":{}, "conda_recipe":{}, "conda-recipe":{},
+    }
     // choose shortest acceptable module
     best := ""
     for _, m := range mods {
@@ -601,8 +623,24 @@ class Py%s(UvPackage):
     tail := depLines + `
     @run_after("install")
     def install_test(self):
+        import inspect
         with working_dir("spack-test", create=True):
-            python("-c", 'import %s')
+            python = inspect.getmodule(self).python
+            prefix = str(self.prefix)
+            cmd = (
+                "import sys,os; "
+                f"prefix=r'{prefix}'; "
+                "ver=f'{sys.version_info.major}.{sys.version_info.minor}'; "
+                "paths=[\n"
+                "    f'{prefix}/lib/python{ver}/site-packages',\n"
+                "    f'{prefix}/local/lib/python{ver}/site-packages',\n"
+                "    f'{prefix}/lib/python{ver}/dist-packages',\n"
+                "    f'{prefix}/local/lib/python{ver}/dist-packages',\n"
+                "]; "
+                "[sys.path.insert(0,p) for p in paths]; "
+                "import %s"
+            )
+            python("-c", cmd)
 `
     tail = fmt.Sprintf(tail, module)
 

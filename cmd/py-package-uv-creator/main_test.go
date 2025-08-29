@@ -231,12 +231,12 @@ func TestWriteRecipe_EndToEnd(t *testing.T) {
     if !(i12 >= 0 && i09 > i12) {
         t.Fatalf("expected 0.0.12 before 0.0.9: %d < %d\n%s", i12, i09, s)
     }
-    // import_modules should include metro first, and smoke test should import metro
+    // import_modules should include metro first, and install_test should import metro
     if !strings.Contains(s, "import_modules = [\"metro\"") {
         t.Fatalf("expected metro in import_modules: %s", s)
     }
-    if !strings.Contains(s, "python(\"-c\", 'import metro')") {
-        t.Fatalf("expected smoke test 'import metro': %s", s)
+    if !(strings.Contains(s, "def install_test") && strings.Contains(s, "import metro")) {
+        t.Fatalf("expected install_test importing metro: %s", s)
     }
     // _pypi_package canonical name
     if !strings.Contains(s, "_pypi_package = \"metroapi\"") {

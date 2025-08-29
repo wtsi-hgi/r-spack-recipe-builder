@@ -1,0 +1,5 @@
+spack:
+  specs: []
+  view: false
+  repos:
+  - /home/ubuntu/r-spack-recipe-builder
