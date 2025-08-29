@@ -105,7 +105,10 @@ func TestChooseArtifactsMixedCaseSdistForcesURL(t *testing.T) {
     lines, _, err := chooseArtifacts(rels, "")
     if err != nil { t.Fatalf("chooseArtifacts error: %v", err) }
     got := strings.Join(lines, "")
-    if !strings.Contains(got, "expand=False") || !strings.Contains(got, "Demo-1.0.0.tar.gz") || !strings.Contains(got, "demo-0.9.0.tar.gz") {
+    if strings.Contains(got, "expand=False") {
+        t.Fatalf("did not expect expand=False for sdist URLs: %s", got)
+    }
+    if !strings.Contains(got, "url=\"https://files/Demo-1.0.0.tar.gz\"") || !strings.Contains(got, "url=\"https://files/demo-0.9.0.tar.gz\"") {
         t.Fatalf("expected explicit URLs for mixed-case sdists, got: %s", got)
     }
 }

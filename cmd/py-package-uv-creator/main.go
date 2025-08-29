@@ -201,12 +201,19 @@ func chooseArtifacts(releases map[string][]pypiRelease, preferred string) ([]str
             if idx == 0 && ch.wheel != nil {
                 versionLines = append(versionLines, fmt.Sprintf("\tversion(\"%s\", sha256=\"%s\", expand=False, url=\"%s\")\n", ch.v, ch.wheel.Digests.Sha256, ch.wheel.URL))
             } else if mixedCase {
-                versionLines = append(versionLines, fmt.Sprintf("\tversion(\"%s\", sha256=\"%s\", expand=False, url=\"%s\")\n", ch.v, ch.sdist.Digests.Sha256, ch.sdist.URL))
+                // Use explicit sdist URL but allow Spack to expand the archive
+                versionLines = append(versionLines, fmt.Sprintf("\tversion(\"%s\", sha256=\"%s\", url=\"%s\")\n", ch.v, ch.sdist.Digests.Sha256, ch.sdist.URL))
             } else {
                 versionLines = append(versionLines, fmt.Sprintf("\tversion(\"%s\", sha256=\"%s\")\n", ch.v, ch.sdist.Digests.Sha256))
             }
         } else if ch.any != nil {
-            versionLines = append(versionLines, fmt.Sprintf("\tversion(\"%s\", sha256=\"%s\", expand=False, url=\"%s\")\n", ch.v, ch.any.Digests.Sha256, ch.any.URL))
+            // If the fallback artifact is a wheel, disable expansion; otherwise allow default expansion
+            isWheel := strings.HasSuffix(strings.ToLower(ch.any.Filename), ".whl") || strings.EqualFold(ch.any.Packagetype, "bdist_wheel")
+            if isWheel {
+                versionLines = append(versionLines, fmt.Sprintf("\tversion(\"%s\", sha256=\"%s\", expand=False, url=\"%s\")\n", ch.v, ch.any.Digests.Sha256, ch.any.URL))
+            } else {
+                versionLines = append(versionLines, fmt.Sprintf("\tversion(\"%s\", sha256=\"%s\", url=\"%s\")\n", ch.v, ch.any.Digests.Sha256, ch.any.URL))
+            }
         }
     }
 
