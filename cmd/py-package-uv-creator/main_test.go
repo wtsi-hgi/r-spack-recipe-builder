@@ -427,6 +427,9 @@ func TestParseRequiresPython(t *testing.T) {
         "==3.9.*":        "3.9:3.9",
         "<=3.10":         "0:3.10",
         "~=3.8":          "3.8:4.0",
+        ">=3.5.*":        "3.5:",
+        ">3.5.*":         "3.5.1:",
+        ">=3.5.*,<=3.9.*": "3.5:3.9",
     }
     for in, want := range cases {
         got := parseRequiresPython(in)

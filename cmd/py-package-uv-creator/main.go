@@ -251,29 +251,36 @@ func parseRequiresPython(req string) string {
         if p == "" { continue }
         switch {
         case strings.HasPrefix(p, ">="):
-            lower = strings.TrimPrefix(p, ">=")
+            v := strings.TrimPrefix(p, ">=")
+            v = cleanPepVersion(v)
+            lower = v
         case strings.HasPrefix(p, ">"):
             // Approximate >X by using X.0.1 as lower bound; if that's not parseable, skip
             v := strings.TrimPrefix(p, ">")
+            v = cleanPepVersion(v)
             lower = bumpPatch(v)
         case strings.HasPrefix(p, "<="):
-            upper = strings.TrimPrefix(p, "<=")
+            v := strings.TrimPrefix(p, "<=")
+            v = cleanPepVersion(v)
+            upper = v
             upperInclusive = true
         case strings.HasPrefix(p, "<"):
             v := strings.TrimPrefix(p, "<")
+            v = cleanPepVersion(v)
             // Convert exclusive upper bound <A.B to inclusive previous minor A.(B-1)
             upper = decMinor(v)
             upperInclusive = true
         case strings.HasPrefix(p, "=="):
             v := strings.TrimPrefix(p, "==")
-            // Handle "==3.11.*" -> lower=3.11, upper=3.11
-            v = strings.TrimSuffix(v, ".*")
+            // Handle "==3.11.*" -> lower=3.11, upper=3.11 (cleanPepVersion trims wildcards)
+            v = cleanPepVersion(v)
             lower = v
             upper = v
             upperInclusive = true
         case strings.HasPrefix(p, "~="):
             // ~=3.8 -> >=3.8 and <4.0; we approximate with inclusive 4.0 upper bound
             v := strings.TrimPrefix(p, "~=")
+            v = cleanPepVersion(v)
             lower = v
             upper = nextMajor(v)
             upperInclusive = true
@@ -291,6 +298,20 @@ func parseRequiresPython(req string) string {
         if u != "" { upper = u }
     }
     return fmt.Sprintf("%s:%s", lower, upper)
+}
+
+// cleanPepVersion removes trailing wildcard segments like ".*" from a PEP 440
+// version and trims any trailing dot remnants. Examples:
+//   3.*      -> 3
+//   3.5.*    -> 3.5
+//   3.5      -> 3.5
+func cleanPepVersion(v string) string {
+    s := strings.TrimSpace(v)
+    for strings.HasSuffix(s, ".*") {
+        s = strings.TrimSuffix(s, ".*")
+    }
+    s = strings.TrimSuffix(s, ".")
+    return s
 }
 
 func bumpPatch(v string) string {

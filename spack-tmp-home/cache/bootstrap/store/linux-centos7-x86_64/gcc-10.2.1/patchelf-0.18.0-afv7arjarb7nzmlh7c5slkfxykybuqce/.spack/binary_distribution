@@ -1,0 +1,11 @@
+sbang_install_path: /home/spack/spack/opt/spack/bin/sbang
+buildpath: /home/spack/spack/opt/spack/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path
+spackprefix: /home/spack/spack
+relative_prefix: linux-centos7-x86_64/gcc-10.2.1/patchelf-0.18.0-afv7arjarb7nzmlh7c5slkfxykybuqce
+relocate_textfiles: []
+relocate_binaries:
+- bin/patchelf
+relocate_links: []
+hardlinks_deduped: true
+hash_to_prefix:
+  afv7arjarb7nzmlh7c5slkfxykybuqce: /home/spack/spack/opt/spack/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path/linux-centos7-x86_64/gcc-10.2.1/patchelf-0.18.0-afv7arjarb7nzmlh7c5slkfxykybuqce

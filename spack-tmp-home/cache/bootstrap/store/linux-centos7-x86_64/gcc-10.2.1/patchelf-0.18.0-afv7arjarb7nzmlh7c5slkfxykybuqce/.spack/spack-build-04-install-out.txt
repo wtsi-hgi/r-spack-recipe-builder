@@ -1,0 +1,30 @@
+==> patchelf: Executing phase: 'install'
+==> [2023-10-09-19:37:47.872363] 'make' '-j2' 'install'
+Making install in src
+make[1]: Entering directory `/tmp/spack/spack-stage/spack-stage-patchelf-0.18.0-afv7arjarb7nzmlh7c5slkfxykybuqce/spack-src/src'
+make[2]: Entering directory `/tmp/spack/spack-stage/spack-stage-patchelf-0.18.0-afv7arjarb7nzmlh7c5slkfxykybuqce/spack-src/src'
+ /usr/bin/mkdir -p '/home/spack/spack/opt/spack/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path/linux-centos7-x86_64/gcc-10.2.1/patchelf-0.18.0-afv7arjarb7nzmlh7c5slkfxykybuqce/bin'
+make[2]: Nothing to be done for `install-data-am'.
+  /usr/bin/install -c patchelf '/home/spack/spack/opt/spack/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path/linux-centos7-x86_64/gcc-10.2.1/patchelf-0.18.0-afv7arjarb7nzmlh7c5slkfxykybuqce/bin'
+make[2]: Leaving directory `/tmp/spack/spack-stage/spack-stage-patchelf-0.18.0-afv7arjarb7nzmlh7c5slkfxykybuqce/spack-src/src'
+make[1]: Leaving directory `/tmp/spack/spack-stage/spack-stage-patchelf-0.18.0-afv7arjarb7nzmlh7c5slkfxykybuqce/spack-src/src'
+Making install in tests
+make[1]: Entering directory `/tmp/spack/spack-stage/spack-stage-patchelf-0.18.0-afv7arjarb7nzmlh7c5slkfxykybuqce/spack-src/tests'
+make[2]: Entering directory `/tmp/spack/spack-stage/spack-stage-patchelf-0.18.0-afv7arjarb7nzmlh7c5slkfxykybuqce/spack-src/tests'
+make[2]: Nothing to be done for `install-exec-am'.
+make[2]: Nothing to be done for `install-data-am'.
+make[2]: Leaving directory `/tmp/spack/spack-stage/spack-stage-patchelf-0.18.0-afv7arjarb7nzmlh7c5slkfxykybuqce/spack-src/tests'
+make[1]: Leaving directory `/tmp/spack/spack-stage/spack-stage-patchelf-0.18.0-afv7arjarb7nzmlh7c5slkfxykybuqce/spack-src/tests'
+make[1]: Entering directory `/tmp/spack/spack-stage/spack-stage-patchelf-0.18.0-afv7arjarb7nzmlh7c5slkfxykybuqce/spack-src'
+make[2]: Entering directory `/tmp/spack/spack-stage/spack-stage-patchelf-0.18.0-afv7arjarb7nzmlh7c5slkfxykybuqce/spack-src'
+make[2]: Nothing to be done for `install-exec-am'.
+ /usr/bin/mkdir -p '/home/spack/spack/opt/spack/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path/linux-centos7-x86_64/gcc-10.2.1/patchelf-0.18.0-afv7arjarb7nzmlh7c5slkfxykybuqce/share/zsh/site-functions'
+ /usr/bin/mkdir -p '/home/spack/spack/opt/spack/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path/linux-centos7-x86_64/gcc-10.2.1/patchelf-0.18.0-afv7arjarb7nzmlh7c5slkfxykybuqce/share/doc/patchelf'
+ /usr/bin/install -c -m 644 completions/zsh/_patchelf '/home/spack/spack/opt/spack/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path/linux-centos7-x86_64/gcc-10.2.1/patchelf-0.18.0-afv7arjarb7nzmlh7c5slkfxykybuqce/share/zsh/site-functions'
+ /usr/bin/install -c -m 644 README.md '/home/spack/spack/opt/spack/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path/linux-centos7-x86_64/gcc-10.2.1/patchelf-0.18.0-afv7arjarb7nzmlh7c5slkfxykybuqce/share/doc/patchelf'
+ /usr/bin/mkdir -p '/home/spack/spack/opt/spack/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path/linux-centos7-x86_64/gcc-10.2.1/patchelf-0.18.0-afv7arjarb7nzmlh7c5slkfxykybuqce/share/man/man1'
+ /usr/bin/install -c -m 644 patchelf.1 '/home/spack/spack/opt/spack/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path/linux-centos7-x86_64/gcc-10.2.1/patchelf-0.18.0-afv7arjarb7nzmlh7c5slkfxykybuqce/share/man/man1'
+make[2]: Leaving directory `/tmp/spack/spack-stage/spack-stage-patchelf-0.18.0-afv7arjarb7nzmlh7c5slkfxykybuqce/spack-src'
+make[1]: Leaving directory `/tmp/spack/spack-stage/spack-stage-patchelf-0.18.0-afv7arjarb7nzmlh7c5slkfxykybuqce/spack-src'
+==> [2023-10-09-19:37:48.026413] Find (recursive): /home/spack/spack/opt/spack/[padded-to-256-chars]/linux-centos7-x86_64/gcc-10.2.1/patchelf-0.18.0-afv7arjarb7nzmlh7c5slkfxykybuqce ['*.la']
+==> [2023-10-09-19:37:48.032376] Find complete: /home/spack/spack/opt/spack/[padded-to-256-chars]/linux-centos7-x86_64/gcc-10.2.1/patchelf-0.18.0-afv7arjarb7nzmlh7c5slkfxykybuqce ['*.la']
