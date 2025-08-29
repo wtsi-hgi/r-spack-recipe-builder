@@ -328,3 +328,53 @@ func TestRunCLI_WithFlagFParsesNextArg(t *testing.T) {
         t.Fatalf("expected recipe file to be created: %v", err)
     }
 }
+
+func TestHomepageSelectionAndModuleChoiceFromProjectURLs(t *testing.T) {
+    // HomePage field is empty; ProjectURLs includes a repository URL.
+    resp := pypiResponse{
+        Info: pypiInfo{
+            Name:        "examplepkg",
+            HomePage:    "",
+            ProjectURL:  "",
+            ProjectURLs: map[string]string{"Repository": "https://github.com/foo/bar"},
+        },
+        Releases: map[string][]pypiRelease{
+            "1.0.0": {
+                {Yanked:false, Packagetype:"bdist_wheel", Filename:"examplepkg-1.0.0-py3-none-any.whl", URL:"https://files/examplepkg-1.0.0.whl", Digests: struct{Sha256 string `json:"sha256"`}{Sha256:"wsha"}},
+            },
+        },
+    }
+    data, _ := json.Marshal(resp)
+    // Wheel exposes modules: bar (from repo URL) and examplepkg
+    wheel := buildWheel([]string{"bar", "examplepkg"}, true)
+    restore := withHTTPStub(t, roundTripFunc(func(req *http.Request) *http.Response {
+        if strings.Contains(req.URL.String(), "/pypi/examplepkg/json") {
+            return httpResponse(200, "application/json", data)
+        }
+        return httpResponse(200, "application/zip", wheel)
+    }))
+    defer restore()
+
+    // Work in a temp directory
+    cwd, _ := os.Getwd()
+    dir := t.TempDir()
+    _ = os.Chdir(dir)
+    defer os.Chdir(cwd)
+
+    if err := writeRecipe("examplepkg", ""); err != nil {
+        t.Fatalf("writeRecipe: %v", err)
+    }
+
+    path := filepath.Join("packages", "py-examplepkg", "package.py")
+    b, err := os.ReadFile(path)
+    if err != nil { t.Fatalf("reading recipe: %v", err) }
+    s := string(b)
+    // Homepage should be taken from ProjectURLs[Repository]
+    if !strings.Contains(s, "homepage = \"https://github.com/foo/bar\"") {
+        t.Fatalf("expected homepage from ProjectURLs[Repository]: %s", s)
+    }
+    // Primary import module should be 'bar' derived from homepage last segment
+    if !strings.Contains(s, "import_modules = [\"bar\"") {
+        t.Fatalf("expected primary module 'bar' chosen from homepage: %s", s)
+    }
+}

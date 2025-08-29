@@ -413,9 +413,9 @@ func choosePrimaryImportModule(mods []string, pkgName, canonicalName, homepage s
     if len(mods) == 0 { return moduleImportName(pkgName) }
     // candidates derived from names/homepage
     want := []string{}
+    if homepage != "" { want = append(want, sanitizeBaseName(lastPathSegment(homepage))) }
     want = append(want, sanitizeBaseName(pkgName))
     if canonicalName != "" { want = append(want, sanitizeBaseName(canonicalName)) }
-    if homepage != "" { want = append(want, sanitizeBaseName(lastPathSegment(homepage))) }
 
     // prefer exact matches to any of desired tokens
     for _, w := range want {
@@ -445,21 +445,12 @@ func writeRecipe(packageName, versionPin string) error {
     if err != nil { return err }
 
     // Metadata
-    homepage := resp.Info.HomePage
-    if homepage == "" {
-        if resp.Info.ProjectURL != "" { homepage = resp.Info.ProjectURL }
-    }
-    if homepage == "" {
-        if url, ok := resp.Info.ProjectURLs["Homepage"]; ok { homepage = url }
-    }
-    if homepage == "" {
-        homepage = fmt.Sprintf("https://pypi.org/project/%s/", packageName)
-    }
+    homepage := selectHomepage(resp.Info, packageName)
     // Discover import modules from a wheel when possible and choose a primary
     importMods := discoverImportModules(resp, versionPin)
     canonicalName := strings.TrimSpace(resp.Info.Name)
     if canonicalName == "" { canonicalName = packageName }
-    module := choosePrimaryImportModule(importMods, packageName, canonicalName, resp.Info.HomePage)
+    module := choosePrimaryImportModule(importMods, packageName, canonicalName, homepage)
     className := classNameFromPackage(packageName)
     // Canonical PyPI project name for installation spec
 
@@ -516,6 +507,45 @@ func escapePyStr(s string) string {
     s = strings.ReplaceAll(s, "\"", "\\\"")
     s = strings.ReplaceAll(s, "\n", " ")
     return s
+}
+
+// selectHomepage picks the most appropriate homepage URL from the PyPI metadata.
+// Priority: Info.HomePage -> Info.ProjectURL -> ProjectURLs keys (homepage/home/source/repository/code/github) -> PyPI project page.
+func selectHomepage(info pypiInfo, pkg string) string {
+    if strings.TrimSpace(info.HomePage) != "" {
+        return info.HomePage
+    }
+    if strings.TrimSpace(info.ProjectURL) != "" {
+        return info.ProjectURL
+    }
+    // Search case-insensitively through common keys
+    if info.ProjectURLs != nil {
+        // exact homepage-like keys first
+        keys := []string{"homepage", "home"}
+        for _, k := range keys {
+            for key, val := range info.ProjectURLs {
+                if strings.EqualFold(strings.TrimSpace(key), k) && strings.TrimSpace(val) != "" {
+                    return val
+                }
+            }
+        }
+        // repository-like keys next
+        repoKeys := []string{"repository", "source", "source code", "code", "github"}
+        for _, k := range repoKeys {
+            for key, val := range info.ProjectURLs {
+                if strings.EqualFold(strings.TrimSpace(key), k) && strings.TrimSpace(val) != "" {
+                    return val
+                }
+            }
+        }
+        // fallback: first non-empty URL value
+        for _, val := range info.ProjectURLs {
+            if strings.TrimSpace(val) != "" {
+                return val
+            }
+        }
+    }
+    return fmt.Sprintf("https://pypi.org/project/%s/", pkg)
 }
 
 func formatImportModules(mods []string, fallback string) string {
