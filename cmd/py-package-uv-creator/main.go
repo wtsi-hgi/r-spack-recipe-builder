@@ -644,26 +644,11 @@ class Py%s(UvPackage):
     tail := depLines + `
     @run_after("install")
     def install_test(self):
-        import inspect
         with working_dir("spack-test", create=True):
-            python = inspect.getmodule(self).python
-            prefix = str(self.prefix)
-            cmd = (
-                "import sys,os; "
-                f"prefix=r'{prefix}'; "
-                "ver=f'{sys.version_info.major}.{sys.version_info.minor}'; "
-                "paths=[\n"
-                "    f'{prefix}/lib/python{ver}/site-packages',\n"
-                "    f'{prefix}/local/lib/python{ver}/site-packages',\n"
-                "    f'{prefix}/lib/python{ver}/dist-packages',\n"
-                "    f'{prefix}/local/lib/python{ver}/dist-packages',\n"
-                "]; "
-                "[sys.path.insert(0,p) for p in paths]; "
-                "import %s"
-            )
-            python("-c", cmd)
+            # Ensure Python can see the uv-installed site-packages under this prefix
+            python("-c", 'import sys, os, site; site.addsitedir(os.path.join(r"%s","lib", f"python{sys.version_info.major}.{sys.version_info.minor}","site-packages")); import __MODULE__' % (self.prefix,))
 `
-    tail = fmt.Sprintf(tail, module)
+    tail = strings.ReplaceAll(tail, "__MODULE__", module)
 
     content := header + body + tail
     content = strings.ReplaceAll(content, "\t", "    ")
