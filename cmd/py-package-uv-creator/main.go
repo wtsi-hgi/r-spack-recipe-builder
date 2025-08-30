@@ -306,6 +306,10 @@ func parseRequiresPython(req string) string {
         u := decMinor(upper)
         if u != "" { upper = u }
     }
+    // Guard against nonsensical ranges where upper < lower
+    if versionLess(upper, lower) {
+        return ""
+    }
     return fmt.Sprintf("%s:%s", lower, upper)
 }
 
@@ -655,9 +659,9 @@ class Py%s(UvPackage):
     def install_test(self):
         with working_dir("spack-test", create=True):
             # Ensure Python can see the uv-installed site-packages under this prefix
-            python("-c", 'import sys, os, site; site.addsitedir(os.path.join(r"%s","lib", f"python{sys.version_info.major}.{sys.version_info.minor}","site-packages")); import __MODULE__' % (self.prefix,))
+            python("-c", "import %s")
 `
-    tail = strings.ReplaceAll(tail, "__MODULE__", module)
+    tail = fmt.Sprintf(tail, module)
 
     content := header + body + tail
     content = strings.ReplaceAll(content, "\t", "    ")

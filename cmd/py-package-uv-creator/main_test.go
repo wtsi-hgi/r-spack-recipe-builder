@@ -455,6 +455,14 @@ func TestParseRequiresPython(t *testing.T) {
     }
 }
 
+func TestParseRequiresPython_InvalidReversedRange(t *testing.T) {
+    // e.g., ">=3.4,<3.0" should yield empty constraint as it's contradictory
+    got := parseRequiresPython(">=3.4,<3.0")
+    if got != "" {
+        t.Fatalf("expected empty spec for invalid reversed range, got %q", got)
+    }
+}
+
 func TestHomepageSelectionAndModuleChoiceFromProjectURLs(t *testing.T) {
     // HomePage field is empty; ProjectURLs includes a repository URL.
     resp := pypiResponse{
