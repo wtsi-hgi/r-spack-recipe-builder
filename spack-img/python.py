@@ -189,9 +189,25 @@ class PythonExtension(spack.package_base.PackageBase):
     def test_imports(self):
         """Attempts to import modules of the installed package."""
 
-        # Make sure we are importing the installed modules,
-        # not the ones in the source directory
-        python = inspect.getmodule(self).python
+        # Ensure imports use the installed site-packages for this prefix
+        python = self.spec["python"].command
+
+        # Construct PYTHONPATH to include both platlib and purelib under this package prefix
+        pkg = self.spec["python"].package
+        site_dirs = []
+        for directory in {pkg.platlib, pkg.purelib}:
+            root = os.path.join(self.prefix, directory)
+            if os.path.isdir(root):
+                site_dirs.append(root)
+
+        existing_pythonpath = os.environ.get("PYTHONPATH", "")
+        if site_dirs or existing_pythonpath:
+            new_pythonpath = os.pathsep.join(site_dirs + ([existing_pythonpath] if existing_pythonpath else []))
+            python.add_default_env("PYTHONPATH", new_pythonpath)
+
+        # Hide user packages to avoid interference
+        python.add_default_env("PYTHONNOUSERSITE", "1")
+
         for module in self.import_modules:
             with test_part(
                 self,
@@ -565,7 +581,11 @@ class PythonUvBuilder(BaseBuilder):
         else:
             args.append(".")
 
-        args.append(f"--prefix={prefix}")
+        # Prefer installing into the explicit site-packages directory to avoid uv ignoring --prefix
+        py_pkg = spec["python"].package
+        target_dir = os.path.join(prefix, py_pkg.purelib)
+        fs.mkdirp(target_dir)
+        args.extend(["--target", target_dir])
 
         with fs.working_dir(self.build_directory):
             uv(*args, env=env)
