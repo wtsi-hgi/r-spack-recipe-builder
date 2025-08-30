@@ -360,6 +360,133 @@ func nextMajor(v string) string {
     return fmt.Sprintf("%d.0", maj+1)
 }
 
+// parseWheelPythonSpecFromFilename derives a Spack-style Python version constraint
+// from a wheel filename according to PEP 425 tags.
+// Examples:
+//   ...-cp310-cp310-...whl   -> 3.10:3.10
+//   ...-cp39-abi3-...whl     -> 3.9:
+//   ...-py3-none-any.whl     -> 3:
+//   ...-cp39.cp310-...whl    -> 3.9:3.10
+func parseWheelPythonSpecFromFilename(filename string) string {
+    name := strings.ToLower(strings.TrimSpace(filename))
+    if !strings.HasSuffix(name, ".whl") { return "" }
+    // Split by '-' and take the last 3 fields: python-tag, abi-tag, platform-tag
+    parts := strings.Split(strings.TrimSuffix(name, ".whl"), "-")
+    if len(parts) < 2 { return "" }
+    isPyTag := func(s string) bool { return strings.HasPrefix(s, "cp") || strings.HasPrefix(s, "py") || strings.HasPrefix(s, "pp") }
+    pyTag := ""
+    abiTag := ""
+    if len(parts) >= 3 && isPyTag(parts[len(parts)-3]) {
+        pyTag = parts[len(parts)-3]
+        abiTag = parts[len(parts)-2]
+    } else if len(parts) >= 2 && isPyTag(parts[len(parts)-2]) { // tolerate missing platform tag
+        pyTag = parts[len(parts)-2]
+        abiTag = parts[len(parts)-1]
+    } else {
+        return ""
+    }
+
+    // Helper to convert cp310 -> 3.10
+    toPyVer := func(tag string) string {
+        if !strings.HasPrefix(tag, "cp") || len(tag) < 4 { return "" }
+        digits := tag[2:]
+        // Accept forms like cp3, cp37, cp310, cp311
+        if len(digits) == 1 {
+            return fmt.Sprintf("%s.0", digits)
+        }
+        if len(digits) == 2 {
+            return fmt.Sprintf("%s.%s", string(digits[0]), string(digits[1]))
+        }
+        // len >= 3, treat first as major and the rest as minor
+        return fmt.Sprintf("%s.%s", string(digits[0]), digits[1:])
+    }
+
+    // Multiple python tags are separated by '.' e.g., cp39.cp310
+    if strings.HasPrefix(pyTag, "cp") {
+        tags := strings.Split(pyTag, ".")
+        minV := ""
+        maxV := ""
+        for _, t := range tags {
+            v := toPyVer(t)
+            if v == "" { continue }
+            if minV == "" || versionLess(v, minV) { minV = v }
+            if maxV == "" || versionLess(maxV, v) { maxV = v }
+        }
+        if minV == "" { return "" }
+        // If abi is abi3, assume forward compatibility from the minimum tag
+        if strings.HasPrefix(abiTag, "abi3") {
+            return fmt.Sprintf("%s:", minV)
+        }
+        // Non-abi3 cpXY wheels generally pin to that exact interpreter; if there are
+        // multiple tags, constrain to the closed range [min, max]
+        if maxV == "" { maxV = minV }
+        return fmt.Sprintf("%s:%s", minV, maxV)
+    }
+
+    // Universal python 3 tag
+    if pyTag == "py3" || strings.HasPrefix(pyTag, "py3.") {
+        return "3:"
+    }
+    // PyPy-only wheels are not suitable for CPython; do not infer broader CP spec
+    if strings.HasPrefix(pyTag, "pp") { return "" }
+    return ""
+}
+
+// intersectSpackRanges returns the intersection of two Spack-style ranges (a and b):
+//   "<lo>:<hi>" where <hi> may be empty for open-ended. Returns empty string if
+// intersection cannot be represented or is empty.
+func intersectSpackRanges(a, b string) string {
+    normalize := func(s string) (string, string, bool) {
+        s = strings.TrimSpace(s)
+        if s == "" { return "", "", false }
+        lo := ""
+        hi := ""
+        if strings.Contains(s, ":") {
+            parts := strings.SplitN(s, ":", 2)
+            lo = strings.TrimSpace(parts[0])
+            hi = strings.TrimSpace(parts[1])
+        } else {
+            // Treat a bare version as exact pin
+            lo = s
+            hi = s
+        }
+        return lo, hi, true
+    }
+    loA, hiA, okA := normalize(a)
+    loB, hiB, okB := normalize(b)
+    if !okA && !okB { return "" }
+    if !okA { return b }
+    if !okB { return a }
+
+    // Compute max lower bound
+    lo := loA
+    if lo == "" { lo = loB } else if loB != "" && versionLess(lo, loB) { lo = loB }
+    // Compute min upper bound (empty means open)
+    hi := hiA
+    if hi == "" { hi = hiB } else if hiB != "" && versionLess(hiB, hi) { hi = hiB }
+
+    if lo != "" && hi != "" && versionLess(hi, lo) {
+        // Disjoint; cannot intersect
+        return ""
+    }
+    if hi == "" { return fmt.Sprintf("%s:", lo) }
+    return fmt.Sprintf("%s:%s", lo, hi)
+}
+
+// mergePythonSpecs combines requires-python derived spec with wheel-derived spec.
+// Prefer the intersection when possible; if they conflict to empty, prefer the
+// wheel-derived spec since the chosen artifact dictates the interpreter.
+func mergePythonSpecs(requiresSpec, wheelSpec string) string {
+    requiresSpec = strings.TrimSpace(requiresSpec)
+    wheelSpec = strings.TrimSpace(wheelSpec)
+    if requiresSpec == "" && wheelSpec == "" { return "" }
+    if requiresSpec == "" { return wheelSpec }
+    if wheelSpec == "" { return requiresSpec }
+    inter := intersectSpackRanges(requiresSpec, wheelSpec)
+    if inter != "" { return inter }
+    return wheelSpec
+}
+
 func selectIntrospectionVersion(releases map[string][]pypiRelease, preferred string) string {
     var keys []string
     for v := range releases { keys = append(keys, v) }
@@ -649,7 +776,9 @@ class Py%s(UvPackage):
     depLines := ""
     for _, s := range sels {
         if s.file == nil { continue }
-        pySpec := parseRequiresPython(s.file.RequiresPython)
+        reqSpec := parseRequiresPython(s.file.RequiresPython)
+        wheelSpec := parseWheelPythonSpecFromFilename(s.file.Filename)
+        pySpec := mergePythonSpecs(reqSpec, wheelSpec)
         if strings.TrimSpace(pySpec) == "" { continue }
         depLines += fmt.Sprintf("\n    depends_on(\"python@%s\", type=(\"build\", \"run\"), when=\"@%s\")\n", pySpec, s.version)
     }

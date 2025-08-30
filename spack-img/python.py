@@ -190,20 +190,7 @@ class PythonExtension(spack.package_base.PackageBase):
         """Attempts to import modules of the installed package."""
 
         # Ensure imports use the installed site-packages for this prefix
-        # Prefer the interpreter used during uv installation if recorded
-        marker_path = os.path.join(self.prefix, ".uv-python-used")
-        if os.path.exists(marker_path):
-            try:
-                with open(marker_path, "r") as f:
-                    used_python = f.read().strip()
-                if used_python:
-                    python = Executable(used_python)
-                else:
-                    python = self.spec["python"].command
-            except Exception:
-                python = self.spec["python"].command
-        else:
-            python = self.spec["python"].command
+        python = self.spec["python"].command
 
         # Construct PYTHONPATH to include both platlib and purelib under this package prefix
         pkg = self.spec["python"].package
@@ -578,11 +565,10 @@ class PythonUvBuilder(BaseBuilder):
     def install(self, pkg, spec, prefix):
         """Install using uv from the build directory or a wheel."""
 
+        python_exe = spec["python"].command.path
         uv = Executable("uv")
 
         env = os.environ.copy()
-        # default to the spack-provided python
-        python_exe = spec["python"].command.path
         env["UV_PYTHON"] = python_exe
 
         args = [
@@ -601,37 +587,7 @@ class PythonUvBuilder(BaseBuilder):
         fs.mkdirp(target_dir)
         args.extend(["--target", target_dir])
 
-        # Helper: attempt uv install, optionally retrying with a compatible system Python
-        def try_install(env_to_use, record_python=None):
-            with fs.working_dir(self.build_directory):
-                uv(*args, env=env_to_use)
-            if record_python:
-                try:
-                    with open(os.path.join(prefix, ".uv-python-used"), "w") as f:
-                        f.write(record_python)
-                except Exception:
-                    pass
-
-        # First attempt with the spack python
-        try:
-            try_install(env, None)
-        except Exception as e:
-            # If failure appears related to Python version incompatibility of dependencies,
-            # retry with a common system python compatible with many older packages (3.10) if present.
-            fallback_pythons = ["/usr/bin/python3.10", "/usr/bin/python3.11", "/usr/bin/python3.9", "/usr/bin/python3.8"]
-            used = None
-            for cand in fallback_pythons:
-                if os.path.exists(cand):
-                    env_alt = dict(env)
-                    env_alt["UV_PYTHON"] = cand
-                    try:
-                        try_install(env_alt, cand)
-                        used = cand
-                        break
-                    except Exception:
-                        continue
-            if not used:
-                # re-raise original exception if no fallback succeeded
-                raise e
+        with fs.working_dir(self.build_directory):
+            uv(*args, env=env)
 
     spack.builder.run_after("install")(execute_install_time_tests)
