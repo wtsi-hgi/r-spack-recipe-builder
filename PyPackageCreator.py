@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import ast
 import json
 import os
 import re
@@ -19,7 +20,7 @@ def getExistingVersions():
     decoded = stream.stdout.decode("utf-8").strip()
     try:
         builtin = json.loads(decoded)
-    except json.JSONDecodeError:
+    except:
         print(stream.stderr.decode("utf-8"))
         exit(1)
     print("Versions successfully fetched!\n")
@@ -44,7 +45,7 @@ def pyify(package):
 
 
 def spackifyVersion(version):
-    if version is None:
+    if version == None:
         return ""
     if "," in version:
         split = version.split(",")
@@ -76,14 +77,9 @@ def getVersions(versionList):
         for release in versionList[i]:
             if release["yanked"]:
                 continue
-            
-            # Skip release candidate versions
-            if "rc" in i.lower():
-                continue
 
             if release["packagetype"] == "bdist_wheel" and (
-                release["filename"].endswith("any.whl") or
-                re.search(r"manylinux[^x]*_x86_64\.whl", release["filename"])
+                release["filename"].endswith("manylinux1_x86_64.whl") or release["filename"].endswith("any.whl")
             ):
                 py_ver = release["python_version"]
                 if py_ver not in python_version_wheels:
@@ -248,12 +244,6 @@ def get(package_name, package_version, recurse=False, force=False):
     header, footer = getTemplate(
         "+", package_name, json["description"], json["homepage"], getClassname(package_name), filename
     )
-    
-    # Merge wheel dependencies with Libraries.io dependencies
-    for dep in extradeps.keys():
-        if dep not in dependencies:
-            dependencies.append(dep)
-    
     # Add Python version dependencies for specific wheel versions
     python_deps = {}
     for version in versions:
