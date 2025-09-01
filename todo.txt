@@ -1,0 +1,4 @@
+to do
+- figure out whether uv accerlates installation
+- find out whether it works for multiple uvpackages in the same environment
+- find out how much extra space it takes

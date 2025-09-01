@@ -1,20 +1,25 @@
-# Repository Guidelines
+## Failure Reason Summariser
 
-This guide for iteratively improving the script `cmd/py-package-uv-creator/main.go` and its test main_test.go. **Important: Under no circumstances should you ask for confirmation or preference for further actions from the user for any action, there is no user interaction, because you are running inside an automated pipeline. Always make the changes that you suggest and proceed.**
+This guide instructs the AI to perform one simple task per package.
 
-## Workflow
-1) when asked to create a uv package for a pypi entry, first run the tool `py-package-uv-creator -f {pypi_name}` to create a uv package.
-2) then run `spack install` on the newly created uv package.
-3) If there is any errors, first look at the created recipe in `packages/{pkg}/package.py` and check its homepage/url just to make sure that the `install_test` session is correct. Some python packages may have a different import name than the package name, so you should modify the `import_modules` field and the test code.
-4) Otherwise you need to adjust the `cmd/py-package-uv-creator/main.go` to find out the correct way to create the uv package recipe. 
-5) If you make any changes to the `cmd/py-package-uv-creator/main.go` file, you need to also add appropriate tests to the `cmd/py-package-uv-creator/main_test.go` file.
-6) Then you need to make sure the tests pass by running `go test ./cmd/py-package-uv-creator/...`
-7) If the tests pass, run `make build` to build the tool and test it with `./py-package-uv-creator -f {pypi_name}` again, back to step 2.
-8) If the installation succeeds, and no changes are needed, you can exit.
-9) If any changes are made, make a commit with an appropriate message.
+### Task
+- Read the provided install log for the specified Python package (built via Spack).
+- the install log will always mention another log file in /tmp under `See build log for details:`, make sure you read that file to find the actual reason. A reason such as `uv pip install failure` is not a good reason, you should find the actual reason from the other log file.
+- Produce a concise, one-sentence summary of the root cause of the installation failure.
 
-## Notes
-- the `py-package-uv-creator` tool should prefer the wheel package over the sdist package, if available.
-- the tool should only use wheels that are compatible with the linux platform.
+### Input
+- Package name (string)
+- Install log text (string)
+
+### Output
+- Return only strict JSON with the following keys:
+  - `package`: the package name
+  - `failure_reason`: a short sentence (≤ 25 words) describing the primary cause of failure
+
+### Requirements
+- Be specific: missing system library, version conflict, network/SSL, compiler error, incompatible wheel, wrong import name, checksum mismatch, etc.
+- Do not include build steps or long stack traces in the summary.
+- If there is clearly no failure in the log, set `failure_reason` to `No failure detected in log`.
+- Output must be JSON only. No extra commentary or formatting.
 
 
