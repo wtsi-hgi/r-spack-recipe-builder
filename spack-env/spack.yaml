@@ -1,6 +1,0 @@
-spack:
-  specs:
-  - py-bed-reader
-  view: false
-  repos:
-  - /home/ubuntu/r-spack-recipe-builder

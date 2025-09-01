@@ -780,14 +780,14 @@ class Py%s(UvPackage):
         wheelSpec := parseWheelPythonSpecFromFilename(s.file.Filename)
         pySpec := mergePythonSpecs(reqSpec, wheelSpec)
         if strings.TrimSpace(pySpec) == "" { continue }
-        depLines += fmt.Sprintf("\n    depends_on(\"python@%s\", type=(\"build\", \"run\"), when=\"@%s\")\n", pySpec, s.version)
+        depLines += fmt.Sprintf("\n    depends_on(\"python@%s\", type=(\"build\", \"run\"), when=\"@%s\")", pySpec, s.version)
     }
 
     tail := depLines + `
+    
     @run_after("install")
     def install_test(self):
         with working_dir("spack-test", create=True):
-            # Ensure Python can see the uv-installed site-packages under this prefix
             python("-c", "import %s")
 `
     tail = fmt.Sprintf(tail, module)
