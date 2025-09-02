@@ -1,0 +1,8 @@
+FROM spack/ubuntu-jammy:0.21.1
+
+RUN apt update && apt install -y pkg-config libgomp1 libgfortran5 xvfb curl && update-ca-certificates && rm -rf /var/lib/apt/lists/*
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh && ln -sf /root/.local/bin/uv /usr/local/bin/uv
+COPY perl.py /opt/spack/lib/spack/spack/build_systems/perl.py
+COPY python.py /opt/spack/lib/spack/spack/build_systems/python.py
+RUN sed -i '$a from spack.build_systems.python import UvPackage as UvPackage' /opt/spack/lib/spack/spack/package.py \
+ && sed -i '$a if "__all__" in globals(): __all__.append("UvPackage")' /opt/spack/lib/spack/spack/package.py
